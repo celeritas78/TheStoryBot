@@ -19,16 +19,31 @@ export default function StoryGenerator() {
         description: "Your magical story is ready to read.",
       });
     },
-    onError: () => {
+    onError: (error: Error) => {
       toast({
         title: "Error",
-        description: "Failed to generate story. Please try again.",
+        description: error.message || "Failed to generate story. Please try again.",
         variant: "destructive",
       });
+      console.error("Story generation error:", error);
     },
   });
 
-  const handleSubmit = (formData) => {
+  const handleSubmit = (formData: {
+    childName: string;
+    childAge: string;
+    mainCharacter: string;
+    theme: string;
+  }) => {
+    if (!formData.childName || !formData.childAge || !formData.mainCharacter || !formData.theme) {
+      toast({
+        title: "Missing information",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     mutation.mutate(formData);
   };
 

@@ -9,10 +9,14 @@ export function registerRoutes(app: Express) {
     try {
       const { childName, childAge, mainCharacter, theme } = req.body;
 
+      if (!childName || !childAge || !mainCharacter || !theme) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+
       // Generate initial story content
       const storyContent = await generateStoryContent({
         childName,
-        childAge,
+        childAge: Number(childAge),
         mainCharacter,
         theme,
       });
@@ -26,19 +30,24 @@ export function registerRoutes(app: Express) {
       // Save to database
       const [story] = await db.insert(stories).values({
         childName,
-        childAge,
-        characters: { mainCharacter },
+        childAge: Number(childAge),
+        characters: JSON.stringify({ mainCharacter }),
         theme,
         content: storyContent.text,
-        imageUrls: [imageUrl],
+        imageUrls: JSON.stringify([imageUrl]),
       }).returning();
 
-      await db.insert(storySegments).values({
+      if (!story || !story.id) {
+        throw new Error("Failed to create story");
+      }
+
+      // Add the first story segment
+      const [segment] = await db.insert(storySegments).values({
         storyId: story.id,
         content: storyContent.text,
         imageUrl,
         sequence: 1,
-      });
+      }).returning();
 
       res.json({
         id: story.id,
@@ -60,18 +69,19 @@ export function registerRoutes(app: Express) {
 
       const story = await db.query.stories.findFirst({
         where: eq(stories.id, parseInt(id)),
-        with: {
-          segments: true,
-        },
       });
 
       if (!story) {
         return res.status(404).json({ error: "Story not found" });
       }
 
+      // Parse characters JSON
+      const characters = JSON.parse(story.characters as string) as { mainCharacter: string };
+
       // Fetch existing segments
       const segments = await db.query.storySegments.findMany({
-        where: eq(storySegments.storyId, story.id)
+        where: eq(storySegments.storyId, story.id),
+        orderBy: (storySegments, { desc }) => [desc(storySegments.sequence)],
       });
 
       // Generate continuation
@@ -79,7 +89,7 @@ export function registerRoutes(app: Express) {
         previousContent: story.content,
         childName: story.childName,
         childAge: story.childAge,
-        mainCharacter: story.characters.mainCharacter,
+        mainCharacter: characters.mainCharacter,
         theme: story.theme,
       });
 
