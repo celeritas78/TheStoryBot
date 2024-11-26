@@ -22,9 +22,10 @@ export const stories = pgTable("stories", {
 
 export const storySegments = pgTable("story_segments", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
-  storyId: integer("story_id").notNull().references(() => stories.id),
+  storyId: integer("story_id").notNull().references(() => stories.id, { onDelete: 'cascade' }),
   content: text("content").notNull(),
   imageUrl: text("image_url").notNull(),
+  audioUrl: text("audio_url").notNull(),
   sequence: integer("sequence").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });

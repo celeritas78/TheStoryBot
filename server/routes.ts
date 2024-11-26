@@ -1,6 +1,6 @@
 import type { Express } from "express";
 import { db } from "../db";
-import { stories, storySegments, favorites } from "@db/schema";
+import { stories, storySegments, favorites, type InsertStorySegment } from "@db/schema";
 import { generateStoryContent, generateImage, generateSpeech } from "./services/openai";
 import { eq, desc } from "drizzle-orm";
 
@@ -42,12 +42,15 @@ export function registerRoutes(app: Express) {
       }
 
       // Add the first story segment
-      const [segment] = await db.insert(storySegments).values({
+      const segment: InsertStorySegment = {
         storyId: story.id,
         content: storyContent.text,
         imageUrl,
+        audioUrl,
         sequence: 1,
-      }).returning();
+      };
+
+      const [newSegment] = await db.insert(storySegments).values(segment).returning();
 
       res.json({
         id: story.id,
@@ -97,12 +100,15 @@ export function registerRoutes(app: Express) {
       const audioUrl = await generateSpeech(continuation.text);
 
       // Save new segment
-      await db.insert(storySegments).values({
+      const segment: InsertStorySegment = {
         storyId: story.id,
         content: continuation.text,
         imageUrl,
+        audioUrl,
         sequence: (segments?.length ?? 0) + 1,
-      });
+      };
+
+      const [newSegment] = await db.insert(storySegments).values(segment).returning();
 
       res.json({
         content: continuation.text,
@@ -114,6 +120,7 @@ export function registerRoutes(app: Express) {
       res.status(500).json({ error: "Failed to continue story" });
     }
   });
+
   // Get all favorite stories
   app.get("/api/favorites", async (req, res) => {
     try {

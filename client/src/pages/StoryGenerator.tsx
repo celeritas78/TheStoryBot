@@ -6,6 +6,21 @@ import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { generateStory } from "../lib/api";
 
+import { ErrorBoundary } from "react-error-boundary";
+import { Loader2 } from "lucide-react";
+
+function ErrorFallback({ error, resetErrorBoundary }) {
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-purple-50 to-purple-100 p-4">
+      <div className="container mx-auto max-w-4xl text-center">
+        <h2 className="text-2xl font-bold text-red-600 mb-4">Something went wrong:</h2>
+        <pre className="text-red-500 mb-4">{error.message}</pre>
+        <Button onClick={resetErrorBoundary}>Try again</Button>
+      </div>
+    </div>
+  );
+}
+
 export default function StoryGenerator() {
   const [story, setStory] = useState(null);
   const { toast } = useToast();
@@ -61,8 +76,17 @@ export default function StoryGenerator() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-purple-50 to-purple-100 p-4">
-      <div className="container mx-auto max-w-4xl">
+    <ErrorBoundary FallbackComponent={ErrorFallback} onReset={() => setStory(null)}>
+      <div className="min-h-screen bg-gradient-to-b from-purple-50 to-purple-100 p-4">
+        <div className="container mx-auto max-w-4xl">
+          {mutation.isPending && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+              <div className="bg-white p-4 rounded-lg flex items-center space-x-2">
+                <Loader2 className="h-6 w-6 animate-spin" />
+                <span>Generating your story...</span>
+              </div>
+            </div>
+          )}
         {!story ? (
           <StoryForm onSubmit={handleSubmit} isLoading={mutation.isPending} />
         ) : (
@@ -79,7 +103,8 @@ export default function StoryGenerator() {
             </div>
           </div>
         )}
+        </div>
       </div>
-    </div>
+    </ErrorBoundary>
   );
 }
