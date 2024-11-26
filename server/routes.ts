@@ -26,24 +26,29 @@ export function registerRoutes(app: Express) {
       console.log('Generated content:', storyContent);
       let imageUrl: string;
       try {
-        imageUrl = await generateImage(storyContent.sceneDescription);
+        const generatedImageUrl = await generateImage(storyContent.sceneDescription);
+        if (!generatedImageUrl) {
+          throw new Error("Image generation returned empty URL");
+        }
+        imageUrl = generatedImageUrl;
         console.log('Generated image URL:', imageUrl);
       } catch (error) {
-        console.error('Failed to generate image:', error);
-        throw new Error("Failed to generate image");
+        console.error('Failed to generate image:', error instanceof Error ? error.message : 'Unknown error');
+        throw new Error("Failed to generate image: " + (error instanceof Error ? error.message : 'Unknown error'));
       }
 
       // Generate audio narration
       let audioUrl: string;
       try {
-        audioUrl = await generateSpeech(storyContent.text);
+        const generatedAudioUrl = await generateSpeech(storyContent.text);
+        if (!generatedAudioUrl) {
+          throw new Error("Audio generation returned empty URL");
+        }
+        audioUrl = generatedAudioUrl;
+        console.log('Generated audio URL:', audioUrl);
       } catch (error) {
-        console.error('Failed to generate audio:', error);
-        throw new Error("Failed to generate audio");
-      }
-
-      if (!imageUrl || !audioUrl) {
-        throw new Error("Failed to generate media resources");
+        console.error('Failed to generate audio:', error instanceof Error ? error.message : 'Unknown error');
+        throw new Error("Failed to generate audio: " + (error instanceof Error ? error.message : 'Unknown error'));
       }
 
       // Save to database

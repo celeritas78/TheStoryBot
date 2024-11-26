@@ -66,28 +66,49 @@ export async function generateStoryContent({
   }
 }
 
-export async function generateImage(sceneDescription: string) {
-  const response = await openai.images.generate({
-    model: "dall-e-3",
-    prompt: `Create a child-friendly, storybook-style illustration of: ${sceneDescription}. Use soft colors and a warm, comforting style suitable for bedtime stories.`,
-    n: 1,
-    size: "1024x1024",
-    quality: "standard",
-  });
+export async function generateImage(sceneDescription: string): Promise<string> {
+  try {
+    const response = await openai.images.generate({
+      model: "dall-e-3",
+      prompt: `Create a child-friendly, storybook-style illustration of: ${sceneDescription}. Use soft colors and a warm, comforting style suitable for bedtime stories.`,
+      n: 1,
+      size: "1024x1024",
+      quality: "standard",
+    });
 
-  return response.data[0].url;
+    if (!response.data?.[0]?.url) {
+      throw new Error("No image URL received from OpenAI");
+    }
+
+    return response.data[0].url;
+  } catch (error) {
+    console.error("OpenAI Image Generation Error:", error);
+    throw new Error(`Failed to generate image: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
 }
 
-export async function generateSpeech(text: string) {
-  const mp3 = await openai.audio.speech.create({
-    model: "tts-1",
-    voice: "nova",
-    input: text,
-  });
+export async function generateSpeech(text: string): Promise<string> {
+  try {
+    const mp3 = await openai.audio.speech.create({
+      model: "tts-1",
+      voice: "nova",
+      input: text,
+    });
 
-  const buffer = Buffer.from(await mp3.arrayBuffer());
-  
-  // In a real implementation, you would save this to a file storage service
-  // For this example, we'll return a mock URL
-  return `/api/audio/${Date.now()}.mp3`;
+    if (!mp3) {
+      throw new Error("No audio data received from OpenAI");
+    }
+
+    const buffer = Buffer.from(await mp3.arrayBuffer());
+    if (!buffer || buffer.length === 0) {
+      throw new Error("Invalid audio data received");
+    }
+    
+    // In a real implementation, you would save this to a file storage service
+    // For this example, we'll return a mock URL
+    return `/api/audio/${Date.now()}.mp3`;
+  } catch (error) {
+    console.error("OpenAI Speech Generation Error:", error);
+    throw new Error(`Failed to generate speech: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
 }

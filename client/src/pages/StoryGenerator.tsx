@@ -27,20 +27,15 @@ function ErrorFallback({ error, resetErrorBoundary }: ErrorFallbackProps) {
 }
 
 export default function StoryGenerator() {
-  const [story, setStory] = useState(null);
+  const [story, setStory] = useState<Story | null>(null);
   const { toast } = useToast();
 
   const mutation = useMutation({
-    mutationFn: async (formData: {
-      childName: string;
-      childAge: string;
-      mainCharacter: string;
-      theme: string;
-    }) => {
+    mutationFn: async (formData: StoryFormData) => {
       console.log('Submitting form data:', formData);
       return generateStory(formData);
     },
-    onSuccess: (data) => {
+    onSuccess: (data: Story) => {
       console.log('Story generated successfully:', data);
       setStory(data);
       toast({
