@@ -3,13 +3,26 @@ import OpenAI from "openai";
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
+interface StoryGenerationParams {
+  childName: string;
+  childAge: number;
+  mainCharacter: string;
+  theme: string;
+  previousContent?: string;
+}
+
+interface StoryContent {
+  text: string;
+  sceneDescription: string;
+}
+
 export async function generateStoryContent({
   childName,
   childAge,
   mainCharacter,
   theme,
   previousContent = "",
-}) {
+}: StoryGenerationParams): Promise<StoryContent> {
   const prompt = previousContent
     ? `Continue the following children's story about ${childName} and ${mainCharacter}, maintaining the same style and theme. Previous content: ${previousContent}`
     : `Create a short, engaging children's story (maximum 1 minute reading time) about a child named ${childName} (age ${childAge}) and their friend ${mainCharacter}. The story should have a ${theme} theme and be appropriate for young children.`;
@@ -29,7 +42,11 @@ export async function generateStoryContent({
     response_format: { type: "json_object" },
   });
 
-  return JSON.parse(response.choices[0].message.content);
+  const content = response.choices[0].message.content;
+  if (!content) {
+    throw new Error("No content received from OpenAI");
+  }
+  return JSON.parse(content);
 }
 
 export async function generateImage(sceneDescription: string) {
