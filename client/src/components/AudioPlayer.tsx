@@ -118,17 +118,35 @@ function AudioPlayerContent({ audioUrl }: AudioPlayerProps) {
     }
   };
 
+  function getAudioErrorMessage(code: number | null): string {
+    switch (code) {
+      case 1:
+        return "The audio loading was aborted";
+      case 2:
+        return "Network error occurred while loading audio";
+      case 3:
+        return "Audio decoding failed";
+      case 4:
+        return "Audio format not supported";
+      default:
+        return "Unknown error occurred";
+    }
+  }
+
   const handleError = (event: React.SyntheticEvent<HTMLAudioElement, Event>) => {
     const audioElement = event.currentTarget;
+    const errorMessage = getAudioErrorMessage(audioElement.error?.code);
+    
     console.error('Audio loading error:', {
       url: audioUrl,
       error: audioElement.error,
       code: audioElement.error?.code,
-      message: audioElement.error?.message,
+      message: errorMessage,
       networkState: audioElement.networkState,
       readyState: audioElement.readyState,
     });
-    setError(`Failed to load audio: ${audioElement.error?.message || 'Unknown error'}`);
+    
+    setError(`Failed to load audio: ${errorMessage}`);
     setIsLoading(false);
     setIsPlaying(false);
     setProgress(0);

@@ -3,8 +3,15 @@ import { db } from "../db";
 import { stories, storySegments, favorites, type InsertStorySegment } from "@db/schema";
 import { generateStoryContent, generateImage, generateSpeech } from "./services/openai";
 import { eq, desc } from "drizzle-orm";
+import fs from 'fs';
 
 import { getAudioFilePath, audioFileExists } from './services/audio-storage';
+
+const MIME_TYPES = {
+  'mp3': 'audio/mpeg',
+  'wav': 'audio/wav',
+  'm4a': 'audio/mp4'
+};
 
 export function registerRoutes(app: Express) {
   // Serve audio files with proper CORS and caching headers
@@ -12,42 +19,46 @@ export function registerRoutes(app: Express) {
     try {
       const { filename } = req.params;
       if (!filename) {
+        console.error('No filename provided');
         return res.status(400).json({ error: "No filename provided" });
+      }
+
+      const extension = filename.split('.').pop()?.toLowerCase();
+      if (!extension || !MIME_TYPES[extension as keyof typeof MIME_TYPES]) {
+        console.error('Invalid file extension:', extension);
+        return res.status(400).json({ error: "Invalid audio file format" });
       }
 
       const filePath = getAudioFilePath(filename);
       if (!audioFileExists(filename)) {
+        console.error('Audio file not found:', filename);
         return res.status(404).json({ error: "Audio file not found" });
       }
 
-      // Set proper MIME type and CORS headers
-      res.setHeader('Content-Type', 'audio/mpeg');
+      // Set correct content type and headers
+      res.setHeader('Content-Type', MIME_TYPES[extension as keyof typeof MIME_TYPES]);
       res.setHeader('Accept-Ranges', 'bytes');
       res.setHeader('Access-Control-Allow-Origin', '*');
       res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
       res.setHeader('Access-Control-Allow-Headers', 'Range');
 
-      // Handle range requests for audio seeking
-      const range = req.headers.range;
-      if (range) {
-        const stats = fs.statSync(filePath);
-        const parts = range.replace(/bytes=/, "").split("-");
-        const start = parseInt(parts[0], 10);
-        const end = parts[1] ? parseInt(parts[1], 10) : stats.size - 1;
-        const chunksize = (end - start) + 1;
-        
-        res.status(206);
-        res.setHeader('Content-Range', `bytes ${start}-${end}/${stats.size}`);
-        res.setHeader('Content-Length', chunksize);
-        
-        const stream = fs.createReadStream(filePath, { start, end });
-        stream.pipe(res);
-      } else {
-        res.sendFile(filePath);
-      }
+      // Stream the file
+      const stream = fs.createReadStream(filePath);
+      stream.pipe(res);
+
+      // Handle streaming errors
+      stream.on('error', (error) => {
+        console.error('Error streaming audio file:', error);
+        if (!res.headersSent) {
+          res.status(500).json({ error: "Failed to stream audio file" });
+        }
+      });
+
     } catch (error) {
       console.error('Error serving audio file:', error);
-      res.status(500).json({ error: "Failed to serve audio file" });
+      if (!res.headersSent) {
+        res.status(500).json({ error: "Failed to serve audio file" });
+      }
     }
   });
   app.post("/api/stories", async (req, res) => {
