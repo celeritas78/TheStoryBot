@@ -4,7 +4,27 @@ import { stories, storySegments, favorites, type InsertStorySegment } from "@db/
 import { generateStoryContent, generateImage, generateSpeech } from "./services/openai";
 import { eq, desc } from "drizzle-orm";
 
+import { getAudioFilePath, audioFileExists } from './services/audio-storage';
+
 export function registerRoutes(app: Express) {
+  // Serve audio files
+  app.get("/audio/:filename", (req, res) => {
+    try {
+      const { filename } = req.params;
+      
+      if (!filename || !audioFileExists(filename)) {
+        console.error('Audio file not found:', filename);
+        return res.status(404).json({ error: "Audio file not found" });
+      }
+
+      const filePath = getAudioFilePath(filename);
+      res.setHeader('Content-Type', 'audio/mpeg');
+      res.sendFile(filePath);
+    } catch (error) {
+      console.error('Error serving audio file:', error);
+      res.status(500).json({ error: "Failed to serve audio file" });
+    }
+  });
   app.post("/api/stories", async (req, res) => {
     try {
       const { childName, childAge, mainCharacter, theme } = req.body;

@@ -11,6 +11,8 @@ export default function AudioPlayer({ audioUrl }: AudioPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const togglePlay = () => {
@@ -36,6 +38,25 @@ export default function AudioPlayer({ audioUrl }: AudioPlayerProps) {
     }
   };
 
+  const handleError = () => {
+    setError("Failed to load audio");
+    setIsLoading(false);
+    setIsPlaying(false);
+  };
+
+  const handleLoadedData = () => {
+    setIsLoading(false);
+    setError(null);
+  };
+
+  if (error) {
+    return <div className="text-red-500 text-sm">Failed to load audio</div>;
+  }
+
+  if (isLoading) {
+    return <div className="text-gray-500 text-sm">Loading audio...</div>;
+  }
+
   return (
     <div className="flex items-center space-x-4">
       <audio
@@ -43,6 +64,8 @@ export default function AudioPlayer({ audioUrl }: AudioPlayerProps) {
         src={audioUrl}
         onTimeUpdate={handleTimeUpdate}
         onEnded={() => setIsPlaying(false)}
+        onError={handleError}
+        onLoadedData={handleLoadedData}
       />
       
       <Button

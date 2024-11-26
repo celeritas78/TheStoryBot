@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import { saveAudioFile } from './audio-storage';
 
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -130,6 +131,8 @@ export async function generateImage(sceneDescription: string): Promise<string> {
 
 export async function generateSpeech(text: string): Promise<string> {
   try {
+    console.log('Generating speech for text:', text.substring(0, 100) + '...');
+    
     const mp3 = await openai.audio.speech.create({
       model: "tts-1",
       voice: "nova",
@@ -137,19 +140,27 @@ export async function generateSpeech(text: string): Promise<string> {
     });
 
     if (!mp3) {
+      console.error('OpenAI returned empty response for speech generation');
       throw new Error("No audio data received from OpenAI");
     }
 
     const buffer = Buffer.from(await mp3.arrayBuffer());
     if (!buffer || buffer.length === 0) {
+      console.error('Received empty buffer from OpenAI speech generation');
       throw new Error("Invalid audio data received");
     }
+
+    // Save the audio file and get its URL
+    const audioUrl = await saveAudioFile(buffer);
+    console.log('Successfully saved audio file:', audioUrl);
     
-    // In a real implementation, you would save this to a file storage service
-    // For this example, we'll return a mock URL
-    return `/api/audio/${Date.now()}.mp3`;
+    return audioUrl;
   } catch (error) {
-    console.error("OpenAI Speech Generation Error:", error);
+    console.error("OpenAI Speech Generation Error:", {
+      error,
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined
+    });
     throw new Error(`Failed to generate speech: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }

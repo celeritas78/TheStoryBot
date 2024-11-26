@@ -16,7 +16,26 @@ export default function LibraryPage() {
     return (
       <div className="min-h-screen bg-gradient-to-b from-purple-50 to-purple-100 p-8">
         <div className="container mx-auto">
-          <h1 className="text-3xl font-bold mb-8">Loading...</h1>
+          <header className="flex items-center justify-between mb-8">
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 text-transparent bg-clip-text">
+              My Story Library
+            </h1>
+            <Link href="/create">
+              <Button>Create New Story</Button>
+            </Link>
+          </header>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Card key={i} className="overflow-hidden animate-pulse">
+                <div className="w-full h-48 bg-gray-200" />
+                <CardContent className="p-4">
+                  <div className="h-6 bg-gray-200 rounded w-3/4 mb-2" />
+                  <div className="h-4 bg-gray-200 rounded w-1/2 mb-4" />
+                  <div className="h-10 bg-gray-200 rounded" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
       </div>
     );

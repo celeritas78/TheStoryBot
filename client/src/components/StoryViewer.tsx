@@ -52,9 +52,9 @@ export default function StoryViewer({ story, isFavorited = false }: StoryViewerP
 
   const toggleFavorite = () => {
     if (isLiked) {
-      removeFromFavoritesMutation.mutate();
+      removeFromFavoritesMutation.mutate(story.id);
     } else {
-      addToFavoritesMutation.mutate();
+      addToFavoritesMutation.mutate(story.id);
     }
   };
 
