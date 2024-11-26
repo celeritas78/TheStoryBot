@@ -22,7 +22,7 @@ export const stories = pgTable("stories", {
 
 export const storySegments = pgTable("story_segments", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
-  storyId: integer("story_id").references(() => stories.id),
+  storyId: integer("story_id").notNull().references(() => stories.id),
   content: text("content").notNull(),
   imageUrl: text("image_url").notNull(),
   sequence: integer("sequence").notNull(),

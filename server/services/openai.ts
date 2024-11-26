@@ -23,30 +23,47 @@ export async function generateStoryContent({
   theme,
   previousContent = "",
 }: StoryGenerationParams): Promise<StoryContent> {
-  const prompt = previousContent
-    ? `Continue the following children's story about ${childName} and ${mainCharacter}, maintaining the same style and theme. Previous content: ${previousContent}`
-    : `Create a short, engaging children's story (maximum 1 minute reading time) about a child named ${childName} (age ${childAge}) and their friend ${mainCharacter}. The story should have a ${theme} theme and be appropriate for young children.`;
+  console.log('Generating story content with params:', { childName, childAge, mainCharacter, theme, hasPreviousContent: !!previousContent });
+  
+  try {
+    const prompt = previousContent
+      ? `Continue the following children's story about ${childName} and ${mainCharacter}, maintaining the same style and theme. Previous content: ${previousContent}`
+      : `Create a short, engaging children's story (maximum 1 minute reading time) about a child named ${childName} (age ${childAge}) and their friend ${mainCharacter}. The story should have a ${theme} theme and be appropriate for young children.`;
 
-  const response = await openai.chat.completions.create({
-    model: "gpt-4o",
-    messages: [
-      {
-        role: "system",
-        content: "You are a skilled children's story writer. Create engaging, age-appropriate content with clear scene descriptions for illustration.",
-      },
-      {
-        role: "user",
-        content: prompt,
-      },
-    ],
-    response_format: { type: "json_object" },
-  });
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content: "You are a skilled children's story writer. Create engaging, age-appropriate content with clear scene descriptions for illustration.",
+        },
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
+      response_format: { type: "json_object" },
+    });
 
-  const content = response.choices[0].message.content;
-  if (!content) {
-    throw new Error("No content received from OpenAI");
+    const content = response.choices[0]?.message?.content;
+    if (!content) {
+      throw new Error("No content received from OpenAI");
+    }
+
+    const parsedContent = JSON.parse(content) as StoryContent;
+    console.log('Successfully generated story content:', { 
+      textLength: parsedContent.text.length,
+      sceneDescriptionLength: parsedContent.sceneDescription.length
+    });
+    
+    return parsedContent;
+  } catch (error) {
+    console.error('Error generating story content:', error);
+    if (error instanceof Error) {
+      throw new Error(`Failed to generate story content: ${error.message}`);
+    }
+    throw new Error('Failed to generate story content');
   }
-  return JSON.parse(content);
 }
 
 export async function generateImage(sceneDescription: string) {

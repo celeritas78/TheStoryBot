@@ -13,6 +13,10 @@ export default function StoryGenerator() {
   const mutation = useMutation({
     mutationFn: generateStory,
     onSuccess: (data) => {
+      console.log('Story generated successfully:', {
+        storyId: data.id,
+        segmentsCount: data.segments.length,
+      });
       setStory(data);
       toast({
         title: "Story created!",
@@ -20,12 +24,17 @@ export default function StoryGenerator() {
       });
     },
     onError: (error: Error) => {
+      const errorMessage = error.message || "Failed to generate story. Please try again.";
+      console.error("Story generation error:", {
+        error,
+        message: errorMessage,
+        stack: error.stack,
+      });
       toast({
         title: "Error",
-        description: error.message || "Failed to generate story. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
-      console.error("Story generation error:", error);
     },
   });
 
