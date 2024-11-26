@@ -7,22 +7,55 @@ import { eq, desc } from "drizzle-orm";
 import { getAudioFilePath, audioFileExists } from './services/audio-storage';
 
 export function registerRoutes(app: Express) {
-  // Serve audio files
+  // Serve audio files with proper CORS and caching headers
   app.get("/audio/:filename", (req, res) => {
     try {
       const { filename } = req.params;
       
-      if (!filename || !audioFileExists(filename)) {
+      if (!filename) {
+        console.error('No filename provided');
+        return res.status(400).json({ error: "No filename provided" });
+      }
+
+      if (!audioFileExists(filename)) {
         console.error('Audio file not found:', filename);
         return res.status(404).json({ error: "Audio file not found" });
       }
 
       const filePath = getAudioFilePath(filename);
+
+      // Set proper headers for audio streaming
       res.setHeader('Content-Type', 'audio/mpeg');
-      res.sendFile(filePath);
+      res.setHeader('Accept-Ranges', 'bytes');
+      res.setHeader('Cache-Control', 'public, max-age=31536000');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Range, Origin, Content-Type');
+
+      // Handle range requests for audio seeking
+      const range = req.headers.range;
+      if (range) {
+        const parts = range.replace(/bytes=/, "").split("-");
+        const start = parseInt(parts[0], 10);
+        const end = parts[1] ? parseInt(parts[1], 10) : undefined;
+        
+        res.status(206);
+        res.setHeader('Content-Range', `bytes ${start}-${end || ''}`);
+      }
+
+      res.sendFile(filePath, (err) => {
+        if (err) {
+          console.error('Error serving audio file:', err);
+          if (!res.headersSent) {
+            res.status(500).json({ error: "Failed to serve audio file" });
+          }
+        }
+      });
     } catch (error) {
       console.error('Error serving audio file:', error);
-      res.status(500).json({ error: "Failed to serve audio file" });
+      if (!res.headersSent) {
+        res.status(500).json({ error: "Failed to serve audio file" });
+      }
     }
   });
   app.post("/api/stories", async (req, res) => {
