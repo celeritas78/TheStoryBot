@@ -29,17 +29,34 @@ function AudioPlayerContent({ audioUrl }: AudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
+    if (!audioUrl) return;
+    
     console.log('Audio player mounting with URL:', audioUrl);
-    console.log('Audio element state:', {
-      current: audioRef.current,
-      readyState: audioRef.current?.readyState,
-      networkState: audioRef.current?.networkState,
-    });
-    // Reset state when audio URL changes
-    setIsLoading(true);
-    setError(null);
-    setIsPlaying(false);
-    setProgress(0);
+    
+    // Create new audio element
+    const audio = new Audio(audioUrl);
+    audioRef.current = audio;
+    
+    // Add event listeners
+    audio.addEventListener('loadstart', handleLoadStart);
+    audio.addEventListener('canplay', handleCanPlay);
+    audio.addEventListener('error', handleError);
+    audio.addEventListener('timeupdate', handleTimeUpdate);
+    audio.addEventListener('ended', () => setIsPlaying(false));
+    
+    return () => {
+      // Cleanup event listeners
+      audio.removeEventListener('loadstart', handleLoadStart);
+      audio.removeEventListener('canplay', handleCanPlay);
+      audio.removeEventListener('error', handleError);
+      audio.removeEventListener('timeupdate', handleTimeUpdate);
+      audio.removeEventListener('ended', () => setIsPlaying(false));
+      
+      // Stop and cleanup audio
+      audio.pause();
+      audio.src = '';
+      audioRef.current = null;
+    };
   }, [audioUrl]);
 
   const togglePlay = () => {

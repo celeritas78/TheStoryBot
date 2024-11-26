@@ -11,56 +11,43 @@ export function registerRoutes(app: Express) {
   app.get("/audio/:filename", (req, res) => {
     try {
       const { filename } = req.params;
-      
-      console.log('Audio file request:', {
-        filename: req.params.filename,
-        headers: req.headers,
-      });
-      
       if (!filename) {
-        console.error('No filename provided');
         return res.status(400).json({ error: "No filename provided" });
       }
 
+      const filePath = getAudioFilePath(filename);
       if (!audioFileExists(filename)) {
-        console.error('Audio file not found:', filename);
         return res.status(404).json({ error: "Audio file not found" });
       }
 
-      const filePath = getAudioFilePath(filename);
-
-      // Set proper headers for audio streaming
+      // Set proper MIME type and CORS headers
       res.setHeader('Content-Type', 'audio/mpeg');
       res.setHeader('Accept-Ranges', 'bytes');
-      res.setHeader('Cache-Control', 'public, max-age=31536000');
       res.setHeader('Access-Control-Allow-Origin', '*');
       res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-      res.setHeader('Access-Control-Allow-Headers', 'Range, Origin, Content-Type');
+      res.setHeader('Access-Control-Allow-Headers', 'Range');
 
       // Handle range requests for audio seeking
       const range = req.headers.range;
       if (range) {
+        const stats = fs.statSync(filePath);
         const parts = range.replace(/bytes=/, "").split("-");
         const start = parseInt(parts[0], 10);
-        const end = parts[1] ? parseInt(parts[1], 10) : undefined;
+        const end = parts[1] ? parseInt(parts[1], 10) : stats.size - 1;
+        const chunksize = (end - start) + 1;
         
         res.status(206);
-        res.setHeader('Content-Range', `bytes ${start}-${end || ''}`);
+        res.setHeader('Content-Range', `bytes ${start}-${end}/${stats.size}`);
+        res.setHeader('Content-Length', chunksize);
+        
+        const stream = fs.createReadStream(filePath, { start, end });
+        stream.pipe(res);
+      } else {
+        res.sendFile(filePath);
       }
-
-      res.sendFile(filePath, (err) => {
-        if (err) {
-          console.error('Error serving audio file:', err);
-          if (!res.headersSent) {
-            res.status(500).json({ error: "Failed to serve audio file" });
-          }
-        }
-      });
     } catch (error) {
       console.error('Error serving audio file:', error);
-      if (!res.headersSent) {
-        res.status(500).json({ error: "Failed to serve audio file" });
-      }
+      res.status(500).json({ error: "Failed to serve audio file" });
     }
   });
   app.post("/api/stories", async (req, res) => {
