@@ -17,11 +17,18 @@ export interface StorySegment {
 
 export interface Story {
   id: number;
+  childName: string;
+  theme: string;
   segments: Array<{
     content: string;
     imageUrl: string;
     audioUrl: string;
   }>;
+  firstSegment?: {
+    imageUrl: string;
+    content: string;
+    audioUrl: string;
+  };
 }
 
 export async function generateStory(formData: StoryFormData): Promise<Story> {

@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { addToFavorites, removeFromFavorites } from "../lib/api";
 import AudioPlayer from "./AudioPlayer";
+import { Story, StorySegment } from "../lib/api";
 import {
   Carousel,
   CarouselContent,
@@ -14,7 +15,12 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 
-export default function StoryViewer({ story, isFavorited = false }) {
+interface StoryViewerProps {
+  story: Story;
+  isFavorited?: boolean;
+}
+
+export default function StoryViewer({ story, isFavorited = false }: StoryViewerProps) {
   const [currentSegment, setCurrentSegment] = useState(0);
   const [isLiked, setIsLiked] = useState(isFavorited);
   const { toast } = useToast();
@@ -57,7 +63,7 @@ export default function StoryViewer({ story, isFavorited = false }) {
       <Card className="p-6">
         <Carousel className="w-full max-w-xl mx-auto">
           <CarouselContent>
-            {story.segments.map((segment, index) => (
+            {story.segments.map((segment: StorySegment, index: number) => (
               <CarouselItem key={index}>
                 <div className="space-y-4">
                   <img

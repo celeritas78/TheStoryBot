@@ -19,23 +19,27 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { StoryFormData } from "../lib/api";
+
+interface StoryFormProps {
+  onSubmit: (data: StoryFormData) => void;
+  isLoading: boolean;
+}
 
 const formSchema = z.object({
   childName: z.string().min(2).max(50),
   childAge: z.string().transform(Number),
   mainCharacter: z.string().min(2),
-  setting: z.string().min(2),
   theme: z.string(),
 });
 
-export default function StoryForm({ onSubmit, isLoading }) {
+export default function StoryForm({ onSubmit, isLoading }: StoryFormProps) {
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
       childName: "",
       childAge: "",
       mainCharacter: "",
-      setting: "",
       theme: "adventure",
     },
   });

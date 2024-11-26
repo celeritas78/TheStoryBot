@@ -4,9 +4,10 @@ import { getFavorites } from "../lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Library } from "lucide-react";
+import type { Story } from "../lib/api";
 
 export default function LibraryPage() {
-  const { data: favorites, isLoading } = useQuery({
+  const { data: favorites, isLoading } = useQuery<Story[]>({
     queryKey: ["favorites"],
     queryFn: getFavorites,
   });
@@ -48,10 +49,10 @@ export default function LibraryPage() {
           </Card>
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {favorites?.map((story) => (
+            {favorites?.map((story: Story) => (
               <Card key={story.id} className="overflow-hidden hover:shadow-lg transition-shadow">
                 <img
-                  src={story.firstSegment.imageUrl}
+                  src={story.firstSegment?.imageUrl || story.segments[0]?.imageUrl}
                   alt={`Story about ${story.childName}`}
                   className="w-full h-48 object-cover"
                 />

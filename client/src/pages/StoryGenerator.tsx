@@ -4,7 +4,7 @@ import StoryViewer from "../components/StoryViewer";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
-import { generateStory } from "../lib/api";
+import { generateStory, type Story, type StoryFormData } from "../lib/api";
 
 import { ErrorBoundary } from "react-error-boundary";
 import { Loader2 } from "lucide-react";
@@ -58,12 +58,7 @@ export default function StoryGenerator() {
     },
   });
 
-  const handleSubmit = (formData: {
-    childName: string;
-    childAge: string;
-    mainCharacter: string;
-    theme: string;
-  }) => {
+  const handleSubmit = (formData: StoryFormData) => {
     if (!formData.childName || !formData.childAge || !formData.mainCharacter || !formData.theme) {
       toast({
         title: "Missing information",
@@ -92,22 +87,22 @@ export default function StoryGenerator() {
               </div>
             </div>
           )}
-        {!story ? (
-          <StoryForm onSubmit={handleSubmit} isLoading={mutation.isPending} />
-        ) : (
-          <div>
-            <StoryViewer story={story} />
-            <div className="mt-4 text-center">
-              <Button
-                variant="outline"
-                onClick={handleReset}
-                className="mx-2"
-              >
-                Create Another Story
-              </Button>
+          {!story ? (
+            <StoryForm onSubmit={handleSubmit} isLoading={mutation.isPending} />
+          ) : (
+            <div>
+              <StoryViewer story={story} />
+              <div className="mt-4 text-center">
+                <Button
+                  variant="outline"
+                  onClick={handleReset}
+                  className="mx-2"
+                >
+                  Create Another Story
+                </Button>
+              </div>
             </div>
-          </div>
-        )}
+          )}
         </div>
       </div>
     </ErrorBoundary>
