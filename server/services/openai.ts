@@ -31,7 +31,7 @@ export async function generateStoryContent({
       : `Create a short, engaging children's story (maximum 1 minute reading time) about a child named ${childName} (age ${childAge}) and their friend ${mainCharacter}. The story should have a ${theme} theme and be appropriate for young children.`;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-4",
       messages: [
         {
           role: "system",
@@ -45,24 +45,44 @@ export async function generateStoryContent({
       response_format: { type: "json_object" },
     });
 
-    const content = response.choices[0]?.message?.content;
-    if (!content) {
-      throw new Error("No content received from OpenAI");
+    if (!response.choices || !response.choices[0]) {
+      console.error('Invalid response structure from OpenAI:', response);
+      throw new Error("OpenAI response missing choices");
     }
 
-    const parsedContent = JSON.parse(content) as StoryContent;
+    const message = response.choices[0].message;
+    if (!message || !message.content) {
+      console.error('Invalid message structure in OpenAI response:', response.choices[0]);
+      throw new Error("OpenAI response missing message content");
+    }
+
+    let parsedContent: StoryContent;
+    try {
+      parsedContent = JSON.parse(message.content) as StoryContent;
+      
+      if (!parsedContent.text || !parsedContent.sceneDescription) {
+        console.error('Invalid story content structure:', parsedContent);
+        throw new Error("Story content missing required fields");
+      }
+    } catch (parseError) {
+      console.error('Failed to parse OpenAI response content:', message.content, parseError);
+      throw new Error("Failed to parse story content from OpenAI response");
+    }
+
     console.log('Successfully generated story content:', { 
       textLength: parsedContent.text.length,
-      sceneDescriptionLength: parsedContent.sceneDescription.length
+      sceneDescriptionLength: parsedContent.sceneDescription.length,
+      preview: parsedContent.text.substring(0, 100) + '...'
     });
     
     return parsedContent;
   } catch (error) {
-    console.error('Error generating story content:', error);
-    if (error instanceof Error) {
-      throw new Error(`Failed to generate story content: ${error.message}`);
-    }
-    throw new Error('Failed to generate story content');
+    console.error('Error in story content generation:', {
+      error,
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined
+    });
+    throw new Error(`Failed to generate story content: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 

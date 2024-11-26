@@ -14,16 +14,40 @@ export function registerRoutes(app: Express) {
         return res.status(400).json({ error: "Missing required fields" });
       }
 
-      // Generate initial story content
-      const storyContent = await generateStoryContent({
+      console.log('Starting story generation process with params:', {
         childName,
-        childAge: Number(childAge),
+        childAge,
         mainCharacter,
-        theme,
+        theme
       });
 
-      // Generate image for the story
-      console.log('Generated content:', storyContent);
+      // Validate and convert childAge
+      const parsedAge = Number(childAge);
+      if (isNaN(parsedAge)) {
+        console.error('Invalid age provided:', childAge);
+        return res.status(400).json({ error: "Invalid age format" });
+      }
+
+      // Generate initial story content
+      let storyContent;
+      try {
+        storyContent = await generateStoryContent({
+          childName,
+          childAge: parsedAge,
+          mainCharacter,
+          theme,
+        });
+        console.log('Successfully generated story content:', {
+          contentLength: storyContent.text.length,
+          sceneDescriptionLength: storyContent.sceneDescription.length
+        });
+      } catch (error) {
+        console.error('Story generation failed:', error);
+        return res.status(500).json({ 
+          error: "Failed to generate story content",
+          details: error instanceof Error ? error.message : 'Unknown error'
+        });
+      }
       let imageUrl: string;
       try {
         const generatedImageUrl = await generateImage(storyContent.sceneDescription);
@@ -52,17 +76,29 @@ export function registerRoutes(app: Express) {
       }
 
       // Save to database
-      const [story] = await db.insert(stories).values({
-        childName,
-        childAge: Number(childAge),
-        characters: JSON.stringify({ mainCharacter }),
-        theme,
-        content: storyContent.text,
-        imageUrls: JSON.stringify([imageUrl]),
-      }).returning();
+      let story;
+      try {
+        const [result] = await db.insert(stories).values({
+          childName,
+          childAge: parsedAge,
+          characters: JSON.stringify({ mainCharacter }),
+          theme,
+          content: storyContent.text,
+          imageUrls: JSON.stringify([imageUrl]),
+        }).returning();
 
-      if (!story || !story.id) {
-        throw new Error("Failed to create story");
+        if (!result || !result.id) {
+          console.error('Database insert returned invalid result:', result);
+          throw new Error("Failed to create story record");
+        }
+        story = result;
+        console.log('Successfully created story record:', { storyId: story.id });
+      } catch (error) {
+        console.error('Database operation failed:', {
+          error,
+          message: error instanceof Error ? error.message : 'Unknown error'
+        });
+        throw new Error("Failed to save story to database");
       }
 
       // Add the first story segment
