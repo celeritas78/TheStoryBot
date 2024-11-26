@@ -69,12 +69,17 @@ export function registerRoutes(app: Express) {
         return res.status(404).json({ error: "Story not found" });
       }
 
+      // Fetch existing segments
+      const segments = await db.query.storySegments.findMany({
+        where: eq(storySegments.storyId, story.id)
+      });
+
       // Generate continuation
       const continuation = await generateStoryContent({
         previousContent: story.content,
         childName: story.childName,
         childAge: story.childAge,
-        characters: story.characters,
+        mainCharacter: story.characters.mainCharacter,
         theme: story.theme,
       });
 
@@ -86,7 +91,7 @@ export function registerRoutes(app: Express) {
         storyId: story.id,
         content: continuation.text,
         imageUrl,
-        sequence: story.segments.length + 1,
+        sequence: (segments?.length ?? 0) + 1,
       });
 
       res.json({
