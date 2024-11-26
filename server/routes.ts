@@ -12,6 +12,11 @@ export function registerRoutes(app: Express) {
     try {
       const { filename } = req.params;
       
+      console.log('Audio file request:', {
+        filename: req.params.filename,
+        headers: req.headers,
+      });
+      
       if (!filename) {
         console.error('No filename provided');
         return res.status(400).json({ error: "No filename provided" });

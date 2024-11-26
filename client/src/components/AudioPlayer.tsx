@@ -29,7 +29,12 @@ function AudioPlayerContent({ audioUrl }: AudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    console.log('Audio URL changed:', audioUrl);
+    console.log('Audio player mounting with URL:', audioUrl);
+    console.log('Audio element state:', {
+      current: audioRef.current,
+      readyState: audioRef.current?.readyState,
+      networkState: audioRef.current?.networkState,
+    });
     // Reset state when audio URL changes
     setIsLoading(true);
     setError(null);
@@ -67,7 +72,12 @@ function AudioPlayerContent({ audioUrl }: AudioPlayerProps) {
   };
 
   const handleLoadStart = () => {
-    console.log('Audio loading started:', audioUrl);
+    console.log('Audio loading started:', {
+      url: audioUrl,
+      element: audioRef.current,
+      readyState: audioRef.current?.readyState,
+      networkState: audioRef.current?.networkState,
+    });
     setIsLoading(true);
     setError(null);
     setIsPlaying(false);
@@ -75,7 +85,11 @@ function AudioPlayerContent({ audioUrl }: AudioPlayerProps) {
   };
 
   const handleCanPlay = () => {
-    console.log('Audio can play:', audioUrl);
+    console.log('Audio can play:', {
+      url: audioUrl,
+      duration: audioRef.current?.duration,
+      readyState: audioRef.current?.readyState,
+    });
     setIsLoading(false);
     setError(null);
     // Auto-play when ready if it was playing before
@@ -88,11 +102,14 @@ function AudioPlayerContent({ audioUrl }: AudioPlayerProps) {
   };
 
   const handleError = (event: React.SyntheticEvent<HTMLAudioElement, Event>) => {
-    const audioElement = event.currentTarget as HTMLAudioElement;
+    const audioElement = event.currentTarget;
     console.error('Audio loading error:', {
+      url: audioUrl,
       error: audioElement.error,
-      src: audioUrl,
-      readyState: audioElement.readyState
+      code: audioElement.error?.code,
+      message: audioElement.error?.message,
+      networkState: audioElement.networkState,
+      readyState: audioElement.readyState,
     });
     setError(`Failed to load audio: ${audioElement.error?.message || 'Unknown error'}`);
     setIsLoading(false);
