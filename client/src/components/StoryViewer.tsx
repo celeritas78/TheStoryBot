@@ -7,6 +7,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { addToFavorites, removeFromFavorites } from "../lib/api";
 import AudioPlayer from "./AudioPlayer";
 import { Story, StorySegment } from "../lib/api";
+import { Link } from "wouter";
 import {
   Carousel,
   CarouselContent,

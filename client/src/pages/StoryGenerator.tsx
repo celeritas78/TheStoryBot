@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { generateStory, type Story, type StoryFormData } from "../lib/api";
+import { Link } from "wouter";
 
 import { ErrorBoundary } from "react-error-boundary";
 import { Loader2 } from "lucide-react";
