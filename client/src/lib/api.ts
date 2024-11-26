@@ -1,6 +1,26 @@
+import { z } from "zod";
+
 const API_BASE = "/api";
 
-export async function generateStory(formData) {
+export interface StoryFormData {
+  childName: string;
+  childAge: string;
+  mainCharacter: string;
+  theme: string;
+}
+
+export interface StorySegment {
+  content: string;
+  imageUrl: string;
+  audioUrl: string;
+}
+
+export interface Story {
+  id: number;
+  segments: StorySegment[];
+}
+
+export async function generateStory(formData: StoryFormData): Promise<Story> {
   const response = await fetch(`${API_BASE}/stories`, {
     method: "POST",
     headers: {
@@ -10,28 +30,21 @@ export async function generateStory(formData) {
   });
 
   if (!response.ok) {
-    throw new Error("Failed to generate story");
+    const error = await response.json();
+    console.error('API error:', error);
+    throw new Error(error.message || 'Failed to generate story');
   }
 
   return response.json();
 }
 
-export async function continueStory(storyId) {
-  const response = await fetch(`${API_BASE}/stories/${storyId}/continue`, {
-    method: "POST",
-  });
-
-  if (!response.ok) {
-    throw new Error("Failed to continue story");
-  }
-
-  return response.json();
-}
 export async function getFavorites() {
   const response = await fetch(`${API_BASE}/favorites`);
   
   if (!response.ok) {
-    throw new Error("Failed to fetch favorites");
+    const error = await response.json();
+    console.error('API error:', error);
+    throw new Error(error.message || 'Failed to fetch favorites');
   }
 
   return response.json();
@@ -43,7 +56,9 @@ export async function addToFavorites(storyId: number) {
   });
 
   if (!response.ok) {
-    throw new Error("Failed to add to favorites");
+    const error = await response.json();
+    console.error('API error:', error);
+    throw new Error(error.message || 'Failed to add to favorites');
   }
 
   return response.json();
@@ -55,6 +70,8 @@ export async function removeFromFavorites(storyId: number) {
   });
 
   if (!response.ok) {
-    throw new Error("Failed to remove from favorites");
+    const error = await response.json();
+    console.error('API error:', error);
+    throw new Error(error.message || 'Failed to remove from favorites');
   }
 }

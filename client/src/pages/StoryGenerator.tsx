@@ -9,7 +9,12 @@ import { generateStory } from "../lib/api";
 import { ErrorBoundary } from "react-error-boundary";
 import { Loader2 } from "lucide-react";
 
-function ErrorFallback({ error, resetErrorBoundary }) {
+interface ErrorFallbackProps {
+  error: Error;
+  resetErrorBoundary: () => void;
+}
+
+function ErrorFallback({ error, resetErrorBoundary }: ErrorFallbackProps) {
   return (
     <div className="min-h-screen bg-gradient-to-b from-purple-50 to-purple-100 p-4">
       <div className="container mx-auto max-w-4xl text-center">
@@ -26,12 +31,17 @@ export default function StoryGenerator() {
   const { toast } = useToast();
 
   const mutation = useMutation({
-    mutationFn: generateStory,
+    mutationFn: async (formData: {
+      childName: string;
+      childAge: string;
+      mainCharacter: string;
+      theme: string;
+    }) => {
+      console.log('Submitting form data:', formData);
+      return generateStory(formData);
+    },
     onSuccess: (data) => {
-      console.log('Story generated successfully:', {
-        storyId: data.id,
-        segmentsCount: data.segments.length,
-      });
+      console.log('Story generated successfully:', data);
       setStory(data);
       toast({
         title: "Story created!",

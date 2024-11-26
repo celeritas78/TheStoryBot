@@ -8,6 +8,7 @@ export function registerRoutes(app: Express) {
   app.post("/api/stories", async (req, res) => {
     try {
       const { childName, childAge, mainCharacter, theme } = req.body;
+      console.log('Received story generation request:', req.body);
 
       if (!childName || !childAge || !mainCharacter || !theme) {
         return res.status(400).json({ error: "Missing required fields" });
@@ -22,10 +23,28 @@ export function registerRoutes(app: Express) {
       });
 
       // Generate image for the story
-      const imageUrl = await generateImage(storyContent.sceneDescription);
+      console.log('Generated content:', storyContent);
+      let imageUrl: string;
+      try {
+        imageUrl = await generateImage(storyContent.sceneDescription);
+        console.log('Generated image URL:', imageUrl);
+      } catch (error) {
+        console.error('Failed to generate image:', error);
+        throw new Error("Failed to generate image");
+      }
 
       // Generate audio narration
-      const audioUrl = await generateSpeech(storyContent.text);
+      let audioUrl: string;
+      try {
+        audioUrl = await generateSpeech(storyContent.text);
+      } catch (error) {
+        console.error('Failed to generate audio:', error);
+        throw new Error("Failed to generate audio");
+      }
+
+      if (!imageUrl || !audioUrl) {
+        throw new Error("Failed to generate media resources");
+      }
 
       // Save to database
       const [story] = await db.insert(stories).values({
