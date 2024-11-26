@@ -35,14 +35,13 @@ export async function generateStoryContent({
       messages: [
         {
           role: "system",
-          content: "You are a skilled children's story writer. Create engaging, age-appropriate content with clear scene descriptions for illustration.",
+          content: "You are a skilled children's story writer. Create engaging, age-appropriate content. Format your response as follows:\n[Story Text]\n\nScene Description: [Description for illustration]"
         },
         {
           role: "user",
           content: prompt,
         },
       ],
-      response_format: { type: "json_object" },
     });
 
     if (!response.choices || !response.choices[0]) {
@@ -56,18 +55,11 @@ export async function generateStoryContent({
       throw new Error("OpenAI response missing message content");
     }
 
-    let parsedContent: StoryContent;
-    try {
-      parsedContent = JSON.parse(message.content) as StoryContent;
-      
-      if (!parsedContent.text || !parsedContent.sceneDescription) {
-        console.error('Invalid story content structure:', parsedContent);
-        throw new Error("Story content missing required fields");
-      }
-    } catch (parseError) {
-      console.error('Failed to parse OpenAI response content:', message.content, parseError);
-      throw new Error("Failed to parse story content from OpenAI response");
-    }
+    const content = message.content;
+    const parsedContent: StoryContent = {
+      text: content.split('Scene Description:')[0].trim(),
+      sceneDescription: content.split('Scene Description:')[1]?.trim() || ''
+    };
 
     console.log('Successfully generated story content:', { 
       textLength: parsedContent.text.length,
