@@ -1,0 +1,6 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1024" height="1024" fill="#F3E8FF"/>
+  <circle cx="512" cy="512" r="200" fill="#D8B4FE"/>
+  <path d="M412 512C412 456.772 456.772 412 512 412C567.228 412 612 456.772 612 512C612 567.228 567.228 612 512 612C456.772 612 412 567.228 412 512Z" stroke="#9333EA" stroke-width="24"/>
+  <text x="512" y="750" text-anchor="middle" font-family="Arial" font-size="48" fill="#6B21A8">Story Image Coming Soon</text>
+</svg>

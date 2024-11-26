@@ -27,10 +27,21 @@ interface StoryFormProps {
 }
 
 const formSchema = z.object({
-  childName: z.string().min(2).max(50),
-  childAge: z.string().transform(Number),
-  mainCharacter: z.string().min(2),
-  theme: z.string(),
+  childName: z.string()
+    .min(2, "Name must be at least 2 characters")
+    .max(50, "Name cannot be longer than 50 characters")
+    .regex(/^[a-zA-Z\s'-]+$/, "Name can only contain letters, spaces, hyphens and apostrophes"),
+  childAge: z.string()
+    .min(1, "Age is required")
+    .transform(Number)
+    .refine((n) => n >= 2 && n <= 12, "Age must be between 2 and 12 years"),
+  mainCharacter: z.string()
+    .min(2, "Character name must be at least 2 characters")
+    .max(100, "Character name is too long")
+    .regex(/^[a-zA-Z\s,()-]+$/, "Character name can only contain letters, spaces, commas, and basic punctuation"),
+  theme: z.string()
+    .min(1, "Please select a theme")
+    .refine((val) => ['adventure', 'fantasy', 'friendship', 'nature'].includes(val), "Invalid theme selected"),
 });
 
 export default function StoryForm({ onSubmit, isLoading }: StoryFormProps) {

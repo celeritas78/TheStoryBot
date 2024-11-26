@@ -8,10 +8,35 @@ export function registerRoutes(app: Express) {
   app.post("/api/stories", async (req, res) => {
     try {
       const { childName, childAge, mainCharacter, theme } = req.body;
-      console.log('Received story generation request:', req.body);
+      console.log('Received story generation request:', {
+        ...req.body,
+        timestamp: new Date().toISOString()
+      });
 
-      if (!childName || !childAge || !mainCharacter || !theme) {
-        return res.status(400).json({ error: "Missing required fields" });
+      // Enhanced input validation
+      if (!childName?.trim() || !childAge || !mainCharacter?.trim() || !theme?.trim()) {
+        return res.status(400).json({ 
+          error: "Missing required fields",
+          details: {
+            childName: !childName?.trim() ? "Name is required" : null,
+            childAge: !childAge ? "Age is required" : null,
+            mainCharacter: !mainCharacter?.trim() ? "Character is required" : null,
+            theme: !theme?.trim() ? "Theme is required" : null
+          }
+        });
+      }
+
+      // Additional validation
+      if (typeof childAge !== 'number' && isNaN(Number(childAge))) {
+        return res.status(400).json({ error: "Invalid age format" });
+      }
+
+      if (mainCharacter.length > 100) {
+        return res.status(400).json({ error: "Character name is too long" });
+      }
+
+      if (!['adventure', 'fantasy', 'friendship', 'nature'].includes(theme)) {
+        return res.status(400).json({ error: "Invalid theme" });
       }
 
       console.log('Starting story generation process with params:', {

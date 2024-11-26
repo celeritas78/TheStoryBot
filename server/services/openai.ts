@@ -80,22 +80,51 @@ export async function generateStoryContent({
 
 export async function generateImage(sceneDescription: string): Promise<string> {
   try {
+    // Sanitize and limit scene description
+    const sanitizedDescription = sceneDescription
+      .replace(/[^\w\s,.()'"-]/g, '') // Remove special characters except basic punctuation
+      .trim()
+      .substring(0, 500); // Limit length to 500 characters
+
+    // Enhance prompt with child-friendly context
+    const safePrompt = `Create a cheerful, child-friendly storybook illustration with the following scene: ${sanitizedDescription}. 
+      Style guidelines:
+      - Use bright, warm colors suitable for children's books
+      - Keep the imagery gentle and non-threatening
+      - Avoid any scary or adult themes
+      - Focus on cute, cartoon-style characters
+      - Include soft lighting and friendly expressions
+      - Make it suitable for ages 3-10`;
+
+    console.log('Generating image with sanitized prompt:', {
+      originalLength: sceneDescription.length,
+      sanitizedLength: sanitizedDescription.length,
+      promptPreview: safePrompt.substring(0, 100) + '...'
+    });
+
     const response = await openai.images.generate({
       model: "dall-e-3",
-      prompt: `Create a child-friendly, storybook-style illustration of: ${sceneDescription}. Use soft colors and a warm, comforting style suitable for bedtime stories.`,
+      prompt: safePrompt,
       n: 1,
       size: "1024x1024",
       quality: "standard",
+      style: "vivid",
     });
 
     if (!response.data?.[0]?.url) {
-      throw new Error("No image URL received from OpenAI");
+      console.warn('No image URL received from OpenAI, using fallback');
+      return '/assets/fallback-story-image.png';
     }
 
     return response.data[0].url;
   } catch (error) {
-    console.error("OpenAI Image Generation Error:", error);
-    throw new Error(`Failed to generate image: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    console.error("OpenAI Image Generation Error:", {
+      error,
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined
+    });
+    // Return fallback image URL instead of throwing
+    return '/assets/fallback-story-image.png';
   }
 }
 
