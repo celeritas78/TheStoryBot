@@ -2,6 +2,12 @@ import { pgTable, text, integer, jsonb, timestamp, boolean } from "drizzle-orm/p
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
 
+export const favorites = pgTable("favorites", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  storyId: integer("story_id").references(() => stories.id),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const stories = pgTable("stories", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   childName: text("child_name").notNull(),
@@ -26,6 +32,10 @@ export const storySegments = pgTable("story_segments", {
 export const insertStorySchema = createInsertSchema(stories);
 export const selectStorySchema = createSelectSchema(stories);
 export type InsertStory = z.infer<typeof insertStorySchema>;
+export const insertFavoriteSchema = createInsertSchema(favorites);
+export const selectFavoriteSchema = createSelectSchema(favorites);
+export type InsertFavorite = z.infer<typeof insertFavoriteSchema>;
+export type Favorite = z.infer<typeof selectFavoriteSchema>;
 export type Story = z.infer<typeof selectStorySchema>;
 
 export const insertStorySegmentSchema = createInsertSchema(storySegments);

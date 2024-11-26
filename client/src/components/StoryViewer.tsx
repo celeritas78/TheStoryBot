@@ -1,6 +1,10 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Heart, HeartOff } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { addToFavorites, removeFromFavorites } from "../lib/api";
 import AudioPlayer from "./AudioPlayer";
 import {
   Carousel,
@@ -10,8 +14,43 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 
-export default function StoryViewer({ story }) {
+export default function StoryViewer({ story, isFavorited = false }) {
   const [currentSegment, setCurrentSegment] = useState(0);
+  const [isLiked, setIsLiked] = useState(isFavorited);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const addToFavoritesMutation = useMutation({
+    mutationFn: () => addToFavorites(story.id),
+    onSuccess: () => {
+      setIsLiked(true);
+      queryClient.invalidateQueries({ queryKey: ["favorites"] });
+      toast({
+        title: "Added to favorites",
+        description: "Story has been added to your library",
+      });
+    },
+  });
+
+  const removeFromFavoritesMutation = useMutation({
+    mutationFn: () => removeFromFavorites(story.id),
+    onSuccess: () => {
+      setIsLiked(false);
+      queryClient.invalidateQueries({ queryKey: ["favorites"] });
+      toast({
+        title: "Removed from favorites",
+        description: "Story has been removed from your library",
+      });
+    },
+  });
+
+  const toggleFavorite = () => {
+    if (isLiked) {
+      removeFromFavoritesMutation.mutate();
+    } else {
+      addToFavoritesMutation.mutate();
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -36,6 +75,21 @@ export default function StoryViewer({ story }) {
           <CarouselPrevious />
           <CarouselNext />
         </Carousel>
+
+        <div className="mt-4 flex justify-end">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleFavorite}
+            className="hover:text-pink-500"
+          >
+            {isLiked ? (
+              <Heart className="h-6 w-6 fill-pink-500 text-pink-500" />
+            ) : (
+              <HeartOff className="h-6 w-6" />
+            )}
+          </Button>
+        </div>
 
         <div className="mt-4">
           <AudioPlayer audioUrl={story.segments[currentSegment].audioUrl} />

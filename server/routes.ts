@@ -1,8 +1,8 @@
 import type { Express } from "express";
 import { db } from "../db";
-import { stories, storySegments } from "@db/schema";
+import { stories, storySegments, favorites } from "@db/schema";
 import { generateStoryContent, generateImage, generateSpeech } from "./services/openai";
-import { eq } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 
 export function registerRoutes(app: Express) {
   app.post("/api/stories", async (req, res) => {
@@ -102,6 +102,59 @@ export function registerRoutes(app: Express) {
     } catch (error) {
       console.error("Error continuing story:", error);
       res.status(500).json({ error: "Failed to continue story" });
+    }
+  });
+  // Get all favorite stories
+  app.get("/api/favorites", async (req, res) => {
+    try {
+      const favoriteStories = await db
+        .select({
+          id: stories.id,
+          childName: stories.childName,
+          theme: stories.theme,
+          createdAt: stories.createdAt,
+          favoriteId: favorites.id,
+          firstSegment: storySegments,
+        })
+        .from(favorites)
+        .innerJoin(stories, eq(favorites.storyId, stories.id))
+        .innerJoin(storySegments, eq(stories.id, storySegments.storyId))
+        .where(eq(storySegments.sequence, 1))
+        .orderBy(desc(favorites.createdAt));
+
+      res.json(favoriteStories);
+    } catch (error) {
+      console.error("Error fetching favorites:", error);
+      res.status(500).json({ error: "Failed to fetch favorites" });
+    }
+  });
+
+  // Add story to favorites
+  app.post("/api/favorites/:storyId", async (req, res) => {
+    try {
+      const { storyId } = req.params;
+      const [favorite] = await db
+        .insert(favorites)
+        .values({ storyId: parseInt(storyId) })
+        .returning();
+      res.json(favorite);
+    } catch (error) {
+      console.error("Error adding to favorites:", error);
+      res.status(500).json({ error: "Failed to add to favorites" });
+    }
+  });
+
+  // Remove story from favorites
+  app.delete("/api/favorites/:storyId", async (req, res) => {
+    try {
+      const { storyId } = req.params;
+      await db
+        .delete(favorites)
+        .where(eq(favorites.storyId, parseInt(storyId)));
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error removing from favorites:", error);
+      res.status(500).json({ error: "Failed to remove from favorites" });
     }
   });
 }
