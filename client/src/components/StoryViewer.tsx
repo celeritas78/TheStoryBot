@@ -26,8 +26,8 @@ export default function StoryViewer({ story, isFavorited = false }: StoryViewerP
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const addToFavoritesMutation = useMutation({
-    mutationFn: (id: number) => addToFavorites(id),
+  const addToFavoritesMutation = useMutation<void, Error, number>({
+    mutationFn: addToFavorites,
     onSuccess: () => {
       setIsLiked(true);
       queryClient.invalidateQueries({ queryKey: ["favorites"] });
@@ -38,8 +38,8 @@ export default function StoryViewer({ story, isFavorited = false }: StoryViewerP
     },
   });
 
-  const removeFromFavoritesMutation = useMutation({
-    mutationFn: (id: number) => removeFromFavorites(id),
+  const removeFromFavoritesMutation = useMutation<void, Error, number>({
+    mutationFn: removeFromFavorites,
     onSuccess: () => {
       setIsLiked(false);
       queryClient.invalidateQueries({ queryKey: ["favorites"] });

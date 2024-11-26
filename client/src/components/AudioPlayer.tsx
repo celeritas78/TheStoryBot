@@ -29,6 +29,7 @@ function AudioPlayerContent({ audioUrl }: AudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
+    console.log('Audio URL changed:', audioUrl);
     // Reset state when audio URL changes
     setIsLoading(true);
     setError(null);
@@ -66,16 +67,19 @@ function AudioPlayerContent({ audioUrl }: AudioPlayerProps) {
   };
 
   const handleLoadStart = () => {
+    console.log('Audio loading started');
     setIsLoading(true);
     setError(null);
   };
 
   const handleCanPlay = () => {
+    console.log('Audio can play');
     setIsLoading(false);
     setError(null);
   };
 
-  const handleError = () => {
+  const handleError = (e: ErrorEvent) => {
+    console.error('Audio loading error:', e);
     setError("Failed to load audio");
     setIsLoading(false);
     setIsPlaying(false);

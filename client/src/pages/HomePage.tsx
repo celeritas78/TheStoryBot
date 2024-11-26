@@ -51,13 +51,22 @@ export default function HomePage() {
           </Card>
         </div>
 
-        <div className="text-center">
+        <div className="text-center space-x-4">
           <Link href="/create">
             <Button
               size="lg"
               className="bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:opacity-90 text-lg px-8 py-6"
             >
               Create a Story
+            </Button>
+          </Link>
+          <Link href="/library">
+            <Button
+              size="lg"
+              variant="outline"
+              className="border-2 border-purple-600 text-purple-600 hover:bg-purple-50 text-lg px-8 py-6"
+            >
+              View Library
             </Button>
           </Link>
         </div>
