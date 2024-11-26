@@ -44,6 +44,15 @@ function AudioPlayerContent({ audioUrl }: AudioPlayerProps) {
     audio.addEventListener('timeupdate', handleTimeUpdate);
     audio.addEventListener('ended', () => setIsPlaying(false));
     
+    const handleMetadata = () => {
+      console.log('Audio metadata loaded:', {
+        duration: audio.duration,
+        readyState: audio.readyState
+      });
+    };
+    
+    audio.addEventListener('loadedmetadata', handleMetadata);
+    
     return () => {
       // Cleanup event listeners
       audio.removeEventListener('loadstart', handleLoadStart);
@@ -51,6 +60,7 @@ function AudioPlayerContent({ audioUrl }: AudioPlayerProps) {
       audio.removeEventListener('error', handleError);
       audio.removeEventListener('timeupdate', handleTimeUpdate);
       audio.removeEventListener('ended', () => setIsPlaying(false));
+      audio.removeEventListener('loadedmetadata', handleMetadata);
       
       // Stop and cleanup audio
       audio.pause();
@@ -102,15 +112,26 @@ function AudioPlayerContent({ audioUrl }: AudioPlayerProps) {
   };
 
   const handleCanPlay = () => {
+    if (!audioRef.current) return;
+    
     console.log('Audio can play:', {
       url: audioUrl,
-      duration: audioRef.current?.duration,
-      readyState: audioRef.current?.readyState,
+      duration: audioRef.current.duration,
+      readyState: audioRef.current.readyState,
+      paused: audioRef.current.paused,
     });
+    
+    if (audioRef.current.duration === Infinity) {
+      // Some browsers initially report Infinity, wait for loadedmetadata
+      audioRef.current.currentTime = 1e101;
+      audioRef.current.currentTime = 0;
+    }
+    
     setIsLoading(false);
     setError(null);
+    
     // Auto-play when ready if it was playing before
-    if (audioRef.current && isPlaying) {
+    if (isPlaying) {
       audioRef.current.play().catch(error => {
         console.error('Auto-play failed:', error);
         setIsPlaying(false);
