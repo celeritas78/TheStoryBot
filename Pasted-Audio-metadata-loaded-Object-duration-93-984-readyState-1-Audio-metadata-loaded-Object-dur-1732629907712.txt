@@ -1,0 +1,110 @@
+Audio metadata loaded: 
+Object {duration: 93.984, readyState: 1}
+Audio metadata loaded: 
+Object {duration: 93.984, readyState: 4}
+Audio metadata loaded: 
+Object {duration: 93.984, readyState: 1}
+Audio metadata loaded: 
+Object {duration: 93.984, readyState: 4}
+Audio metadata loaded: 
+Object {duration: 93.984, readyState: 1}
+Audio metadata loaded: 
+Object {duration: 93.984, readyState: 1}
+Audio metadata loaded: 
+Object {duration: 93.984, readyState: 1}
+Audio metadata loaded: 
+Object {duration: 93.984, readyState: 1}
+Audio metadata loaded: 
+Object {duration: 93.984, readyState: 1}
+Audio metadata loaded: 
+Object {duration: 93.984, readyState: 1}
+Audio metadata loaded: 
+Object {duration: 93.984, readyState: 1}
+Audio metadata loaded: 
+Object {duration: 93.984, readyState: 1}
+Audio metadata loaded: 
+Object {duration: 93.984, readyState: 1}
+Audio metadata loaded: 
+Object {duration: 93.984, readyState: 1}
+Audio metadata loaded: 
+Object {duration: 93.984, readyState: 1}
+Audio metadata loaded: 
+Object {duration: 93.984, readyState: 1}
+Audio metadata loaded: 
+Object {duration: 93.984, readyState: 4}
+Audio metadata loaded: 
+Object {duration: 93.984, readyState: 1}
+Audio metadata loaded: 
+Object {duration: 93.984, readyState: 1}
+Audio metadata loaded: 
+Object {duration: 93.984, readyState: 4}
+Audio metadata loaded: 
+Object {duration: 93.984, readyState: 1}
+Audio metadata loaded: 
+Object {duration: 93.984, readyState: 1}
+Audio metadata loaded: 
+Object {duration: 93.984, readyState: 1}
+Audio metadata loaded: 
+Object {duration: 93.984, readyState: 1}
+Audio metadata loaded: 
+Object {duration: 93.984, readyState: 4}
+Audio metadata loaded: 
+Object {duration: 93.984, readyState: 1}
+Audio metadata loaded: 
+Object {duration: 93.984, readyState: 1}
+Audio metadata loaded: 
+Object {duration: 93.984, readyState: 1}
+Audio metadata loaded: 
+Object {duration: 93.984, readyState: 1}
+Audio metadata loaded: 
+Object {duration: 93.984, readyState: 1}
+Audio metadata loaded: 
+Object {duration: 93.984, readyState: 4}
+Audio metadata loaded: 
+Object {duration: 93.984, readyState: 1}
+Audio metadata loaded: 
+Object {duration: 93.984, readyState: 1}
+Audio metadata loaded: 
+Object {duration: 93.984, readyState: 1}
+Audio metadata loaded: 
+Object {duration: 93.984, readyState: 1}
+Audio metadata loaded: 
+Object {duration: 93.984, readyState: 1}
+Audio metadata loaded: 
+Object {duration: 93.984, readyState: 1}
+Audio metadata loaded: 
+Object {duration: 93.984, readyState: 1}
+Audio metadata loaded: 
+Object {duration: 93.984, readyState: 1}
+Audio metadata loaded: 
+Object {duration: 93.984, readyState: 1}
+Audio metadata loaded: 
+Object {duration: 93.984, readyState: 1}
+Audio metadata loaded: 
+Object {duration: 93.984, readyState: 4}
+Audio metadata loaded: 
+Object {duration: 93.984, readyState: 1}
+Audio metadata loaded: 
+Object {duration: 93.984, readyState: 1}
+Audio metadata loaded: 
+Object {duration: 93.984, readyState: 4}
+Audio metadata loaded: 
+Object {duration: 93.984, readyState: 1}
+Audio metadata loaded: 
+Object {duration: 93.984, readyState: 1}
+Audio metadata loaded: 
+Object {duration: 93.984, readyState: 4}
+Audio metadata loaded: 
+Object {duration: 93.984, readyState: 4}
+Audio metadata loaded: 
+Object {duration: 93.984, readyState: 4}
+Audio metadata loaded: 
+Object {duration: 93.984, readyState: 1}
+Audio metadata loaded: 
+Object {duration: 93.984, readyState: 1}
+Audio metadata loaded: 
+Object {duration: 93.984, readyState: 1}
+Audio metadata loaded: 
+Object {duration: 93.984, readyState: 1}
+Audio metadata loaded: 
+Object {duration: 93.984, readyState: 1}

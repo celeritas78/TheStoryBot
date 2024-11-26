@@ -53,23 +53,42 @@ function AudioPlayerContent({ audioUrl }: AudioPlayerProps) {
     const handleCanPlay = () => {
       if (!audioRef.current) return;
       
-      if (audioRef.current.duration === Infinity) {
-        audioRef.current.currentTime = 1e101;
-        audioRef.current.currentTime = 0;
-      }
+      console.log('Audio can play:', {
+        url: audioUrl,
+        duration: audioRef.current.duration,
+        readyState: audioRef.current.readyState,
+        paused: audioRef.current.paused
+      });
       
-      setIsLoading(false);
-      setError(null);
-      setProgress(0);
+      // Only update state if we haven't already
+      if (isLoading) {
+        setIsLoading(false);
+        setError(null);
+        setProgress(0);
+      }
     };
 
+    let metadataTimeout: NodeJS.Timeout;
+    
     const handleMetadata = () => {
-      if (!audioRef.current) return;
+      // Clear any existing timeout
+      if (metadataTimeout) {
+        clearTimeout(metadataTimeout);
+      }
       
-      console.log('Audio metadata loaded:', {
-        duration: audioRef.current.duration,
-        readyState: audioRef.current.readyState
-      });
+      // Debounce metadata updates
+      metadataTimeout = setTimeout(() => {
+        if (!audioRef.current) return;
+        
+        console.log('Audio metadata loaded:', {
+          duration: audioRef.current.duration,
+          readyState: audioRef.current.readyState
+        });
+        
+        if (audioRef.current.readyState >= 4) {
+          setIsLoading(false);
+        }
+      }, 100);
     };
 
     const handleTimeUpdate = () => {
@@ -108,6 +127,7 @@ function AudioPlayerContent({ audioUrl }: AudioPlayerProps) {
     
     return () => {
       clearTimeout(loadingTimeout);
+      clearTimeout(metadataTimeout);
       
       // Cleanup event listeners
       audio.removeEventListener('loadstart', handleLoadStart);
@@ -171,11 +191,11 @@ function AudioPlayerContent({ audioUrl }: AudioPlayerProps) {
     );
   }
 
-  if (isLoading) {
+  if (isLoading && (!audioRef.current || audioRef.current.readyState < 4)) {
     return (
       <div className="flex items-center justify-center p-4 text-gray-500">
         <Loader2 className="h-4 w-4 animate-spin mr-2" />
-        <span>Loading audio{audioRef.current?.readyState > 0 ? ` (${Math.round((audioRef.current?.buffered?.end(0) || 0) / (audioRef.current?.duration || 1) * 100)}%)` : '...'}</span>
+        <span>Loading audio{audioRef.current?.duration ? ` (${Math.round(audioRef.current.duration)}s)` : '...'}</span>
       </div>
     );
   }
