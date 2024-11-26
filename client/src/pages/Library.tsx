@@ -70,9 +70,30 @@ export default function LibraryPage() {
     <div className="min-h-screen bg-gradient-to-b from-purple-50 to-purple-100 p-8">
       <div className="container mx-auto">
         <header className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 text-transparent bg-clip-text">
-            My Story Library
-          </h1>
+          <div className="flex items-center gap-4">
+            <Link href="/">
+              <Button variant="ghost" className="flex items-center gap-2">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                  <polyline points="9 22 9 12 15 12 15 22" />
+                </svg>
+                Home
+              </Button>
+            </Link>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 text-transparent bg-clip-text">
+              My Story Library
+            </h1>
+          </div>
           <Link href="/create">
             <Button>Create New Story</Button>
           </Link>
@@ -105,7 +126,7 @@ export default function LibraryPage() {
                     {story.childName}'s Story
                   </h2>
                   <p className="text-gray-600 mb-4">Theme: {story.theme}</p>
-                  <Link href={`/story/${story.id}`}>
+                  <Link href="/create?id=${story.id}">
                     <Button className="w-full">Read Story</Button>
                   </Link>
                 </CardContent>

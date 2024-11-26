@@ -67,22 +67,37 @@ function AudioPlayerContent({ audioUrl }: AudioPlayerProps) {
   };
 
   const handleLoadStart = () => {
-    console.log('Audio loading started');
+    console.log('Audio loading started:', audioUrl);
     setIsLoading(true);
     setError(null);
+    setIsPlaying(false);
+    setProgress(0);
   };
 
   const handleCanPlay = () => {
-    console.log('Audio can play');
+    console.log('Audio can play:', audioUrl);
     setIsLoading(false);
     setError(null);
+    // Auto-play when ready if it was playing before
+    if (audioRef.current && isPlaying) {
+      audioRef.current.play().catch(error => {
+        console.error('Auto-play failed:', error);
+        setIsPlaying(false);
+      });
+    }
   };
 
   const handleError = (event: React.SyntheticEvent<HTMLAudioElement, Event>) => {
-    console.error('Audio loading error:', event);
-    setError("Failed to load audio");
+    const audioElement = event.currentTarget as HTMLAudioElement;
+    console.error('Audio loading error:', {
+      error: audioElement.error,
+      src: audioUrl,
+      readyState: audioElement.readyState
+    });
+    setError(`Failed to load audio: ${audioElement.error?.message || 'Unknown error'}`);
     setIsLoading(false);
     setIsPlaying(false);
+    setProgress(0);
   };
 
   if (error) {
