@@ -78,8 +78,8 @@ function AudioPlayerContent({ audioUrl }: AudioPlayerProps) {
     setError(null);
   };
 
-  const handleError = (e: ErrorEvent) => {
-    console.error('Audio loading error:', e);
+  const handleError = (event: React.SyntheticEvent<HTMLAudioElement, Event>) => {
+    console.error('Audio loading error:', event);
     setError("Failed to load audio");
     setIsLoading(false);
     setIsPlaying(false);

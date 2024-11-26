@@ -6,10 +6,35 @@ import { Button } from "@/components/ui/button";
 import { Library } from "lucide-react";
 import type { Story } from "../lib/api";
 
+import { ErrorBoundary } from "react-error-boundary";
+import { AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+
+function ErrorFallback({ error }: { error: Error }) {
+  return (
+    <Alert variant="destructive">
+      <AlertCircle className="h-4 w-4" />
+      <AlertDescription>
+        Error loading library: {error.message}
+      </AlertDescription>
+    </Alert>
+  );
+}
+
 export default function LibraryPage() {
-  const { data: favorites, isLoading } = useQuery<Story[]>({
+  const { data: favorites, isLoading, error } = useQuery<Story[]>({
     queryKey: ["favorites"],
-    queryFn: getFavorites,
+    queryFn: async () => {
+      console.log('Fetching favorites...');
+      try {
+        const data = await getFavorites();
+        console.log('Favorites fetched successfully:', data);
+        return data;
+      } catch (error) {
+        console.error('Error fetching favorites:', error);
+        throw error;
+      }
+    },
   });
 
   if (isLoading) {

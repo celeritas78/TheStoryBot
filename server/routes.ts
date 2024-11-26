@@ -262,6 +262,7 @@ export function registerRoutes(app: Express) {
   // Get all favorite stories
   app.get("/api/favorites", async (req, res) => {
     try {
+      console.log('Fetching favorites...');
       const favoriteStories = await db
         .select({
           id: stories.id,
@@ -277,6 +278,7 @@ export function registerRoutes(app: Express) {
         .where(eq(storySegments.sequence, 1))
         .orderBy(desc(favorites.createdAt));
 
+      console.log('Favorites fetched:', favoriteStories);
       res.json(favoriteStories);
     } catch (error) {
       console.error("Error fetching favorites:", error);
