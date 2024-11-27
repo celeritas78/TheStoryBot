@@ -1,0 +1,72 @@
+
+]
+09:12:17 AM [express] GET /api/favorites 304 in 1250ms :: [{"id":13,"childName":"raju","theme":"adven…
+Received story generation request: {
+  childName: 'hrishi',
+  childAge: 4,
+  mainCharacter: 'spectacle, horse, mountain trail, tiger',
+  theme: 'fantasy',
+  timestamp: '2024-11-27T09:12:33.625Z'
+}
+Starting story generation process with params: {
+  childName: 'hrishi',
+  childAge: 4,
+  mainCharacter: 'spectacle, horse, mountain trail, tiger',
+  theme: 'fantasy'
+}
+Generating story content with params: {
+  childName: 'hrishi',
+  childAge: 4,
+  mainCharacter: 'spectacle, horse, mountain trail, tiger',
+  theme: 'fantasy',
+  hasPreviousContent: false
+}
+Successfully generated story content: {
+  textLength: 1218,
+  sceneDescriptionLength: 332,
+  preview: '[Story Text]\n' +
+    '\n' +
+    'Once upon a time, in a magical world, a tiny boy named Hrishi was the best of friends ...'
+}
+Successfully generated story content: { contentLength: 1218, sceneDescriptionLength: 332 }
+Generating image with sanitized prompt: {
+  originalLength: 332,
+  sanitizedLength: 330,
+  promptPreview: 'Create a cheerful, child-friendly storybook illustration with the following scene: A small boy, Hris...'
+}
+Generated image URL: https://oaidalleapiprodscus.blob.core.windows.net/private/org-8hqUrMQvREaIO7bDZXZNpDR1/user-RcpYfzRbtZ5ra2JTLyVdShGs/img-uK1BJrToUnbTPjyYiJgARVdb.png?st=2024-11-27T08%3A13%3A06Z&se=2024-11-27T10%3A13%3A06Z&sp=r&sv=2024-08-04&sr=b&rscd=inline&rsct=image/png&skoid=d505667d-d6c1-4a0a-bac7-5c84a87759f8&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2024-11-27T00%3A32%3A37Z&ske=2024-11-28T00%3A32%3A37Z&sks=b&skv=2024-08-04&sig=T3DqAsEkPNaW/dk6vP8N7P0G43J66ybvA14N2W4Zmug%3D
+Generating speech for text: [Story Text]
+
+Once upon a time, in a magical world, a tiny boy named Hrishi was the best of friends ...
+Successfully saved audio file: /audio/3a6f0355-fe61-4f0c-80d1-212afdc30d22.mp3
+Generated audio URL: /audio/3a6f0355-fe61-4f0c-80d1-212afdc30d22.mp3
+Database operation failed: {
+  error: error: duplicate key value violates unique constraint "stories_pkey"
+      at file:///home/runner/CustomBedtimeStories/node_modules/@neondatabase/serverless/index.mjs:1345:74
+      at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+      at NeonPreparedQuery.execute (/home/runner/CustomBedtimeStories/node_modules/src/neon-serverless/session.ts:102:18)
+      at <anonymous> (/home/runner/CustomBedtimeStories/server/routes.ts:161:26) {
+    length: 186,
+    severity: 'ERROR',
+    code: '23505',
+    detail: 'Key (id)=(1) already exists.',
+    hint: undefined,
+    position: undefined,
+    internalPosition: undefined,
+    internalQuery: undefined,
+    where: undefined,
+    schema: 'public',
+    table: 'stories',
+    column: undefined,
+    dataType: undefined,
+    constraint: 'stories_pkey',
+    file: 'nbtinsert.c',
+    line: '666',
+    routine: '_bt_check_unique'
+  },
+  message: 'duplicate key value violates unique constraint "stories_pkey"'
+}
+Error generating story: Error: Failed to save story to database
+    at <anonymous> (/home/runner/CustomBedtimeStories/server/routes.ts:183:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+09:13:26 AM [express] POST /api/stories 500 in 52678ms :: {"error":"Failed to generate story"}
