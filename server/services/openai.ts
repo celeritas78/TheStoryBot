@@ -114,15 +114,10 @@ export async function generateImage(sceneDescription: string): Promise<string> {
 
     if (!response.data?.[0]?.url) {
       console.warn('No image URL received from OpenAI, using fallback');
-      return '/assets/fallback-story-image.svg';
+      return '/assets/fallback-story-image.png';
     }
 
-    // Download and convert image to base64
-    const imageResponse = await fetch(response.data[0].url);
-    const imageBuffer = await imageResponse.arrayBuffer();
-    const base64Image = Buffer.from(imageBuffer).toString('base64');
-    
-    return `data:image/png;base64,${base64Image}`;
+    return response.data[0].url;
   } catch (error) {
     console.error("OpenAI Image Generation Error:", {
       error,
@@ -130,7 +125,7 @@ export async function generateImage(sceneDescription: string): Promise<string> {
       stack: error instanceof Error ? error.stack : undefined
     });
     // Return fallback image URL instead of throwing
-    return '/assets/fallback-story-image.svg';
+    return '/assets/fallback-story-image.png';
   }
 }
 

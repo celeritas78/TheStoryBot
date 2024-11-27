@@ -49,18 +49,6 @@ export async function generateStory(formData: StoryFormData): Promise<Story> {
   return response.json();
 }
 
-export async function getAllStories() {
-  const response = await fetch(`${API_BASE}/stories`);
-  
-  if (!response.ok) {
-    const error = await response.json();
-    console.error('API error:', error);
-    throw new Error(error.message || 'Failed to fetch stories');
-  }
-
-  return response.json();
-}
-
 export async function getFavorites() {
   const response = await fetch(`${API_BASE}/favorites`);
   
