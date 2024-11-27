@@ -1,0 +1,100 @@
+
+]
+08:54:30 AM [express] GET /api/favorites 304 in 1153ms :: [{"id":13,"childName":"raju","theme":"adven…
+Error fetching story: TypeError: Cannot read properties of undefined (reading 'referencedTable')
+    at normalizeRelation (/home/runner/CustomBedtimeStories/node_modules/src/relations.ts:564:74)
+    at PgDialect.buildRelationalQueryWithoutPK (/home/runner/CustomBedtimeStories/node_modules/src/pg-core/dialect.ts:1282:32)
+    at QueryPromise._getQuery (/home/runner/CustomBedtimeStories/node_modules/src/pg-core/query-builders/query.ts:117:23)
+    at QueryPromise._toSQL (/home/runner/CustomBedtimeStories/node_modules/src/pg-core/query-builders/query.ts:134:22)
+    at <anonymous> (/home/runner/CustomBedtimeStories/node_modules/src/pg-core/query-builders/query.ts:92:39)
+    at Object.startActiveSpan (/home/runner/CustomBedtimeStories/node_modules/src/tracing.ts:27:11)
+    at QueryPromise._prepare (/home/runner/CustomBedtimeStories/node_modules/src/pg-core/query-builders/query.ts:91:17)
+    at <anonymous> (/home/runner/CustomBedtimeStories/node_modules/src/pg-core/query-builders/query.ts:154:16)
+    at Object.startActiveSpan (/home/runner/CustomBedtimeStories/node_modules/src/tracing.ts:27:11)
+    at QueryPromise.execute (/home/runner/CustomBedtimeStories/node_modules/src/pg-core/query-builders/query.ts:153:17)
+    at QueryPromise.then (/home/runner/CustomBedtimeStories/node_modules/src/query-promise.ts:31:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+08:54:40 AM [express] GET /api/stories/12 500 in 8ms :: {"error":"Failed to fetch story"}
+Error fetching story: TypeError: Cannot read properties of undefined (reading 'referencedTable')
+    at normalizeRelation (/home/runner/CustomBedtimeStories/node_modules/src/relations.ts:564:74)
+    at PgDialect.buildRelationalQueryWithoutPK (/home/runner/CustomBedtimeStories/node_modules/src/pg-core/dialect.ts:1282:32)
+    at QueryPromise._getQuery (/home/runner/CustomBedtimeStories/node_modules/src/pg-core/query-builders/query.ts:117:23)
+    at QueryPromise._toSQL (/home/runner/CustomBedtimeStories/node_modules/src/pg-core/query-builders/query.ts:134:22)
+    at <anonymous> (/home/runner/CustomBedtimeStories/node_modules/src/pg-core/query-builders/query.ts:92:39)
+    at Object.startActiveSpan (/home/runner/CustomBedtimeStories/node_modules/src/tracing.ts:27:11)
+    at QueryPromise._prepare (/home/runner/CustomBedtimeStories/node_modules/src/pg-core/query-builders/query.ts:91:17)
+    at <anonymous> (/home/runner/CustomBedtimeStories/node_modules/src/pg-core/query-builders/query.ts:154:16)
+    at Object.startActiveSpan (/home/runner/CustomBedtimeStories/node_modules/src/tracing.ts:27:11)
+    at QueryPromise.execute (/home/runner/CustomBedtimeStories/node_modules/src/pg-core/query-builders/query.ts:153:17)
+    at QueryPromise.then (/home/runner/CustomBedtimeStories/node_modules/src/query-promise.ts:31:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+08:54:44 AM [express] GET /api/stories/13 500 in 2ms :: {"error":"Failed to fetch story"}
+Error fetching story: TypeError: Cannot read properties of undefined (reading 'referencedTable')
+    at normalizeRelation (/home/runner/CustomBedtimeStories/node_modules/src/relations.ts:564:74)
+    at PgDialect.buildRelationalQueryWithoutPK (/home/runner/CustomBedtimeStories/node_modules/src/pg-core/dialect.ts:1282:32)
+    at QueryPromise._getQuery (/home/runner/CustomBedtimeStories/node_modules/src/pg-core/query-builders/query.ts:117:23)
+    at QueryPromise._toSQL (/home/runner/CustomBedtimeStories/node_modules/src/pg-core/query-builders/query.ts:134:22)
+    at <anonymous> (/home/runner/CustomBedtimeStories/node_modules/src/pg-core/query-builders/query.ts:92:39)
+    at Object.startActiveSpan (/home/runner/CustomBedtimeStories/node_modules/src/tracing.ts:27:11)
+    at QueryPromise._prepare (/home/runner/CustomBedtimeStories/node_modules/src/pg-core/query-builders/query.ts:91:17)
+    at <anonymous> (/home/runner/CustomBedtimeStories/node_modules/src/pg-core/query-builders/query.ts:154:16)
+    at Object.startActiveSpan (/home/runner/CustomBedtimeStories/node_modules/src/tracing.ts:27:11)
+    at QueryPromise.execute (/home/runner/CustomBedtimeStories/node_modules/src/pg-core/query-builders/query.ts:153:17)
+    at QueryPromise.then (/home/runner/CustomBedtimeStories/node_modules/src/query-promise.ts:31:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+08:54:55 AM [express] GET /api/stories/12 500 in 2ms :: {"error":"Failed to fetch story"}
+Received story generation request: {
+  childName: 'praj',
+  childAge: 7,
+  mainCharacter: 'bike, sandy my friend, tyre puncture, mountain',
+  theme: 'friendship',
+  timestamp: '2024-11-27T08:55:43.970Z'
+}
+Starting story generation process with params: {
+  childName: 'praj',
+  childAge: 7,
+  mainCharacter: 'bike, sandy my friend, tyre puncture, mountain',
+  theme: 'friendship'
+}
+Generating story content with params: {
+  childName: 'praj',
+  childAge: 7,
+  mainCharacter: 'bike, sandy my friend, tyre puncture, mountain',
+  theme: 'friendship',
+  hasPreviousContent: false
+}
+Successfully generated story content: {
+  textLength: 1456,
+  sceneDescriptionLength: 292,
+  preview: '[Story Text]\n' +
+    '\n' +
+    'Once upon a time, in a beautiful, friendly town lived a sweet 7-year-old boy named Pra...'
+}
+Successfully generated story content: { contentLength: 1456, sceneDescriptionLength: 292 }
+Generating image with sanitized prompt: {
+  originalLength: 292,
+  sanitizedLength: 290,
+  promptPreview: 'Create a cheerful, child-friendly storybook illustration with the following scene: Praj standing pro...'
+}
+Generated image URL: https://oaidalleapiprodscus.blob.core.windows.net/private/org-8hqUrMQvREaIO7bDZXZNpDR1/user-RcpYfzRbtZ5ra2JTLyVdShGs/img-qmL2AcqiE2IQImX1IwyfgDBr.png?st=2024-11-27T07%3A56%3A12Z&se=2024-11-27T09%3A56%3A12Z&sp=r&sv=2024-08-04&sr=b&rscd=inline&rsct=image/png&skoid=d505667d-d6c1-4a0a-bac7-5c84a87759f8&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2024-11-27T00%3A14%3A25Z&ske=2024-11-28T00%3A14%3A25Z&sks=b&skv=2024-08-04&sig=Ba20IlTKi25Cpv/9iZgnSpvxg3eQ%2Bb2x6MpcoV9GznQ%3D
+Generating speech for text: [Story Text]
+
+Once upon a time, in a beautiful, friendly town lived a sweet 7-year-old boy named Pra...
+Successfully saved audio file: /audio/a7385a9f-760c-4413-b466-51eb0964c7f6.mp3
+Generated audio URL: /audio/a7385a9f-760c-4413-b466-51eb0964c7f6.mp3
+Successfully created story record: { storyId: 14 }
+08:56:29 AM [express] POST /api/stories 200 in 45602ms :: {"id":14,"segments":[{"content":"[Story Tex…
+Error fetching story: TypeError: Cannot read properties of undefined (reading 'referencedTable')
+    at normalizeRelation (/home/runner/CustomBedtimeStories/node_modules/src/relations.ts:564:74)
+    at PgDialect.buildRelationalQueryWithoutPK (/home/runner/CustomBedtimeStories/node_modules/src/pg-core/dialect.ts:1282:32)
+    at QueryPromise._getQuery (/home/runner/CustomBedtimeStories/node_modules/src/pg-core/query-builders/query.ts:117:23)
+    at QueryPromise._toSQL (/home/runner/CustomBedtimeStories/node_modules/src/pg-core/query-builders/query.ts:134:22)
+    at <anonymous> (/home/runner/CustomBedtimeStories/node_modules/src/pg-core/query-builders/query.ts:92:39)
+    at Object.startActiveSpan (/home/runner/CustomBedtimeStories/node_modules/src/tracing.ts:27:11)
+    at QueryPromise._prepare (/home/runner/CustomBedtimeStories/node_modules/src/pg-core/query-builders/query.ts:91:17)
+    at <anonymous> (/home/runner/CustomBedtimeStories/node_modules/src/pg-core/query-builders/query.ts:154:16)
+    at Object.startActiveSpan (/home/runner/CustomBedtimeStories/node_modules/src/tracing.ts:27:11)
+    at QueryPromise.execute (/home/runner/CustomBedtimeStories/node_modules/src/pg-core/query-builders/query.ts:153:17)
+    at QueryPromise.then (/home/runner/CustomBedtimeStories/node_modules/src/query-promise.ts:31:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+08:57:30 AM [express] GET /api/stories/13 500 in 1ms :: {"error":"Failed to fetch story"}
