@@ -53,6 +53,7 @@ export const favoritesRelations = relations(favorites, ({ one }) => ({
   }),
 }));
 
+// Schemas for validation
 export const insertStorySchema = createInsertSchema(stories);
 export const selectStorySchema = createSelectSchema(stories);
 export type InsertStory = z.infer<typeof insertStorySchema>;

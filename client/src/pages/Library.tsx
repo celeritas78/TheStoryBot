@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { getFavorites } from "../lib/api";
+import { getAllStories } from "../lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Library, ImageOff } from "lucide-react";
@@ -61,16 +61,16 @@ function StoryImage({ src, alt }: StoryImageProps) {
 }
 
 export default function LibraryPage() {
-  const { data: favorites, isLoading, error } = useQuery<Story[]>({
-    queryKey: ["favorites"],
+  const { data: stories, isLoading, error } = useQuery<Story[]>({
+    queryKey: ["stories"],
     queryFn: async () => {
-      console.log('Fetching favorites...');
+      console.log('Fetching all stories...');
       try {
-        const data = await getFavorites();
-        console.log('Favorites fetched successfully:', data);
+        const data = await getAllStories();
+        console.log('Stories fetched successfully:', data);
         return data;
       } catch (error) {
-        console.error('Error fetching favorites:', error);
+        console.error('Error fetching stories:', error);
         throw error;
       }
     },
@@ -139,13 +139,13 @@ export default function LibraryPage() {
         </header>
 
         <ErrorBoundary FallbackComponent={ErrorFallback}>
-          {favorites?.length === 0 ? (
+          {stories?.length === 0 ? (
             <Card className="p-8 text-center">
               <CardContent>
                 <Library className="w-12 h-12 mx-auto mb-4 text-gray-400" />
                 <h2 className="text-xl font-semibold mb-2">No Stories Yet</h2>
                 <p className="text-gray-600 mb-4">
-                  Your favorite stories will appear here
+                  Your stories will appear here
                 </p>
                 <Link href="/create">
                   <Button>Create Your First Story</Button>

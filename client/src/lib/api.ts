@@ -49,40 +49,14 @@ export async function generateStory(formData: StoryFormData): Promise<Story> {
   return response.json();
 }
 
-export async function getFavorites() {
-  const response = await fetch(`${API_BASE}/favorites`);
+export async function getAllStories() {
+  const response = await fetch(`${API_BASE}/library`);
   
   if (!response.ok) {
     const error = await response.json();
     console.error('API error:', error);
-    throw new Error(error.message || 'Failed to fetch favorites');
+    throw new Error(error.message || 'Failed to fetch stories');
   }
 
   return response.json();
-}
-
-export async function addToFavorites(storyId: number) {
-  const response = await fetch(`${API_BASE}/favorites/${storyId}`, {
-    method: "POST",
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-    console.error('API error:', error);
-    throw new Error(error.message || 'Failed to add to favorites');
-  }
-
-  return response.json();
-}
-
-export async function removeFromFavorites(storyId: number) {
-  const response = await fetch(`${API_BASE}/favorites/${storyId}`, {
-    method: "DELETE",
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-    console.error('API error:', error);
-    throw new Error(error.message || 'Failed to remove from favorites');
-  }
 }
