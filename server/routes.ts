@@ -316,4 +316,25 @@ export function registerRoutes(app: Express) {
       res.status(500).json({ error: "Failed to remove from favorites" });
     }
   });
+
+  // Get a specific story by ID
+  app.get("/api/stories/:id", async (req, res) => {
+    try {
+      const story = await db.query.stories.findFirst({
+        where: eq(stories.id, parseInt(req.params.id)),
+        with: {
+          segments: true
+        }
+      });
+      
+      if (!story) {
+        return res.status(404).json({ error: "Story not found" });
+      }
+      
+      res.json(story);
+    } catch (error) {
+      console.error("Error fetching story:", error);
+      res.status(500).json({ error: "Failed to fetch story" });
+    }
+  });
 }
