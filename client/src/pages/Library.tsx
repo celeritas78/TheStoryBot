@@ -154,7 +154,7 @@ export default function LibraryPage() {
             </Card>
           ) : (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {favorites?.map((story: Story) => (
+              {stories?.map((story) => (
                 <Card key={story.id} className="overflow-hidden hover:shadow-lg transition-shadow">
                   <ErrorBoundary
                     FallbackComponent={() => (

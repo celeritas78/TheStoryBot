@@ -50,7 +50,7 @@ export async function generateStory(formData: StoryFormData): Promise<Story> {
 }
 
 export async function getAllStories() {
-  const response = await fetch(`${API_BASE}/library`);
+  const response = await fetch(`${API_BASE}/favorites`);
   
   if (!response.ok) {
     const error = await response.json();
