@@ -1,0 +1,182 @@
+
+> rest-express@1.0.0 db:push
+> drizzle-kit push
+
+No config path provided, using default 'drizzle.config.ts'
+Reading config file '/home/runner/CustomBedtimeStories/drizzle.config.ts'
+Using 'pg' driver for database querying
+[✓] Pulling schema from database...
+error: type "serial" does not exist
+    at /home/runner/CustomBedtimeStories/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async Object.query (/home/runner/CustomBedtimeStories/node_modules/drizzle-kit/bin.cjs:76384:26)
+    at async pgPush (/home/runner/CustomBedtimeStories/node_modules/drizzle-kit/bin.cjs:79407:13)
+    at async Object.handler (/home/runner/CustomBedtimeStories/node_modules/drizzle-kit/bin.cjs:88704:9)
+    at async run (/home/runner/CustomBedtimeStories/node_modules/drizzle-kit/bin.cjs:87030:7) {
+  length: 89,
+  severity: 'ERROR',
+  code: '42704',
+  detail: undefined,
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'parse_type.c',
+  line: '270',
+  routine: 'typenameType'
+}
+
+> rest-express@1.0.0 dev
+> tsx watch --clear-screen=false --exclude vite.config.ts.* server/index.ts
+
+10:28:18 AM [express] serving on port 5000
+
+ ERROR(TypeScript)  'audioRef.current.readyState' is possibly 'undefined'.
+ FILE  /home/runner/CustomBedtimeStories/client/src/components/AudioPlayer.tsx:148:52
+
+    146 |   }
+    147 |
+  > 148 |   if (isLoading || (!audioRef.current?.duration && audioRef.current?.readyState < 4)) {
+        |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    149 |     return (
+    150 |       <div className="flex items-center justify-center p-4 text-gray-500">
+    151 |         <Loader2 className="h-4 w-4 animate-spin mr-2" />
+
+[TypeScript] Found 1 error. Watching for file changes.
+Story generation request: {
+  childName: 'fred',
+  childAge: 4,
+  mainCharacter: 'dumbo the dog, funny my friend, my home, spiderman',
+  theme: 'adventure',
+  timestamp: '2024-11-27T10:29:17.394Z'
+}
+Starting story generation process with params: {
+  childName: 'fred',
+  childAge: 4,
+  mainCharacter: 'dumbo the dog, funny my friend, my home, spiderman',
+  theme: 'adventure'
+}
+Generating story content with params: {
+  childName: 'fred',
+  childAge: 4,
+  mainCharacter: 'dumbo the dog, funny my friend, my home, spiderman',
+  theme: 'adventure',
+  hasPreviousContent: false
+}
+Successfully generated story content: {
+  textLength: 1056,
+  sceneDescriptionLength: 305,
+  preview: '[Story Text]\n' +
+    '\n' +
+    'Once upon a time, a 4-year-old boy named Fred lived in a colourful house. He had a fun...'
+}
+Successfully generated story content: { contentLength: 1056, sceneDescriptionLength: 305 }
+Generating image with sanitized prompt: {
+  originalLength: 305,
+  sanitizedLength: 302,
+  promptPreview: 'Create a cheerful, child-friendly storybook illustration with the following scene: The illustration ...'
+}
+OpenAI Image Generation Error: {
+  error: BadRequestError: 400 Your request was rejected as a result of our safety system. Your prompt may contain text that is not allowed by our safety system.
+      at Function.generate (/home/runner/CustomBedtimeStories/node_modules/openai/src/error.ts:70:14)
+      at OpenAI.makeStatusError (/home/runner/CustomBedtimeStories/node_modules/openai/src/core.ts:435:21)
+      at OpenAI.makeRequest (/home/runner/CustomBedtimeStories/node_modules/openai/src/core.ts:499:24)
+      at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+      at generateImage (/home/runner/CustomBedtimeStories/server/services/openai.ts:106:22)
+      at <anonymous> (/home/runner/CustomBedtimeStories/server/routes.ts:137:35) {
+    status: 400,
+    headers: {
+      'access-control-allow-origin': '*',
+      'alt-svc': 'h3=":443"; ma=86400',
+      'cf-cache-status': 'DYNAMIC',
+      'cf-ray': '8e916ff3fecf4192-BOM',
+      connection: 'keep-alive',
+      'content-length': '265',
+      'content-type': 'application/json',
+      date: 'Wed, 27 Nov 2024 10:29:35 GMT',
+      'openai-organization': 'zime',
+      'openai-processing-ms': '6830',
+      'openai-version': '2020-10-01',
+      server: 'cloudflare',
+      'set-cookie': '__cf_bm=DXEZKXjoMFL5nBzoczyrBcYYLEZhL0alRZz3453L8a0-1732703375-1.0.1.1-q2oFYUWuYaw05C3KaeNLfGbXokUnsmnjqflhxj3E.KGiNzi79B6_P0__6lYw_4Q21OU_I7ypWz1CtGaEQSIEaQ; path=/; expires=Wed, 27-Nov-24 10:59:35 GMT; domain=.api.openai.com; HttpOnly; Secure; SameSite=None, _cfuvid=4GUl4Q09M7O0jjbQtYDqP.YAEo80tER9nYm_FPhZyNs-1732703375419-0.0.1.1-604800000; path=/; domain=.api.openai.com; HttpOnly; Secure; SameSite=None',
+      'strict-transport-security': 'max-age=31536000; includeSubDomains; preload',
+      'x-content-type-options': 'nosniff',
+      'x-request-id': 'req_3dc054c30d8c2da38ca853cf01a852c9'
+    },
+    request_id: 'req_3dc054c30d8c2da38ca853cf01a852c9',
+    error: {
+      code: 'content_policy_violation',
+      message: 'Your request was rejected as a result of our safety system. Your prompt may contain text that is not allowed by our safety system.',
+      param: null,
+      type: 'invalid_request_error'
+    },
+    code: 'content_policy_violation',
+    param: null,
+    type: 'invalid_request_error'
+  },
+  message: '400 Your request was rejected as a result of our safety system. Your prompt may contain text that is not allowed by our safety system.',
+  stack: 'Error: 400 Your request was rejected as a result of our safety system. Your prompt may contain text that is not allowed by our safety system.\n' +
+    '    at Function.generate (/home/runner/CustomBedtimeStories/node_modules/openai/src/error.ts:70:14)\n' +
+    '    at OpenAI.makeStatusError (/home/runner/CustomBedtimeStories/node_modules/openai/src/core.ts:435:21)\n' +
+    '    at OpenAI.makeRequest (/home/runner/CustomBedtimeStories/node_modules/openai/src/core.ts:499:24)\n' +
+    '    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n' +
+    '    at generateImage (/home/runner/CustomBedtimeStories/server/services/openai.ts:106:22)\n' +
+    '    at <anonymous> (/home/runner/CustomBedtimeStories/server/routes.ts:137:35)'
+}
+Generated image URL: /assets/fallback-story-image.png
+Generating speech for text: [Story Text]
+
+Once upon a time, a 4-year-old boy named Fred lived in a colourful house. He had a fun...
+Successfully saved audio file: /audio/3a0842ec-a5ad-4667-b8de-0b462cfbeb8a.mp3
+Generated audio URL: /audio/3a0842ec-a5ad-4667-b8de-0b462cfbeb8a.mp3
+Inserting story record: {
+  childName: 'fred',
+  childAge: 4,
+  theme: 'adventure',
+  timestamp: '2024-11-27T10:29:48.267Z'
+}
+Database operation failed: {
+  error: error: null value in column "id" of relation "stories" violates not-null constraint
+      at file:///home/runner/CustomBedtimeStories/node_modules/@neondatabase/serverless/index.mjs:1345:74
+      at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+      at NeonPreparedQuery.execute (/home/runner/CustomBedtimeStories/node_modules/src/neon-serverless/session.ts:102:18)
+      at <anonymous> (/home/runner/CustomBedtimeStories/server/routes.ts:173:24) {
+    length: 421,
+    severity: 'ERROR',
+    code: '23502',
+    detail: 'Failing row contains (null, fred, 4, "{\\"mainCharacter\\":\\"dumbo the dog, funny my friend, my home, s..., adventure, [Story Text]\n' +
+      '\n' +
+      'Once upon a time, a 4-year-old boy named Fred live..., "[\\"/assets/fallback-story-image.png\\"]", f, 2024-11-27 10:29:49.102873).',
+    hint: undefined,
+    position: undefined,
+    internalPosition: undefined,
+    internalQuery: undefined,
+    where: undefined,
+    schema: 'public',
+    table: 'stories',
+    column: 'id',
+    dataType: undefined,
+    constraint: undefined,
+    file: 'execMain.c',
+    line: '2011',
+    routine: 'ExecConstraints'
+  },
+  message: 'null value in column "id" of relation "stories" violates not-null constraint'
+}
+Story generation failed: {
+  error: Error: Failed to save story to database
+      at <anonymous> (/home/runner/CustomBedtimeStories/server/routes.ts:201:15)
+      at process.processTicksAndRejections (node:internal/process/task_queues:95:5),
+  message: 'Failed to save story to database',
+  stack: 'Error: Failed to save story to database\n' +
+    '    at <anonymous> (/home/runner/CustomBedtimeStories/server/routes.ts:201:15)\n' +
+    '    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)',
+  timestamp: '2024-11-27T10:29:49.228Z'
+}
+10:29:49 AM [express] POST /api/stories 500 in 31836ms :: {"error":"Failed to generate story","detail…
