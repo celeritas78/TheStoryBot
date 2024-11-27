@@ -61,16 +61,16 @@ function StoryImage({ src, alt }: StoryImageProps) {
 }
 
 export default function LibraryPage() {
-  const { data: favorites, isLoading, error } = useQuery<Story[]>({
-    queryKey: ["favorites"],
+  const { data: stories, isLoading, error } = useQuery<Story[]>({
+    queryKey: ["stories"],
     queryFn: async () => {
-      console.log('Fetching favorites...');
+      console.log('Fetching stories...');
       try {
-        const data = await getFavorites();
-        console.log('Favorites fetched successfully:', data);
+        const data = await getAllStories();
+        console.log('Stories fetched successfully:', data);
         return data;
       } catch (error) {
-        console.error('Error fetching favorites:', error);
+        console.error('Error fetching stories:', error);
         throw error;
       }
     },
@@ -139,7 +139,7 @@ export default function LibraryPage() {
         </header>
 
         <ErrorBoundary FallbackComponent={ErrorFallback}>
-          {favorites?.length === 0 ? (
+          {stories?.length === 0 ? (
             <Card className="p-8 text-center">
               <CardContent>
                 <Library className="w-12 h-12 mx-auto mb-4 text-gray-400" />
@@ -154,7 +154,7 @@ export default function LibraryPage() {
             </Card>
           ) : (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {favorites?.map((story: Story) => (
+              {stories?.map((story: Story) => (
                 <Card key={story.id} className="overflow-hidden hover:shadow-lg transition-shadow">
                   <ErrorBoundary
                     FallbackComponent={() => (

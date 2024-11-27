@@ -1,0 +1,88 @@
+
+]
+09:53:27 AM [express] GET /api/favorites 304 in 1244ms :: [{"id":13,"childName":"raju","theme":"adven…
+09:53:30 AM [express] GET /api/stories/13 304 in 247ms :: {"id":13,"childName":"raju","childAge":4,"c…
+Story generation request: {
+  childName: 'fred',
+  childAge: 4,
+  mainCharacter: 'spectacle, horse, mountain trail, tiger',
+  theme: 'adventure',
+  timestamp: '2024-11-27T09:53:50.461Z'
+}
+Starting story generation process with params: {
+  childName: 'fred',
+  childAge: 4,
+  mainCharacter: 'spectacle, horse, mountain trail, tiger',
+  theme: 'adventure'
+}
+Generating story content with params: {
+  childName: 'fred',
+  childAge: 4,
+  mainCharacter: 'spectacle, horse, mountain trail, tiger',
+  theme: 'adventure',
+  hasPreviousContent: false
+}
+Successfully generated story content: {
+  textLength: 1245,
+  sceneDescriptionLength: 348,
+  preview: '[Story Text]\n' +
+    '\n' +
+    'Once upon a sunny afternoon, a little boy named Fred saddled up on his favorite horse,...'
+}
+Successfully generated story content: { contentLength: 1245, sceneDescriptionLength: 348 }
+Generating image with sanitized prompt: {
+  originalLength: 348,
+  sanitizedLength: 346,
+  promptPreview: 'Create a cheerful, child-friendly storybook illustration with the following scene: The illustration ...'
+}
+Generated image URL: https://oaidalleapiprodscus.blob.core.windows.net/private/org-8hqUrMQvREaIO7bDZXZNpDR1/user-RcpYfzRbtZ5ra2JTLyVdShGs/img-ZSOi1FPkUWNwfP28qAofVVbs.png?st=2024-11-27T08%3A54%3A14Z&se=2024-11-27T10%3A54%3A14Z&sp=r&sv=2024-08-04&sr=b&rscd=inline&rsct=image/png&skoid=d505667d-d6c1-4a0a-bac7-5c84a87759f8&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2024-11-27T00%3A09%3A59Z&ske=2024-11-28T00%3A09%3A59Z&sks=b&skv=2024-08-04&sig=ADTqs9d3SeBDHyIkV/XOKKtDHU9506t0JJOlLx50ONo%3D
+Generating speech for text: [Story Text]
+
+Once upon a sunny afternoon, a little boy named Fred saddled up on his favorite horse,...
+Successfully saved audio file: /audio/e11fbbc5-3d20-4c29-be59-f538603456e0.mp3
+Generated audio URL: /audio/e11fbbc5-3d20-4c29-be59-f538603456e0.mp3
+Inserting story record: {
+  childName: 'fred',
+  childAge: 4,
+  theme: 'adventure',
+  timestamp: '2024-11-27T09:54:24.784Z'
+}
+Database operation failed: {
+  error: error: null value in column "id" of relation "stories" violates not-null constraint
+      at file:///home/runner/CustomBedtimeStories/node_modules/@neondatabase/serverless/index.mjs:1345:74
+      at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+      at NeonPreparedQuery.execute (/home/runner/CustomBedtimeStories/node_modules/src/neon-serverless/session.ts:102:18)
+      at <anonymous> (/home/runner/CustomBedtimeStories/server/routes.ts:173:24) {
+    length: 447,
+    severity: 'ERROR',
+    code: '23502',
+    detail: 'Failing row contains (null, fred, 4, "{\\"mainCharacter\\":\\"spectacle, horse, mountain trail, tiger\\"}..., adventure, [Story Text]\n' +
+      '\n' +
+      'Once upon a sunny afternoon, a little boy named Fr..., "[\\"https://oaidalleapiprodscus.blob.core.windows.net/private/or..., f, 2024-11-27 09:54:25.58552).',
+    hint: undefined,
+    position: undefined,
+    internalPosition: undefined,
+    internalQuery: undefined,
+    where: undefined,
+    schema: 'public',
+    table: 'stories',
+    column: 'id',
+    dataType: undefined,
+    constraint: undefined,
+    file: 'execMain.c',
+    line: '2011',
+    routine: 'ExecConstraints'
+  },
+  message: 'null value in column "id" of relation "stories" violates not-null constraint'
+}
+Story generation failed: {
+  error: Error: Failed to save story to database
+      at <anonymous> (/home/runner/CustomBedtimeStories/server/routes.ts:201:15)
+      at process.processTicksAndRejections (node:internal/process/task_queues:95:5),
+  message: 'Failed to save story to database',
+  stack: 'Error: Failed to save story to database\n' +
+    '    at <anonymous> (/home/runner/CustomBedtimeStories/server/routes.ts:201:15)\n' +
+    '    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)',
+  timestamp: '2024-11-27T09:54:25.714Z'
+}
+09:54:25 AM [express] POST /api/stories 500 in 35255ms :: {"error":"Failed to generate story","detail…
