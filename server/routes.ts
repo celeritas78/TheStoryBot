@@ -63,21 +63,25 @@ export function registerRoutes(app: Express) {
   app.post("/api/stories", async (req, res) => {
     try {
       const { childName, childAge, mainCharacter, theme } = req.body;
-      console.log('Received story generation request:', {
+      // Add request logging
+      console.log('Story generation request:', {
         ...req.body,
         timestamp: new Date().toISOString()
       });
 
       // Enhanced input validation
       if (!childName?.trim() || !childAge || !mainCharacter?.trim() || !theme?.trim()) {
+        const errorDetails = {
+          childName: !childName?.trim() ? "Name is required" : null,
+          childAge: !childAge ? "Age is required" : null,
+          mainCharacter: !mainCharacter?.trim() ? "Character is required" : null,
+          theme: !theme?.trim() ? "Theme is required" : null,
+          timestamp: new Date().toISOString()
+        };
+        console.error('Validation failed:', errorDetails);
         return res.status(400).json({ 
           error: "Missing required fields",
-          details: {
-            childName: !childName?.trim() ? "Name is required" : null,
-            childAge: !childAge ? "Age is required" : null,
-            mainCharacter: !mainCharacter?.trim() ? "Character is required" : null,
-            theme: !theme?.trim() ? "Theme is required" : null
-          }
+          details: errorDetails
         });
       }
 
@@ -158,7 +162,15 @@ export function registerRoutes(app: Express) {
       // Save to database
       let story;
       try {
-        const [result] = await db.insert(stories)
+        // Add database operation logging
+      console.log('Inserting story record:', {
+        childName,
+        childAge: parsedAge,
+        theme,
+        timestamp: new Date().toISOString()
+      });
+
+      const [result] = await db.insert(stories)
           .values({
             childName,
             childAge: parsedAge,
@@ -170,11 +182,17 @@ export function registerRoutes(app: Express) {
           .returning();
 
         if (!result || !result.id) {
-          console.error('Database insert returned invalid result:', result);
+          console.error('Database insert returned invalid result:', {
+            result,
+            timestamp: new Date().toISOString()
+          });
           throw new Error("Failed to create story record");
         }
         story = result;
-        console.log('Successfully created story record:', { storyId: story.id });
+        console.log('Successfully created story record:', {
+          storyId: story.id,
+          timestamp: new Date().toISOString()
+        });
       } catch (error) {
         console.error('Database operation failed:', {
           error,
@@ -194,6 +212,13 @@ export function registerRoutes(app: Express) {
 
       const [newSegment] = await db.insert(storySegments).values(segment).returning();
 
+      // After story segments insertion
+      console.log('Story segment created:', {
+        storyId: story.id,
+        segmentId: newSegment.id,
+        timestamp: new Date().toISOString()
+      });
+
       res.json({
         id: story.id,
         segments: [{
@@ -203,8 +228,17 @@ export function registerRoutes(app: Express) {
         }],
       });
     } catch (error) {
-      console.error("Error generating story:", error);
-      res.status(500).json({ error: "Failed to generate story" });
+      // Enhanced error logging
+      console.error('Story generation failed:', {
+        error,
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        timestamp: new Date().toISOString()
+      });
+      res.status(500).json({ 
+        error: "Failed to generate story",
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   });
 

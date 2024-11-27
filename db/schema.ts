@@ -1,4 +1,4 @@
-import { pgTable, text, integer, jsonb, timestamp, boolean, sql } from "drizzle-orm/pg-core";
+import { pgTable, text, integer, jsonb, timestamp, boolean } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -10,10 +10,7 @@ export const favorites = pgTable("favorites", {
 });
 
 export const stories = pgTable("stories", {
-  id: integer("id")
-    .primaryKey()
-    .notNull()
-    .generatedAlwaysAsIdentity(),
+  id: integer("id").primaryKey({ autoIncrement: true }),
   childName: text("child_name").notNull(),
   childAge: integer("child_age").notNull(),
   characters: jsonb("characters").notNull(),
@@ -25,10 +22,7 @@ export const stories = pgTable("stories", {
 });
 
 export const storySegments = pgTable("story_segments", {
-  id: integer("id")
-    .primaryKey()
-    .notNull()
-    .generatedAlwaysAsIdentity(),
+  id: integer("id").primaryKey({ autoIncrement: true }),
   storyId: integer("story_id")
     .notNull()
     .references(() => stories.id, { onDelete: 'cascade' }),
