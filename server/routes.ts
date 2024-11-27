@@ -158,14 +158,16 @@ export function registerRoutes(app: Express) {
       // Save to database
       let story;
       try {
-        const [result] = await db.insert(stories).values({
-          childName,
-          childAge: parsedAge,
-          characters: JSON.stringify({ mainCharacter }),
-          theme,
-          content: storyContent.text,
-          imageUrls: JSON.stringify([imageUrl]),
-        }).returning();
+        const [result] = await db.insert(stories)
+          .values({
+            childName,
+            childAge: parsedAge,
+            characters: JSON.stringify({ mainCharacter }),
+            theme,
+            content: storyContent.text,
+            imageUrls: JSON.stringify([imageUrl]),
+          })
+          .returning();
 
         if (!result || !result.id) {
           console.error('Database insert returned invalid result:', result);

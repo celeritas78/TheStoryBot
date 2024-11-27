@@ -10,7 +10,7 @@ export const favorites = pgTable("favorites", {
 });
 
 export const stories = pgTable("stories", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   childName: text("child_name").notNull(),
   childAge: integer("child_age").notNull(),
   characters: jsonb("characters").notNull(),
