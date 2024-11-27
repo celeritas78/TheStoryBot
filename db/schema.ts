@@ -25,7 +25,10 @@ export const stories = pgTable("stories", {
 });
 
 export const storySegments = pgTable("story_segments", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+  id: integer("id")
+    .primaryKey()
+    .notNull()
+    .generatedAlwaysAsIdentity(),
   storyId: integer("story_id")
     .notNull()
     .references(() => stories.id, { onDelete: 'cascade' }),
