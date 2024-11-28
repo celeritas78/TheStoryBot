@@ -59,7 +59,7 @@ export default function StoryForm({ onSubmit, isLoading }: StoryFormProps) {
     <Card className="w-full">
       <CardHeader>
         <CardTitle className="text-2xl text-center">
-          Create Your Story
+          Story Details
         </CardTitle>
       </CardHeader>
       <CardContent>
