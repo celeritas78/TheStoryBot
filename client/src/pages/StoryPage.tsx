@@ -75,7 +75,7 @@ export default function StoryPage() {
     return (
       <div className="min-h-screen bg-gradient-to-b from-purple-50 to-purple-100 p-4">
         <div className="container mx-auto max-w-4xl text-center">
-          <h2 className="text-2xl font-bold text-red-600 mb-4">Story not found</h2>
+          <h2 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 text-transparent bg-clip-text mb-4">Story not found</h2>
           <Link href="/library">
             <Button variant="outline">Back to Library</Button>
           </Link>

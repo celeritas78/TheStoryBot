@@ -71,7 +71,7 @@ export default function LibraryPage() {
       <div className="min-h-screen bg-gradient-to-b from-purple-50 to-purple-100 p-8">
         <div className="container mx-auto">
           <header className="flex items-center justify-between mb-8">
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 text-transparent bg-clip-text">
+            <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 text-transparent bg-clip-text">
               My Story Library
             </h1>
             <Link href="/create">
@@ -119,7 +119,7 @@ export default function LibraryPage() {
                 Home
               </Button>
             </Link>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 text-transparent bg-clip-text">
+            <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 text-transparent bg-clip-text">
               My Story Library
             </h1>
           </div>
@@ -133,7 +133,7 @@ export default function LibraryPage() {
             <Card className="p-8 text-center">
               <CardContent>
                 <Library className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                <h2 className="text-xl font-semibold mb-2">No Stories Yet</h2>
+                <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 text-transparent bg-clip-text mb-2">No Stories Yet</h2>
                 <p className="text-gray-600 mb-4">
                   Your stories will appear here
                 </p>
@@ -159,7 +159,7 @@ export default function LibraryPage() {
                     />
                   </ErrorBoundary>
                   <CardContent className="p-4">
-                    <h2 className="text-xl font-semibold mb-2">
+                    <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 text-transparent bg-clip-text mb-2">
                       {story.childName}'s Story
                     </h2>
                     <p className="text-gray-600 mb-4">Theme: {story.theme}</p>
