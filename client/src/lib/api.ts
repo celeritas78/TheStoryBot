@@ -50,7 +50,8 @@ export async function generateStory(formData: StoryFormData): Promise<Story> {
 }
 
 export async function getAllStories() {
-  const response = await fetch(`${API_BASE}/favorites`);
+  console.log('Fetching all stories...');
+  const response = await fetch(`${API_BASE}/stories`);
   
   if (!response.ok) {
     const error = await response.json();
@@ -58,5 +59,7 @@ export async function getAllStories() {
     throw new Error(error.message || 'Failed to fetch stories');
   }
 
-  return response.json();
+  const stories = await response.json();
+  console.log('Stories fetched:', stories.length);
+  return stories;
 }
