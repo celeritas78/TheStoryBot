@@ -12,9 +12,13 @@ interface StoryGenerationParams {
   previousContent?: string;
 }
 
-interface StoryContent {
+interface Scene {
   text: string;
-  sceneDescription: string;
+  description: string;
+}
+
+interface StoryContent {
+  scenes: Scene[];
 }
 
 export async function generateStoryContent({
@@ -27,16 +31,35 @@ export async function generateStoryContent({
   console.log('Generating story content with params:', { childName, childAge, mainCharacter, theme, hasPreviousContent: !!previousContent });
   
   try {
+    const systemPrompt = `You are a skilled children's story writer. Create engaging, age-appropriate content with the following structure:
+
+[STORY]
+Write the main story text here, divided into 3 scenes. Each scene should be clearly marked with [Scene 1], [Scene 2], [Scene 3].
+Include narration cues in brackets like [excited], [whisper], [pause] to guide the storytelling.
+
+[SCENE DESCRIPTIONS]
+For each scene, provide a detailed description for illustration, marked as [Scene 1 Description], [Scene 2 Description], [Scene 3 Description].
+Focus on visual elements, colors, expressions, and composition.`;
+
     const prompt = previousContent
       ? `Continue the following children's story about ${childName} and ${mainCharacter}, maintaining the same style and theme. Previous content: ${previousContent}`
-      : `Create a short, engaging children's story (maximum 1 minute reading time) about a child named ${childName} (age ${childAge}) and their friend ${mainCharacter}. The story should have a ${theme} theme and be appropriate for young children.`;
+      : `Create an engaging children's story about ${childName} (age ${childAge}) and their friend ${mainCharacter}. 
+         Theme: ${theme}
+         Requirements:
+         - Divide the story into 3 distinct scenes
+         - Include dialogue and character interactions
+         - Add emotional cues for narration
+         - Create vivid, illustration-friendly scenes
+         - Keep each scene brief but engaging
+         - Ensure age-appropriate content and vocabulary
+         - Include a clear beginning, middle, and end`;
 
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
         {
           role: "system",
-          content: "You are a skilled children's story writer. Create engaging, age-appropriate content. Format your response as follows:\n[Story Text]\n\nScene Description: [Description for illustration]"
+          content: systemPrompt
         },
         {
           role: "user",
@@ -57,9 +80,29 @@ export async function generateStoryContent({
     }
 
     const content = message.content;
+    // Parse the content into scenes
+    const scenes: Scene[] = [];
+    const storyText = content.split('[SCENE DESCRIPTIONS]')[0];
+    const descriptions = content.split('[SCENE DESCRIPTIONS]')[1];
+
+    // Extract individual scenes and their descriptions
+    for (let i = 1; i <= 3; i++) {
+      const sceneRegex = new RegExp(`\\[Scene ${i}\\]([\\s\\S]*?)(?=\\[Scene ${i + 1}\\]|$)`);
+      const descRegex = new RegExp(`\\[Scene ${i} Description\\]([\\s\\S]*?)(?=\\[Scene ${i + 1} Description\\]|$)`);
+      
+      const sceneMatch = storyText.match(sceneRegex);
+      const descMatch = descriptions?.match(descRegex);
+
+      if (sceneMatch && descMatch) {
+        scenes.push({
+          text: sceneMatch[1].trim(),
+          description: descMatch[1].trim()
+        });
+      }
+    }
+
     const parsedContent: StoryContent = {
-      text: content.split('Scene Description:')[0].trim(),
-      sceneDescription: content.split('Scene Description:')[1]?.trim() || ''
+      scenes
     };
 
     console.log('Successfully generated story content:', { 
