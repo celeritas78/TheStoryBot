@@ -63,17 +63,7 @@ function StoryImage({ src, alt }: StoryImageProps) {
 export default function LibraryPage() {
   const { data: stories, isLoading, error } = useQuery<Story[]>({
     queryKey: ["stories"],
-    queryFn: async () => {
-      console.log('Fetching all stories...');
-      try {
-        const data = await getAllStories();
-        console.log('Stories fetched successfully:', data);
-        return data;
-      } catch (error) {
-        console.error('Error fetching stories:', error);
-        throw error;
-      }
-    },
+    queryFn: getAllStories,
   });
 
   if (isLoading) {

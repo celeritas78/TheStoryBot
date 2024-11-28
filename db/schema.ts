@@ -3,12 +3,6 @@ import { relations } from "drizzle-orm";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
 
-export const favorites = pgTable("favorites", {
-  id: serial("id").primaryKey(),
-  storyId: integer("story_id").references(() => stories.id),
-  createdAt: timestamp("created_at").defaultNow(),
-});
-
 export const stories = pgTable("stories", {
   id: serial("id").primaryKey(),
   childName: text("child_name").notNull(),
@@ -36,19 +30,11 @@ export const storySegments = pgTable("story_segments", {
 // Define relations
 export const storiesRelations = relations(stories, ({ many }) => ({
   segments: many(storySegments),
-  favorites: many(favorites),
 }));
 
 export const storySegmentsRelations = relations(storySegments, ({ one }) => ({
   story: one(stories, {
     fields: [storySegments.storyId],
-    references: [stories.id],
-  }),
-}));
-
-export const favoritesRelations = relations(favorites, ({ one }) => ({
-  story: one(stories, {
-    fields: [favorites.storyId],
     references: [stories.id],
   }),
 }));
@@ -63,8 +49,3 @@ export const insertStorySegmentSchema = createInsertSchema(storySegments);
 export const selectStorySegmentSchema = createSelectSchema(storySegments);
 export type InsertStorySegment = z.infer<typeof insertStorySegmentSchema>;
 export type StorySegment = z.infer<typeof selectStorySegmentSchema>;
-
-export const insertFavoriteSchema = createInsertSchema(favorites);
-export const selectFavoriteSchema = createSelectSchema(favorites);
-export type InsertFavorite = z.infer<typeof insertFavoriteSchema>;
-export type Favorite = z.infer<typeof selectFavoriteSchema>;
