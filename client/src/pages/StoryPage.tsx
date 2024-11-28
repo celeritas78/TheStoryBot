@@ -114,7 +114,7 @@ export default function StoryPage() {
               </h1>
             </div>
           </header>
-          <StoryViewer story={story} />
+          <StoryViewer story={story} showHomeIcon={false} />
         </div>
       </div>
     </ErrorBoundary>
