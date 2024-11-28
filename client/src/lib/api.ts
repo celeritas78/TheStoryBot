@@ -46,6 +46,10 @@ export async function generateStory(formData: StoryFormData): Promise<Story> {
     throw new Error(error.message || 'Failed to generate story');
   }
 
+  // Import queryClient and invalidate stories cache
+  const { queryClient } = await import('./queryClient');
+  await queryClient.invalidateQueries({ queryKey: ['stories'] });
+
   return response.json();
 }
 
