@@ -102,7 +102,7 @@ export default function StoryGenerator() {
                 </Button>
               </Link>
               <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 text-transparent bg-clip-text">
-                Create Your Story
+                {story ? `${story.childName}'s Story` : 'Create Your Story'}
               </h1>
             </div>
           </header>
@@ -118,7 +118,7 @@ export default function StoryGenerator() {
             <StoryForm onSubmit={handleSubmit} isLoading={mutation.isPending} />
           ) : (
             <div>
-              <StoryViewer story={story} />
+              <StoryViewer story={story} showHomeIcon={false} />
               <div className="mt-4 text-center">
                 <Button
                   variant="outline"

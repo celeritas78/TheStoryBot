@@ -15,35 +15,38 @@ import {
 
 interface StoryViewerProps {
   story: Story;
+  showHomeIcon?: boolean;
 }
 
-export default function StoryViewer({ story }: StoryViewerProps) {
+export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerProps) {
   const [currentSegment, setCurrentSegment] = useState(0);
   const { toast } = useToast();
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center mb-4">
-        <Link href="/">
-          <Button variant="ghost" className="flex items-center gap-2">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-              <polyline points="9 22 9 12 15 12 15 22" />
-            </svg>
-            Home
-          </Button>
-        </Link>
-      </div>
+      {showHomeIcon && (
+        <div className="flex justify-between items-center mb-4">
+          <Link href="/">
+            <Button variant="ghost" className="flex items-center gap-2">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                <polyline points="9 22 9 12 15 12 15 22" />
+              </svg>
+              Home
+            </Button>
+          </Link>
+        </div>
+      )}
       <Card className="p-6">
         <Carousel className="w-full max-w-xl mx-auto">
           <CarouselContent>
