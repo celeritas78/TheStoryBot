@@ -15,10 +15,9 @@ import {
 
 interface StoryViewerProps {
   story: Story;
-  isFavorited?: boolean;
 }
 
-export default function StoryViewer({ story, isFavorited = false }: StoryViewerProps) {
+export default function StoryViewer({ story }: StoryViewerProps) {
   const [currentSegment, setCurrentSegment] = useState(0);
   const { toast } = useToast();
 

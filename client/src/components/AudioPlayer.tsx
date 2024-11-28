@@ -145,7 +145,7 @@ function AudioPlayerContent({ audioUrl }: AudioPlayerProps) {
     );
   }
 
-  if (isLoading || (!audioRef.current?.duration && audioRef.current?.readyState < 4)) {
+  if (isLoading || (!audioRef.current?.duration && audioRef.current?.readyState && audioRef.current.readyState < 4)) {
     return (
       <div className="flex items-center justify-center p-4 text-gray-500">
         <Loader2 className="h-4 w-4 animate-spin mr-2" />
