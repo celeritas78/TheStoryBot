@@ -88,6 +88,11 @@ export default function StoryPage() {
     <ErrorBoundary FallbackComponent={ErrorFallback}>
       <div className="min-h-screen bg-gradient-to-b from-purple-50 to-purple-100 p-4">
         <div className="container mx-auto max-w-4xl">
+          {story && (
+            <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 text-transparent bg-clip-text mb-8">
+              {story.childName}'s Story
+            </h1>
+          )}
           <StoryViewer story={story} />
         </div>
       </div>

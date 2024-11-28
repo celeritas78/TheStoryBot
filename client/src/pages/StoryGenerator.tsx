@@ -102,7 +102,7 @@ export default function StoryGenerator() {
                 </Button>
               </Link>
               <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 text-transparent bg-clip-text">
-                {story ? `${story.childName}'s Story` : 'Create Your Story'}
+                {story && story.childName ? `${story.childName}'s Story` : 'Create Your Story'}
               </h1>
             </div>
           </header>
