@@ -57,12 +57,7 @@ export default function StoryForm({ onSubmit, isLoading }: StoryFormProps) {
 
   return (
     <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="text-2xl text-center font-bold bg-gradient-to-r from-purple-600 to-pink-600 text-transparent bg-clip-text">
-          Story Details
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
+      <CardContent className="pt-6">
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
