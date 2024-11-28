@@ -1,6 +1,9 @@
 import type { Express } from "express";
 import { db } from "../db";
+import type { Express } from "express";
+import { db } from "../db";
 import { stories, storySegments, type InsertStorySegment } from "@db/schema";
+import type { Story } from "@db/schema";
 import { generateStoryContent, generateImage, generateSpeech } from "./services/openai";
 import { eq, desc } from "drizzle-orm";
 import fs from 'fs';
@@ -163,7 +166,7 @@ export function registerRoutes(app: Express) {
       }));
 
       // Save to database
-      let story;
+      let story: Story;
       try {
         console.log('Inserting story record:', {
           childName,
@@ -229,11 +232,9 @@ export function registerRoutes(app: Express) {
 
       res.json({
         id: story.id,
-        segments: [{
-          content: storyContent.text,
-          imageUrl,
-          audioUrl,
-        }],
+        childName: story.childName,
+        theme: story.theme,
+        segments: insertedSegments,
       });
     } catch (error) {
       // Enhanced error logging
@@ -280,24 +281,26 @@ export function registerRoutes(app: Express) {
         theme: story.theme,
       });
 
-      const imageUrl = await generateImage(continuation.sceneDescription);
-      const audioUrl = await generateSpeech(continuation.text);
+      // Generate media for each new scene
+      const newSegments = await Promise.all(continuation.scenes.map(async (scene, index) => {
+        const imageUrl = await generateImage(scene.description);
+        const audioUrl = await generateSpeech(scene.text);
+        
+        return {
+          storyId: story.id,
+          content: scene.text,
+          imageUrl,
+          audioUrl,
+          sequence: (segments?.length ?? 0) + index + 1,
+        };
+      }));
 
-      // Save new segment
-      const segment: InsertStorySegment = {
-        storyId: story.id,
-        content: continuation.text,
-        imageUrl,
-        audioUrl,
-        sequence: (segments?.length ?? 0) + 1,
-      };
-
-      const [newSegment] = await db.insert(storySegments).values(segment).returning();
+      const insertedSegments = await db.insert(storySegments)
+        .values(newSegments)
+        .returning();
 
       res.json({
-        content: continuation.text,
-        imageUrl,
-        audioUrl,
+        segments: insertedSegments,
       });
     } catch (error) {
       console.error("Error continuing story:", error);

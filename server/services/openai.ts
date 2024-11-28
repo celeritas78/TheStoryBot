@@ -106,9 +106,9 @@ Focus on visual elements, colors, expressions, and composition.`;
     };
 
     console.log('Successfully generated story content:', { 
-      textLength: parsedContent.text.length,
-      sceneDescriptionLength: parsedContent.sceneDescription.length,
-      preview: parsedContent.text.substring(0, 100) + '...'
+      numberOfScenes: parsedContent.scenes.length,
+      preview: parsedContent.scenes[0]?.text.substring(0, 100) + '...',
+      firstSceneDescription: parsedContent.scenes[0]?.description.substring(0, 100) + '...'
     });
     
     return parsedContent;
