@@ -80,8 +80,10 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
       <Card className="p-6">
         <Carousel 
           className="w-full max-w-xl mx-auto"
-          onSelect={(index) => setCurrentSegment(index)}
-          value={currentSegment}
+          onSelect={(e: any) => {
+            const index = parseInt(e.target?.getAttribute('data-index') || '0', 10);
+            handleSegmentChange(index);
+          }}
         >
           <CarouselContent>
             {story.segments.map((segment: StorySegment, index: number) => (
