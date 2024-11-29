@@ -249,26 +249,25 @@ export async function generateSpeech(text: string): Promise<string> {
   try {
     console.log('Generating speech for text:', text.substring(0, 100) + '...');
     
-    const audio = await openai.audio.speech.create({
+    const mp3 = await openai.audio.speech.create({
       model: "tts-1",
       voice: "nova",
       input: text,
-      response_format: "wav",  // Explicitly request WAV format
     });
 
-    if (!audio) {
+    if (!mp3) {
       console.error('OpenAI returned empty response for speech generation');
       throw new Error("No audio data received from OpenAI");
     }
 
-    const buffer = Buffer.from(await audio.arrayBuffer());
+    const buffer = Buffer.from(await mp3.arrayBuffer());
     if (!buffer || buffer.length === 0) {
       console.error('Received empty buffer from OpenAI speech generation');
       throw new Error("Invalid audio data received");
     }
 
     // Save the audio file and get its URL
-    const audioUrl = await saveAudioFile(buffer, 'wav');
+    const audioUrl = await saveAudioFile(buffer);
     console.log('Successfully saved audio file:', audioUrl);
     
     return audioUrl;

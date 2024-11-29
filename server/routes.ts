@@ -8,7 +8,9 @@ import { getAudioFilePath, audioFileExists, getMimeType, isAudioFormatSupported 
 
 // Audio MIME types configuration
 const MIME_TYPES = {
-  'wav': 'audio/wav',    // Primary format - Using WAV for best quality and compatibility
+  'mp3': 'audio/mpeg',  // Explicitly using audio/mpeg for MP3 files
+  'wav': 'audio/wav',
+  'm4a': 'audio/mp4'
 } as const;
 
 type SupportedAudioFormat = keyof typeof MIME_TYPES;

@@ -151,7 +151,7 @@ function AudioPlayerContent({ audioUrl }: AudioPlayerProps) {
         return "Audio decoding failed - file may be corrupted";
       case MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED:
         const format = audioRef.current?.currentSrc.split('.').pop()?.toLowerCase();
-        return `Audio format ${format ? `'${format}' ` : ''}not supported. The application uses WAV format for better compatibility. Please ensure your audio files are in WAV format.`;
+        return `Audio format ${format ? `'${format}' ` : ''}not supported by your browser. Please try using a different browser or contact support.`;
       default:
         return `Unknown error occurred (Code: ${error.code})`;
     }
