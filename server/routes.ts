@@ -8,10 +8,12 @@ import { getAudioFilePath, audioFileExists, getMimeType, isAudioFormatSupported 
 
 // Audio MIME types configuration
 const MIME_TYPES = {
-  'mp3': 'audio/mpeg',
+  'mp3': 'audio/mpeg',  // Explicitly using audio/mpeg for MP3 files
   'wav': 'audio/wav',
   'm4a': 'audio/mp4'
 } as const;
+
+type SupportedAudioFormat = keyof typeof MIME_TYPES;
 
 // Error response helper function
 function sendErrorResponse(res: any, statusCode: number, error: string, details?: any) {
@@ -118,11 +120,14 @@ export function registerRoutes(app: Express) {
         
         fs.createReadStream(filePath).pipe(res);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error serving audio:', error);
-      const isUnsupportedFormat = error.message?.includes('Unsupported audio format');
+      const isUnsupportedFormat = error instanceof Error && error.message?.includes('Unsupported audio format');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to serve audio file';
+      
       res.status(isUnsupportedFormat ? 415 : 500).json({ 
-        error: isUnsupportedFormat ? error.message : 'Failed to serve audio file'
+        error: isUnsupportedFormat ? errorMessage : 'Failed to serve audio file',
+        details: process.env.NODE_ENV === 'development' ? errorMessage : undefined
       });
     }
   });
