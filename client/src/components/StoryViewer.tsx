@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import AudioPlayer from "./AudioPlayer";
 import { Story, StorySegment } from "../lib/api";
 import { Link } from "wouter";
+import type { CarouselApi } from "@/components/ui/carousel";
 import {
   Carousel,
   CarouselContent,
@@ -20,12 +21,22 @@ interface StoryViewerProps {
 
 export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerProps) {
   const [currentSegment, setCurrentSegment] = useState(0);
+  const [api, setApi] = useState<CarouselApi>();
   const { toast } = useToast();
 
   // Reset currentSegment when story changes
   useEffect(() => {
     setCurrentSegment(0);
-  }, [story.id]);
+    if (api) {
+      api.scrollTo(0);
+    }
+  }, [story.id, api]);
+
+  // Sync carousel with currentSegment
+  useEffect(() => {
+    if (!api) return;
+    api.scrollTo(currentSegment);
+  }, [api, currentSegment]);
 
   const handleSegmentChange = (index: number) => {
     // Stop current audio if playing
@@ -80,14 +91,13 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
       <Card className="p-6">
         <Carousel 
           className="w-full max-w-xl mx-auto"
-          onSelect={(e: any) => {
-            const index = parseInt(e.target?.getAttribute('data-index') || '0', 10);
-            handleSegmentChange(index);
-          }}
+          setApi={setApi}
+          currentIndex={currentSegment}
+          onSelect={(index) => handleSegmentChange(index)}
         >
           <CarouselContent>
             {story.segments.map((segment: StorySegment, index: number) => (
-              <CarouselItem key={index}>
+              <CarouselItem key={index} data-index={index}>
                 <div className="space-y-4">
                   {segment.imageUrl && (
                     <img
@@ -116,26 +126,24 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
             ))}
           </CarouselContent>
           <CarouselPrevious 
+            onClick={() => handleSegmentChange(currentSegment - 1)}
             disabled={currentSegment === 0}
-            aria-disabled={currentSegment === 0}
             className={`${
               currentSegment === 0 
-                ? 'bg-gray-200 opacity-30 cursor-not-allowed pointer-events-none' 
-                : 'bg-gradient-to-r from-purple-500 to-pink-500'
-            } text-white hover:from-purple-600 hover:to-pink-600 transition-all duration-200`} 
+                ? 'bg-gray-200 text-gray-400 cursor-not-allowed opacity-50' 
+                : 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600'
+            } transition-all duration-200`}
           />
           <CarouselNext 
+            onClick={() => handleSegmentChange(currentSegment + 1)}
             disabled={currentSegment === story.segments.length - 1}
-            aria-disabled={currentSegment === story.segments.length - 1}
             className={`${
               currentSegment === story.segments.length - 1 
-                ? 'bg-gray-200 opacity-30 cursor-not-allowed pointer-events-none' 
-                : 'bg-gradient-to-r from-purple-500 to-pink-500'
-            } text-white hover:from-purple-600 hover:to-pink-600 transition-all duration-200`} 
+                ? 'bg-gray-200 text-gray-400 cursor-not-allowed opacity-50' 
+                : 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600'
+            } transition-all duration-200`}
           />
         </Carousel>
-
-        
       </Card>
     </div>
   );
