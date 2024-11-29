@@ -9,8 +9,27 @@ import { getAudioFilePath, audioFileExists } from './services/audio-storage';
 const MIME_TYPES = {
   'mp3': 'audio/mpeg',
   'wav': 'audio/wav',
-  'm4a': 'audio/mp4'
+  'm4a': 'audio/mp4',
+  'opus': 'audio/opus',
+  'aac': 'audio/aac',
+  'ogg': 'audio/ogg',
+  'webm': 'audio/webm'
 };
+
+// Helper function to detect audio format from buffer
+function detectAudioFormat(buffer: Buffer): string {
+  // Check file signature
+  if (buffer.length < 4) return 'mp3'; // Default to mp3 if buffer is too small
+
+  // Check common audio format signatures
+  if (buffer[0] === 0xFF && (buffer[1] & 0xE0) === 0xE0) return 'mp3';
+  if (buffer.toString('ascii', 0, 4) === 'RIFF') return 'wav';
+  if (buffer.toString('ascii', 0, 4) === 'OggS') return 'ogg';
+  if (buffer.toString('ascii', 4, 8) === 'ftyp') return 'm4a';
+
+  // Default to mp3 if format cannot be detected
+  return 'mp3';
+}
 
 // Error response helper function
 function sendErrorResponse(res: any, statusCode: number, error: string, details?: any) {
@@ -53,11 +72,28 @@ export function registerRoutes(app: Express) {
       const filePath = getAudioFilePath(filename);
       
       if (!audioFileExists(filename)) {
-        return res.status(404).json({ error: "Audio file not found" });
+        console.error('Audio file not found:', filename);
+        return res.status(404).json({ 
+          error: "Audio file not found",
+          details: { filename },
+          timestamp: new Date().toISOString()
+        });
       }
+
+      const fileBuffer = fs.readFileSync(filePath);
+      const audioFormat = detectAudioFormat(fileBuffer);
+      const contentType = MIME_TYPES[audioFormat] || 'audio/mpeg';
 
       const stat = fs.statSync(filePath);
       const range = req.headers.range;
+
+      console.log('Serving audio file:', {
+        filename,
+        format: audioFormat,
+        contentType,
+        size: stat.size,
+        hasRange: !!range
+      });
 
       // Handle range requests
       if (range) {
@@ -94,24 +130,39 @@ export function registerRoutes(app: Express) {
   });
 
   app.post("/api/stories", async (req, res) => {
+    const requestId = Date.now().toString(36) + Math.random().toString(36).substr(2);
+    console.log(`[${requestId}] Starting story generation request:`, {
+      body: req.body,
+      timestamp: new Date().toISOString(),
+      ip: req.ip,
+      userAgent: req.headers['user-agent']
+    });
+
     try {
       const { childName, childAge, mainCharacter, theme } = req.body;
-      console.log('Story generation request:', {
-        ...req.body,
-        timestamp: new Date().toISOString()
-      });
 
-      if (!childName?.trim() || !childAge || !mainCharacter?.trim() || !theme?.trim()) {
-        const errorDetails = {
-          childName: !childName?.trim() ? "Name is required" : null,
-          childAge: !childAge ? "Age is required" : null,
-          mainCharacter: !mainCharacter?.trim() ? "Character is required" : null,
-          theme: !theme?.trim() ? "Theme is required" : null,
-          timestamp: new Date().toISOString()
-        };
-        console.error('Validation failed:', errorDetails);
-        return sendErrorResponse(res, 400, "Missing required fields", errorDetails);
+      // Enhanced validation with detailed error messages
+      const validationErrors = {
+        childName: !childName?.trim() ? "Child's name is required" : null,
+        childAge: !childAge ? "Child's age is required" : 
+                 isNaN(Number(childAge)) ? "Age must be a number" : 
+                 Number(childAge) < 1 || Number(childAge) > 12 ? "Age must be between 1 and 12" : null,
+        mainCharacter: !mainCharacter?.trim() ? "Main character description is required" : null,
+        theme: !theme?.trim() ? "Story theme is required" : null
+      };
+
+      const hasErrors = Object.values(validationErrors).some(error => error !== null);
+      if (hasErrors) {
+        console.error(`[${requestId}] Validation failed:`, validationErrors);
+        return sendErrorResponse(res, 400, "Invalid story parameters", {
+          errors: validationErrors,
+          received: { childName, childAge, mainCharacter, theme },
+          timestamp: new Date().toISOString(),
+          requestId
+        });
       }
+
+      console.log(`[${requestId}] Validation passed, proceeding with story generation`);
 
       const parsedAge = Number(childAge);
       if (isNaN(parsedAge)) {

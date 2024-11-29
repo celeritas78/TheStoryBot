@@ -38,26 +38,37 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
     api.scrollTo(currentSegment);
   }, [api, currentSegment]);
 
-  // Stop audio when currentSegment changes
+  // Audio management
+  const audioRefs = useRef<{[key: number]: HTMLAudioElement}>({});
+  
+  // Register audio element
+  const registerAudioElement = (index: number, element: HTMLAudioElement | null) => {
+    if (element) {
+      audioRefs.current[index] = element;
+    } else {
+      delete audioRefs.current[index];
+    }
+  };
+
+  // Stop all audio except current
+  const stopOtherAudio = (currentIndex: number) => {
+    Object.entries(audioRefs.current).forEach(([index, audio]) => {
+      if (Number(index) !== currentIndex && !audio.paused) {
+        audio.pause();
+        audio.currentTime = 0;
+      }
+    });
+  };
+
+  // Handle segment change
   useEffect(() => {
-    const stopAllAudio = () => {
-      const audioElements = document.querySelectorAll('audio');
-      audioElements.forEach(audio => {
-        if (!audio.paused) {
-          audio.pause();
-          audio.currentTime = 0;
-        }
-      });
-    };
-    
-    stopAllAudio();
+    stopOtherAudio(currentSegment);
   }, [currentSegment]);
 
-  // Cleanup effect to stop audio when unmounting
+  // Cleanup effect
   useEffect(() => {
     return () => {
-      const audioElements = document.querySelectorAll('audio');
-      audioElements.forEach(audio => {
+      Object.values(audioRefs.current).forEach(audio => {
         if (!audio.paused) {
           audio.pause();
           audio.currentTime = 0;
@@ -137,7 +148,11 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
                   )}
                   <div className="my-4">
                     {segment.audioUrl ? (
-                      <AudioPlayer audioUrl={segment.audioUrl} />
+                      <AudioPlayer 
+                        audioUrl={segment.audioUrl} 
+                        ref={(element) => registerAudioElement(index, element)}
+                        onPlay={() => stopOtherAudio(index)}
+                      />
                     ) : (
                       <div className="text-gray-500 text-sm">Audio not available</div>
                     )}

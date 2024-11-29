@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, forwardRef, type ForwardedRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Play, Pause, Volume2, VolumeX, AlertCircle, Loader2 } from "lucide-react";
@@ -7,6 +7,13 @@ import { ErrorBoundary } from "react-error-boundary";
 
 interface AudioPlayerProps {
   audioUrl: string;
+  onPlay?: () => void;
+}
+
+interface AudioPlayerRef {
+  play: () => void;
+  pause: () => void;
+  currentTime: number;
 }
 
 function FallbackComponent({ error }: { error: Error }) {
@@ -20,7 +27,11 @@ function FallbackComponent({ error }: { error: Error }) {
   );
 }
 
-function AudioPlayerContent({ audioUrl }: AudioPlayerProps) {
+interface AudioPlayerContentProps extends AudioPlayerProps {
+  forwardedRef: ForwardedRef<HTMLAudioElement>;
+}
+
+function AudioPlayerContent({ audioUrl, onPlay, forwardedRef }: AudioPlayerContentProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -106,7 +117,9 @@ function AudioPlayerContent({ audioUrl }: AudioPlayerProps) {
     } else {
       const playPromise = audioRef.current.play();
       if (playPromise !== undefined) {
-        playPromise.catch((error) => {
+        playPromise.then(() => {
+          onPlay?.(); // Call onPlay callback when audio starts playing
+        }).catch((error) => {
           console.error("Error playing audio:", error);
           setError("Failed to play audio");
         });
@@ -192,10 +205,14 @@ function AudioPlayerContent({ audioUrl }: AudioPlayerProps) {
   );
 }
 
-export default function AudioPlayer(props: AudioPlayerProps) {
+const AudioPlayer = forwardRef<HTMLAudioElement, AudioPlayerProps>((props, ref) => {
   return (
     <ErrorBoundary FallbackComponent={FallbackComponent}>
-      <AudioPlayerContent {...props} />
+      <AudioPlayerContent {...props} forwardedRef={ref} />
     </ErrorBoundary>
   );
-}
+});
+
+AudioPlayer.displayName = 'AudioPlayer';
+
+export default AudioPlayer;
