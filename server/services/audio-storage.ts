@@ -6,10 +6,7 @@ const AUDIO_DIR = path.join(process.cwd(), 'public', 'audio');
 
 // Supported audio formats and their MIME types
 export const SUPPORTED_AUDIO_FORMATS = {
-  mp3: 'audio/mpeg',
-  wav: 'audio/wav',
-  m4a: 'audio/mp4',
-  ogg: 'audio/ogg',
+  wav: 'audio/wav',  // Using WAV as our standard format for high quality audio
 } as const;
 
 // Ensure audio directory exists
@@ -27,20 +24,34 @@ export function isAudioFormatSupported(fileName: string): boolean {
   return ext in SUPPORTED_AUDIO_FORMATS;
 }
 
-export async function saveAudioFile(audioBuffer: Buffer, format: string = 'mp3'): Promise<string> {
-  if (!format.startsWith('.')) {
-    format = `.${format}`;
-  }
+export async function saveAudioFile(audioBuffer: Buffer, format: string = 'wav'): Promise<string> {
+  // Normalize format string
+  const normalizedFormat = format.startsWith('.') ? format.slice(1) : format;
+  const fileExtension = `.${normalizedFormat}`;
   
-  if (!isAudioFormatSupported(format)) {
-    throw new Error(`Unsupported audio format: ${format}`);
+  // Validate format
+  if (!isAudioFormatSupported(fileExtension)) {
+    console.error(`Attempted to save unsupported audio format: ${format}`);
+    throw new Error(`Unsupported audio format: ${format}. Supported formats are: ${Object.keys(SUPPORTED_AUDIO_FORMATS).join(', ')}`);
   }
 
-  const fileName = `${randomUUID()}${format}`;
-  const filePath = path.join(AUDIO_DIR, fileName);
-  
-  await fs.promises.writeFile(filePath, audioBuffer);
-  return `/audio/${fileName}`;
+  try {
+    // Generate unique filename
+    const fileName = `${randomUUID()}${fileExtension}`;
+    const filePath = path.join(AUDIO_DIR, fileName);
+    
+    // Ensure directory exists
+    await fs.promises.mkdir(path.dirname(filePath), { recursive: true });
+    
+    // Write file
+    await fs.promises.writeFile(filePath, audioBuffer);
+    console.log(`Successfully saved audio file: ${fileName}`);
+    
+    return `/audio/${fileName}`;
+  } catch (error) {
+    console.error('Failed to save audio file:', error);
+    throw new Error(`Failed to save audio file: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
 }
 
 export function getAudioFilePath(fileName: string): string {
