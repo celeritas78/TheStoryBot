@@ -160,7 +160,7 @@ export default function LibraryPage() {
                   </ErrorBoundary>
                   <CardContent className="p-4">
                     <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 text-transparent bg-clip-text mb-2">
-                      {story.childName}'s Story
+                      {story.title || `${story.childName}'s Story`}
                     </h2>
                     <p className="text-gray-600 mb-4">Theme: {story.theme}</p>
                     <Link href={`/story/${story.id}`}>
