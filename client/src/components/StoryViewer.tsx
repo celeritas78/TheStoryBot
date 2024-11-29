@@ -38,20 +38,44 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
     api.scrollTo(currentSegment);
   }, [api, currentSegment]);
 
-  // Stop audio when currentSegment changes
+  // Handle audio transitions between scenes
   useEffect(() => {
     const stopAllAudio = () => {
       const audioElements = document.querySelectorAll('audio');
       audioElements.forEach(audio => {
         if (!audio.paused) {
-          audio.pause();
-          audio.currentTime = 0;
+          // Fade out audio before stopping
+          const fadeOut = setInterval(() => {
+            if (audio.volume > 0.1) {
+              audio.volume = Math.max(0, audio.volume - 0.1);
+            } else {
+              audio.pause();
+              audio.currentTime = 0;
+              audio.volume = 1;
+              clearInterval(fadeOut);
+            }
+          }, 50);
         }
       });
     };
     
+    // Stop current audio when changing segments
     stopAllAudio();
-  }, [currentSegment]);
+
+    // Preload next segment's audio if available
+    const preloadNextAudio = () => {
+      if (story.segments && currentSegment < story.segments.length - 1) {
+        const nextSegment = story.segments[currentSegment + 1];
+        if (nextSegment?.audioUrl) {
+          const audio = new Audio();
+          audio.src = nextSegment.audioUrl;
+          audio.preload = 'auto';
+        }
+      }
+    };
+
+    preloadNextAudio();
+  }, [currentSegment, story.segments]);
 
   // Cleanup effect to stop audio when unmounting
   useEffect(() => {
@@ -105,8 +129,8 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
                 Home
               </Button>
             </Link>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 text-transparent bg-clip-text">
-              {story.title}
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 via-pink-500 to-purple-600 text-transparent bg-clip-text animate-gradient">
+              {story.title || `${story.childName}'s Adventure`}
             </h1>
           </div>
         </div>

@@ -1,0 +1,196 @@
+[TypeScript] Found 0 errors. Watching for file changes.
+Story generation request: {
+  childName: 'Reva',
+  childAge: 7,
+  mainCharacter: 'wooden toys, animals, forest',
+  theme: 'nature',
+  timestamp: '2024-11-29T09:05:17.595Z'
+}
+Generating story content with params: {
+  childName: 'Reva',
+  childAge: 7,
+  mainCharacter: 'wooden toys, animals, forest',
+  theme: 'nature',
+  hasPreviousContent: false
+}
+Sending request to OpenAI with prompt: {
+  systemPrompt: "You are a skilled children's story writer. Create engaging, age-appropriate content with the followi...",
+  userPrompt: "Create an engaging children's story about Reva (age 7) and their friend wooden toys, animals, forest..."
+}
+Received raw response from OpenAI: {
+  id: 'chatcmpl-AYrE6ebpGW6GU3QYnUEhOlzx1AMwI',
+  model: 'gpt-4o-mini-2024-07-18',
+  usage: {
+    prompt_tokens: 948,
+    completion_tokens: 1024,
+    total_tokens: 1972,
+    prompt_tokens_details: { cached_tokens: 0, audio_tokens: 0 },
+    completion_tokens_details: {
+      reasoning_tokens: 0,
+      audio_tokens: 0,
+      accepted_prediction_tokens: 0,
+      rejected_prediction_tokens: 0
+    }
+  },
+  choices: 1
+}
+Raw content from OpenAI: [TITLE]
+Reva and the Forest of Wonders
+
+[STORY]
+[Scene 1]
+Once upon a time, in a cozy little village, there lived a curious girl named Reva. She had sparkling blue eyes and golden hair tied in two cheerful pigtails. One sunny morning, she decided to explore the magical forest near her home with her favorite wooden toys: a clever fox named Felix, a brave elephant named Ella, and a little turtle named Toby.
+
+"Let’s have an adventure!" Reva said, her eyes shining with excitement. [excited] 
+
+The wooden friends cheered, “Hooray!” They danced around her, eager to join her quest. As they entered the forest, they were greeted by tall, whispering trees and playful sunlight dappled on the ground. 
+
+Reva exclaimed, "Look at the beautiful flowers!" She ran towards a patch of colorful blooms, her heart full of joy. 
+
+“Oh, they smell delightful!” Felix said, pretending to sniff a flower. 
+
+“Did you know that flowers can talk?” whispered Ella, her big ears perked up. 
+
+Reva giggled, “What do they say?” 
+
+“They say, ‘We bloom to cheer you up!’” Felix replied while dancing in the blooming patch. 
+
+[Scene 1 Description]
+(Sunny Forest Path): "Reva, a girl with sparkling blue eyes and golden hair in pigtails, stands excitedly on a sunlit forest path. She wears a light blue dress and her cheeks are rosy with joy. Surrounding her are her wooden toys: Felix the fox, with bright orange fur and a playful grin; Ella the elephant, with a shiny gray finish and big floppy ears; and Toby the turtle, small and green with a friendly smile. The background showcases tall, whispering trees, colorful flowers blooming at their feet, and beams of sunlight peeking through the leaves, creating a magical atmosphere."
+
+[Scene 2]
+As they continued their adventure, they stumbled upon a glimmering stream. The water sparkled like diamonds in the sunlight. 
+
+“Let’s play!” shouted Reva, skipping to the edge. She splashed her feet in the water. 
+
+“Careful, Reva!” Toby warned, looking worried with his tiny wooden shell. 
+
+“Don’t worry, Toby! I’ll be super careful!” she replied, giggling as the water splashed around her. 
+
+Ella saw a fluttering butterfly. “Look, Reva! Can you catch it?” 
+
+With a determined smile, Reva ran to catch the butterfly, but it danced above her head. “Come back, pretty butterfly!” she laughed, twirling around in delight. 
+
+“Dance with the flowers, Reva! They’ll help you!” Felix called out, wiggling his bushy tail. Reva jumped and twirled, feeling the magic of the forest all around her.
+
+[Scene 2 Description]
+(Glimmering Stream): "Reva stands at the edge of a sparkling stream, her feet splashing in the crystal-clear water. Her light blue dress sways in the breeze, and her pigtails dance along with her. Around her, Felix, Ella, and Toby cheer her on. Felix dances with his tail in the air, Ella stretches her big ears to catch the gentle breeze, and Toby looks intently at the butterflies fluttering above. The scene includes vibrant green trees, the shimmering stream full of light, and colorful butterflies gliding through the sunny air, creating a joyful and playful atmosphere."
+
+[Scene 3]
+As the sun began to set, painting the sky with pinks and oranges, Reva knew it was time to head home. 
+
+“I had the best day!” she said, her heart swelling with happiness. 
+
+“Me too! Let’s come back tomorrow!” Felix suggested, his eyes sparkling. 
+
+“I can’t wait!” Ella added. 
+
+Toby smiled shyly, “And we’ll have even more adventures!” 
+
+As they walked back, the soft glow of fireflies filled the air. Reva clapped her hands in delight. “Look! The forest is waving goodbye!”
+
+“Goodbye forest, we’ll be back!” she called, twinkling with excitement. 
+
+With laughter in the air and warm memories in their hearts, Reva and her wooden friends made their way home, dreaming of all the adventures still to come.
+
+[Scene 3 Description]
+(Sunset Glow in the Forest): "Reva joyfully walks along a path lined with fireflies as the sun sets behind tall trees, creating hues of pink and orange in the sky. She looks back at her wooden friends, Felix, Ella, and Toby, who are playfully waving goodbye to the forest. Felix does a little dance, Ella flaps her big ears eagerly, and Toby smiles with contentment. The soft golden light of the setting sun highlights the children's expressions of happiness and wonder, while the forest around them glows with magic and the promise of new adventures."
+Failed to parse story sections: {
+  hasStorySection: true,
+  hasDescriptionsSection: false,
+  content: '[TITLE]\n' +
+    'Reva and the Forest of Wonders\n' +
+    '\n' +
+    '[STORY]\n' +
+    '[Scene 1]\n' +
+    'Once upon a time, in a cozy little village, there lived a curious girl named Reva. She had sparkling blue eyes and golden hair tied in two cheerful pigtails. One sunny morning, she decided to explore the magical forest near her home with her favorite wooden toys: a clever fox named Felix, a brave elephant named Ella, and a little turtle named Toby.\n' +
+    '\n' +
+    '"Let’s have an adventure!" Reva said, her eyes shining with excitement. [excited] \n' +
+    '\n' +
+    'The wooden friends cheered, “Hooray!” They danced around her, eager to join her quest. As they entered the forest, they were greeted by tall, whispering trees and playful sunlight dappled on the ground. \n' +
+    '\n' +
+    'Reva exclaimed, "Look at the beautiful flowers!" She ran towards a patch of colorful blooms, her heart full of joy. \n' +
+    '\n' +
+    '“Oh, they smell delightful!” Felix said, pretending to sniff a flower. \n' +
+    '\n' +
+    '“Did you know that flowers can talk?” whispered Ella, her big ears perked up. \n' +
+    '\n' +
+    'Reva giggled, “What do they say?” \n' +
+    '\n' +
+    '“They say, ‘We bloom to cheer you up!’” Felix replied while dancing in the blooming patch. \n' +
+    '\n' +
+    '[Scene 1 Description]\n' +
+    '(Sunny Forest Path): "Reva, a girl with sparkling blue eyes and golden hair in pigtails, stands excitedly on a sunlit forest path. She wears a light blue dress and her cheeks are rosy with joy. Surrounding her are her wooden toys: Felix the fox, with bright orange fur and a playful grin; Ella the elephant, with a shiny gray finish and big floppy ears; and Toby the turtle, small and green with a friendly smile. The background showcases tall, whispering trees, colorful flowers blooming at their feet, and beams of sunlight peeking through the leaves, creating a magical atmosphere."\n' +
+    '\n' +
+    '[Scene 2]\n' +
+    'As they continued their adventure, they stumbled upon a glimmering stream. The water sparkled like diamonds in the sunlight. \n' +
+    '\n' +
+    '“Let’s play!” shouted Reva, skipping to the edge. She splashed her feet in the water. \n' +
+    '\n' +
+    '“Careful, Reva!” Toby warned, looking worried with his tiny wooden shell. \n' +
+    '\n' +
+    '“Don’t worry, Toby! I’ll be super careful!” she replied, giggling as the water splashed around her. \n' +
+    '\n' +
+    'Ella saw a fluttering butterfly. “Look, Reva! Can you catch it?” \n' +
+    '\n' +
+    'With a determined smile, Reva ran to catch the butterfly, but it danced above her head. “Come back, pretty butterfly!” she laughed, twirling around in delight. \n' +
+    '\n' +
+    '“Dance with the flowers, Reva! They’ll help you!” Felix called out, wiggling his bushy tail. Reva jumped and twirled, feeling the magic of the forest all around her.\n' +
+    '\n' +
+    '[Scene 2 Description]\n' +
+    '(Glimmering Stream): "Reva stands at the edge of a sparkling stream, her feet splashing in the crystal-clear water. Her light blue dress sways in the breeze, and her pigtails dance along with her. Around her, Felix, Ella, and Toby cheer her on. Felix dances with his tail in the air, Ella stretches her big ears to catch the gentle breeze, and Toby looks intently at the butterflies fluttering above. The scene includes vibrant green trees, the shimmering stream full of light, and colorful butterflies gliding through the sunny air, creating a joyful and playful atmosphere."\n' +
+    '\n' +
+    '[Scene 3]\n' +
+    'As the sun began to set, painting the sky with pinks and oranges, Reva knew it was time to head home. \n' +
+    '\n' +
+    '“I had the best day!” she said, her heart swelling with happiness. \n' +
+    '\n' +
+    '“Me too! Let’s come back tomorrow!” Felix suggested, his eyes sparkling. \n' +
+    '\n' +
+    '“I can’t wait!” Ella added. \n' +
+    '\n' +
+    'Toby smiled shyly, “And we’ll have even more adventures!” \n' +
+    '\n' +
+    'As they walked back, the soft glow of fireflies filled the air. Reva clapped her hands in delight. “Look! The forest is waving goodbye!”\n' +
+    '\n' +
+    '“Goodbye forest, we’ll be back!” she called, twinkling with excitement. \n' +
+    '\n' +
+    'With laughter in the air and warm memories in their hearts, Reva and her wooden friends made their way home, dreaming of all the adventures still to come.\n' +
+    '\n' +
+    '[Scene 3 Description]\n' +
+    `(Sunset Glow in the Forest): "Reva joyfully walks along a path lined with fireflies as the sun sets behind tall trees, creating hues of pink and orange in the sky. She looks back at her wooden friends, Felix, Ella, and Toby, who are playfully waving goodbye to the forest. Felix does a little dance, Ella flaps her big ears eagerly, and Toby smiles with contentment. The soft golden light of the setting sun highlights the children's expressions of happiness and wonder, while the forest around them glows with magic and the promise of new adventures."`
+}
+Error in story content generation: {
+  error: Error: Story generation failed: Invalid content structure
+      at generateStoryContent (/home/runner/CustomBedtimeStories/server/services/openai.ts:159:13)
+      at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+      at <anonymous> (/home/runner/CustomBedtimeStories/server/routes.ts:123:28),
+  message: 'Story generation failed: Invalid content structure',
+  stack: 'Error: Story generation failed: Invalid content structure\n' +
+    '    at generateStoryContent (/home/runner/CustomBedtimeStories/server/services/openai.ts:159:13)\n' +
+    '    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n' +
+    '    at <anonymous> (/home/runner/CustomBedtimeStories/server/routes.ts:123:28)'
+}
+Story generation failed: {
+  error: Error: Failed to generate story content: Story generation failed: Invalid content structure
+      at generateStoryContent (/home/runner/CustomBedtimeStories/server/services/openai.ts:230:11)
+      at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+      at <anonymous> (/home/runner/CustomBedtimeStories/server/routes.ts:123:28),
+  message: 'Failed to generate story content: Story generation failed: Invalid content structure',
+  stack: 'Error: Failed to generate story content: Story generation failed: Invalid content structure\n' +
+    '    at generateStoryContent (/home/runner/CustomBedtimeStories/server/services/openai.ts:230:11)\n' +
+    '    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n' +
+    '    at <anonymous> (/home/runner/CustomBedtimeStories/server/routes.ts:123:28)',
+  timestamp: '2024-11-29T09:05:36.049Z'
+}
+09:05:36 AM [express] POST /api/stories 500 in 18457ms :: {"error":"Failed to generate story","detail…
+9:06:19 AM [tsx] change in ./server/services/openai.ts Restarting...
+9:06:21 AM [tsx] change in ./server/services/openai.ts Restarting...
+9:06:24 AM [tsx] change in ./server/services/openai.ts Restarting...
+9:06:25 AM [tsx] change in ./server/services/openai.ts Restarting...
+09:06:30 AM [express] serving on port 5000
+
+[TypeScript] Found 0 errors. Watching for file changes.
+Fetching all stories...
+Stories fetched: 20
+09:08:19 AM [express] GET /api/stories 304 in 1980ms :: [{"id":20,"title":"Sandy's Nature Adventure",…
