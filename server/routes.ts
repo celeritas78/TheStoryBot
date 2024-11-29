@@ -4,13 +4,14 @@ import { stories, storySegments, type InsertStorySegment, type Story } from "@db
 import { generateStoryContent, generateImage, generateSpeech } from "./services/openai";
 import { eq, desc } from "drizzle-orm";
 import fs from 'fs';
-import { getAudioFilePath, audioFileExists } from './services/audio-storage';
+import { getAudioFilePath, audioFileExists, getMimeType, isAudioFormatSupported } from './services/audio-storage';
 
+// Audio MIME types configuration
 const MIME_TYPES = {
   'mp3': 'audio/mpeg',
   'wav': 'audio/wav',
   'm4a': 'audio/mp4'
-};
+} as const;
 
 // Error response helper function
 function sendErrorResponse(res: any, statusCode: number, error: string, details?: any) {
@@ -51,11 +52,23 @@ export function registerRoutes(app: Express) {
     try {
       const { filename } = req.params;
       
+      // Set CORS headers
+      res.set({
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, OPTIONS',
+        'Access-Control-Allow-Headers': 'Range, Accept-Ranges, Content-Type'
+      });
+
+      // Handle preflight request
+      if (req.method === 'OPTIONS') {
+        return res.status(204).end();
+      }
+
       // Verify format before proceeding
       if (!isAudioFormatSupported(filename)) {
         return res.status(415).json({ 
           error: "Unsupported audio format",
-          supportedFormats: Object.keys(SUPPORTED_AUDIO_FORMATS)
+          supportedFormats: Object.keys(MIME_TYPES)
         });
       }
 
@@ -65,8 +78,17 @@ export function registerRoutes(app: Express) {
 
       const filePath = getAudioFilePath(filename);
       const stat = fs.statSync(filePath);
-      const mimeType = getMimeType(filename);
+      const ext = filename.split('.').pop()?.toLowerCase();
+      const mimeType = MIME_TYPES[ext as keyof typeof MIME_TYPES] || 'application/octet-stream';
       const range = req.headers.range;
+
+      // Set common headers
+      const commonHeaders = {
+        'Content-Type': mimeType,
+        'Accept-Ranges': 'bytes',
+        'Cache-Control': 'no-cache',
+        'X-Content-Type-Options': 'nosniff'
+      };
 
       // Handle range requests
       if (range) {
@@ -75,25 +97,25 @@ export function registerRoutes(app: Express) {
         const end = parts[1] ? parseInt(parts[1], 10) : stat.size - 1;
         const chunksize = (end - start) + 1;
 
-        res.status(206);
-        res.set({
+        if (isNaN(start) || isNaN(end) || start >= stat.size || end >= stat.size || start > end) {
+          res.status(416).json({ error: "Requested range not satisfiable" });
+          return;
+        }
+
+        res.status(206).set({
+          ...commonHeaders,
           'Content-Range': `bytes ${start}-${end}/${stat.size}`,
-          'Accept-Ranges': 'bytes',
-          'Content-Length': chunksize,
-          'Content-Type': mimeType,
-          'Cache-Control': 'no-cache',
+          'Content-Length': chunksize
         });
 
-        const stream = fs.createReadStream(filePath, { start, end });
-        stream.pipe(res);
+        fs.createReadStream(filePath, { start, end }).pipe(res);
       } else {
         // Serve full file
         res.set({
-          'Content-Length': stat.size,
-          'Content-Type': mimeType,
-          'Accept-Ranges': 'bytes',
-          'Cache-Control': 'no-cache',
+          ...commonHeaders,
+          'Content-Length': stat.size
         });
+        
         fs.createReadStream(filePath).pipe(res);
       }
     } catch (error) {
