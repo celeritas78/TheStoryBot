@@ -38,6 +38,21 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
     api.scrollTo(currentSegment);
   }, [api, currentSegment]);
 
+  // Stop audio when currentSegment changes
+  useEffect(() => {
+    const stopAllAudio = () => {
+      const audioElements = document.querySelectorAll('audio');
+      audioElements.forEach(audio => {
+        if (!audio.paused) {
+          audio.pause();
+          audio.currentTime = 0;
+        }
+      });
+    };
+    
+    stopAllAudio();
+  }, [currentSegment]);
+
   // Cleanup effect to stop audio when unmounting
   useEffect(() => {
     return () => {
@@ -50,20 +65,6 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
       });
     };
   }, []);
-
-  const handleSegmentChange = (index: any) => {
-    // Get all audio elements and stop them
-    const audioElements = document.querySelectorAll('audio');
-    audioElements.forEach(audio => {
-      if (!audio.paused) {
-        audio.pause();
-        audio.currentTime = 0;
-      }
-    });
-    
-    // Update the current segment
-    setCurrentSegment(typeof index === 'number' ? index : 0);
-  };
 
   // Check if story has segments
   if (!story.segments || story.segments.length === 0) {
@@ -109,7 +110,11 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
         <Carousel 
           className="w-full max-w-xl mx-auto"
           setApi={setApi}
-          onSelect={handleSegmentChange}
+          onSelect={(index) => {
+            if (typeof index === 'number' && index !== currentSegment) {
+              setCurrentSegment(index);
+            }
+          }}
         >
           <CarouselContent>
             {story.segments.map((segment: StorySegment, index: number) => (
@@ -142,7 +147,7 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
             ))}
           </CarouselContent>
           <CarouselPrevious 
-            onClick={() => handleSegmentChange(currentSegment - 1)}
+            onClick={() => setCurrentSegment(currentSegment - 1)}
             disabled={currentSegment === 0}
             className={`${
               currentSegment === 0 
@@ -151,7 +156,7 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
             } transition-all duration-200`}
           />
           <CarouselNext 
-            onClick={() => handleSegmentChange(currentSegment + 1)}
+            onClick={() => setCurrentSegment(currentSegment + 1)}
             disabled={currentSegment === story.segments.length - 1}
             className={`${
               currentSegment === story.segments.length - 1 
