@@ -52,12 +52,20 @@ function AudioPlayerContent({ audioUrl }: AudioPlayerProps) {
       if (isInitialLoad || isLoading) {
         console.log('Audio ready to play:', {
           duration: audioRef.current.duration,
-          readyState: audioRef.current.readyState
+          readyState: audioRef.current.readyState,
+          type: 'audio/mpeg'
         });
         setIsLoading(false);
         setError(null);
         isInitialLoad = false;
       }
+    };
+
+    // Add canplaythrough event for more stable playback
+    const handleCanPlayThrough = () => {
+      if (!audioRef.current) return;
+      setIsLoading(false);
+      setError(null);
     };
 
     const handleError = () => {
@@ -96,9 +104,11 @@ function AudioPlayerContent({ audioUrl }: AudioPlayerProps) {
       setIsPlaying(false);
     };
 
-    // Add event listeners
+    // Add event listeners with proper MIME type
+    audio.type = 'audio/mpeg';
     audio.addEventListener('loadstart', handleLoadStart);
     audio.addEventListener('canplay', handleCanPlay);
+    audio.addEventListener('canplaythrough', handleCanPlayThrough);
     audio.addEventListener('error', handleError);
     audio.addEventListener('timeupdate', handleTimeUpdate);
     audio.addEventListener('ended', handleEnded);
@@ -107,6 +117,7 @@ function AudioPlayerContent({ audioUrl }: AudioPlayerProps) {
       // Clean up
       audio.removeEventListener('loadstart', handleLoadStart);
       audio.removeEventListener('canplay', handleCanPlay);
+      audio.removeEventListener('canplaythrough', handleCanPlayThrough);
       audio.removeEventListener('error', handleError);
       audio.removeEventListener('timeupdate', handleTimeUpdate);
       audio.removeEventListener('ended', handleEnded);

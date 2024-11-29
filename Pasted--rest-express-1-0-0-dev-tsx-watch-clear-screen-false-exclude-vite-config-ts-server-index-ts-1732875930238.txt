@@ -1,0 +1,61 @@
+> rest-express@1.0.0 dev
+> tsx watch --clear-screen=false --exclude vite.config.ts.* server/index.ts
+
+10:23:01 AM [express] serving on port 5000
+
+ ERROR(TypeScript)  Cannot find name 'isAudioFormatSupported'.
+ FILE  /home/runner/CustomBedtimeStories/server/routes.ts:55:12
+
+    53 |       
+    54 |       // Verify format before proceeding
+  > 55 |       if (!isAudioFormatSupported(filename)) {
+       |            ^^^^^^^^^^^^^^^^^^^^^^
+    56 |         return res.status(415).json({ 
+    57 |           error: "Unsupported audio format",
+    58 |           supportedFormats: Object.keys(SUPPORTED_AUDIO_FORMATS)
+
+ ERROR(TypeScript)  Cannot find name 'SUPPORTED_AUDIO_FORMATS'.
+ FILE  /home/runner/CustomBedtimeStories/server/routes.ts:58:41
+
+    56 |         return res.status(415).json({ 
+    57 |           error: "Unsupported audio format",
+  > 58 |           supportedFormats: Object.keys(SUPPORTED_AUDIO_FORMATS)
+       |                                         ^^^^^^^^^^^^^^^^^^^^^^^
+    59 |         });
+    60 |       }
+    61 |
+
+ ERROR(TypeScript)  Cannot find name 'getMimeType'. Did you mean 'mimeType'?
+ FILE  /home/runner/CustomBedtimeStories/server/routes.ts:68:24
+
+    66 |       const filePath = getAudioFilePath(filename);
+    67 |       const stat = fs.statSync(filePath);
+  > 68 |       const mimeType = getMimeType(filename);
+       |                        ^^^^^^^^^^^
+    69 |       const range = req.headers.range;
+    70 |
+    71 |       // Handle range requests
+
+ ERROR(TypeScript)  'error' is of type 'unknown'.
+ FILE  /home/runner/CustomBedtimeStories/server/routes.ts:101:35
+
+     99 |     } catch (error) {
+    100 |       console.error('Error serving audio:', error);
+  > 101 |       const isUnsupportedFormat = error.message?.includes('Unsupported audio format');
+        |                                   ^^^^^
+    102 |       res.status(isUnsupportedFormat ? 415 : 500).json({ 
+    103 |         error: isUnsupportedFormat ? error.message : 'Failed to serve audio file'
+    104 |       });
+
+ ERROR(TypeScript)  'error' is of type 'unknown'.
+ FILE  /home/runner/CustomBedtimeStories/server/routes.ts:103:38
+
+    101 |       const isUnsupportedFormat = error.message?.includes('Unsupported audio format');
+    102 |       res.status(isUnsupportedFormat ? 415 : 500).json({ 
+  > 103 |         error: isUnsupportedFormat ? error.message : 'Failed to serve audio file'
+        |                                      ^^^^^
+    104 |       });
+    105 |     }
+    106 |   });
+
+[TypeScript] Found 5 errors. Watching for file changes.

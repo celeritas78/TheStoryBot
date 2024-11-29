@@ -4,13 +4,13 @@ import { stories, storySegments, type InsertStorySegment, type Story } from "@db
 import { generateStoryContent, generateImage, generateSpeech } from "./services/openai";
 import { eq, desc } from "drizzle-orm";
 import fs from 'fs';
-import { getAudioFilePath, audioFileExists } from './services/audio-storage';
-
-const MIME_TYPES = {
-  'mp3': 'audio/mpeg',
-  'wav': 'audio/wav',
-  'm4a': 'audio/mp4'
-};
+import { 
+  getAudioFilePath, 
+  audioFileExists, 
+  isAudioFormatSupported, 
+  SUPPORTED_AUDIO_FORMATS,
+  getMimeType 
+} from './services/audio-storage';
 
 // Error response helper function
 function sendErrorResponse(res: any, statusCode: number, error: string, details?: any) {
@@ -65,8 +65,13 @@ export function registerRoutes(app: Express) {
 
       const filePath = getAudioFilePath(filename);
       const stat = fs.statSync(filePath);
-      const mimeType = getMimeType(filename);
       const range = req.headers.range;
+
+      // Always set MP3 MIME type for stability
+      res.setHeader('Content-Type', 'audio/mpeg');
+      res.setHeader('Accept-Ranges', 'bytes');
+      res.setHeader('Cache-Control', 'public, max-age=0');
+      res.setHeader('Access-Control-Allow-Origin', '*');
 
       // Handle range requests
       if (range) {
@@ -76,29 +81,19 @@ export function registerRoutes(app: Express) {
         const chunksize = (end - start) + 1;
 
         res.status(206);
-        res.set({
-          'Content-Range': `bytes ${start}-${end}/${stat.size}`,
-          'Accept-Ranges': 'bytes',
-          'Content-Length': chunksize,
-          'Content-Type': mimeType,
-          'Cache-Control': 'no-cache',
-        });
+        res.setHeader('Content-Range', `bytes ${start}-${end}/${stat.size}`);
+        res.setHeader('Content-Length', chunksize);
 
         const stream = fs.createReadStream(filePath, { start, end });
         stream.pipe(res);
       } else {
         // Serve full file
-        res.set({
-          'Content-Length': stat.size,
-          'Content-Type': mimeType,
-          'Accept-Ranges': 'bytes',
-          'Cache-Control': 'no-cache',
-        });
+        res.setHeader('Content-Length', stat.size);
         fs.createReadStream(filePath).pipe(res);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error serving audio:', error);
-      const isUnsupportedFormat = error.message?.includes('Unsupported audio format');
+      const isUnsupportedFormat = error?.message?.includes('Unsupported audio format');
       res.status(isUnsupportedFormat ? 415 : 500).json({ 
         error: isUnsupportedFormat ? error.message : 'Failed to serve audio file'
       });
