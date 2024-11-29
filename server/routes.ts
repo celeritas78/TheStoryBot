@@ -50,25 +50,52 @@ export function registerRoutes(app: Express) {
   app.get("/audio/:filename", (req, res) => {
     try {
       const { filename } = req.params;
+      console.log('Audio request received:', { filename });
       
-      if (!audioFileExists(filename)) {
+      const filePath = getAudioFilePath(filename);
+      console.log('Resolved file path:', { filePath });
+
+      // Check if file exists
+      if (!fs.existsSync(filePath)) {
+        console.error('Audio file not found:', { filePath });
         return res.status(404).json({ error: "Audio file not found" });
       }
 
-      const filePath = getAudioFilePath(filename);
+      // Log file stats
       const stat = fs.statSync(filePath);
+      console.log('Audio file stats:', { 
+        size: stat.size,
+        path: filePath,
+        exists: fs.existsSync(filePath)
+      });
 
-      // Set proper headers for MP3 streaming
+      // Set proper CORS headers
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Methods', 'GET');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+      
+      // Set content type and caching headers
       res.setHeader('Content-Type', 'audio/mpeg');
       res.setHeader('Accept-Ranges', 'bytes');
       res.setHeader('Content-Length', stat.size);
       res.setHeader('Cache-Control', 'no-cache');
 
-      // Create read stream and pipe to response
+      // Stream the file
       const stream = fs.createReadStream(filePath);
+      console.log('Starting audio stream');
+      
+      stream.on('error', (error) => {
+        console.error('Stream error:', error);
+        res.status(500).json({ error: 'Failed to stream audio file' });
+      });
+
       stream.pipe(res);
     } catch (error: any) {
-      console.error('Error serving audio:', error);
+      console.error('Error serving audio:', { 
+        error, 
+        message: error.message,
+        stack: error.stack 
+      });
       res.status(500).json({ error: 'Failed to serve audio file' });
     }
   });

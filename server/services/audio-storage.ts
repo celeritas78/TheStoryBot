@@ -13,6 +13,12 @@ export const SUPPORTED_AUDIO_FORMATS = {
 if (!fs.existsSync(AUDIO_DIR)) {
   fs.mkdirSync(AUDIO_DIR, { recursive: true });
 }
+// Log audio directory configuration
+console.log('Audio directory configuration:', {
+  AUDIO_DIR,
+  exists: fs.existsSync(AUDIO_DIR),
+  files: fs.existsSync(AUDIO_DIR) ? fs.readdirSync(AUDIO_DIR) : []
+});
 
 export function getMimeType(fileName: string): string {
   const ext = path.extname(fileName).toLowerCase().slice(1);

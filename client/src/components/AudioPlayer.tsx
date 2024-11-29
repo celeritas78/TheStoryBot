@@ -31,8 +31,12 @@ function AudioPlayerContent({ audioUrl }: AudioPlayerProps) {
   useEffect(() => {
     if (!audioUrl) return;
     
-    console.log('Initializing audio player with URL:', audioUrl);
-    const audio = new Audio(audioUrl);
+    const normalizedUrl = new URL(audioUrl, window.location.origin).pathname;
+    console.log('Initializing audio player with URL:', {
+      original: audioUrl,
+      normalized: normalizedUrl
+    });
+    const audio = new Audio(normalizedUrl);
     audioRef.current = audio;
     
     let isInitialLoad = true;
