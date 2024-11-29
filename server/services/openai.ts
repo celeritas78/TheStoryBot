@@ -149,15 +149,24 @@ Ensure descriptions are vivid and specific for image generation.`;
         throw new Error(`Story generation failed: Missing scene ${i}`);
       }
 
-      const text = sceneMatch[1].trim();
+      const rawText = sceneMatch[1].trim();
       const description = descMatch[1].trim();
+
+      // Clean the text by removing any remaining description markers and clean up spacing
+      const text = rawText
+        .replace(/\[.*?\]/g, '') // Remove any remaining markers
+        .replace(/\s+/g, ' ')    // Normalize spaces
+        .trim();
 
       if (!text || !description) {
         console.error(`Empty content in scene ${i}`);
         throw new Error(`Story generation failed: Empty content in scene ${i}`);
       }
 
-      scenes.push({ text, description });
+      scenes.push({ 
+        text,           // Clean narrative text for audio/display
+        description     // Separate description for image generation
+      });
     }
 
     if (scenes.length === 0) {

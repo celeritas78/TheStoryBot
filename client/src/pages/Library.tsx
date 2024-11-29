@@ -32,7 +32,7 @@ function StoryImage({ src, alt }: StoryImageProps) {
   const [isLoading, setIsLoading] = useState(true);
 
   return (
-    <div className="relative w-full h-48 bg-purple-50">
+    <div className="relative w-full h-48 bg-purple-50 rounded-lg overflow-hidden">
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="w-full h-full animate-pulse bg-purple-100" />
@@ -47,7 +47,7 @@ function StoryImage({ src, alt }: StoryImageProps) {
         <img
           src={src}
           alt={alt}
-          className="w-full h-full object-cover transition-opacity duration-300"
+          className="w-full h-full object-cover transition-opacity duration-300 rounded-lg"
           style={{ opacity: isLoading ? 0 : 1 }}
           onLoad={() => setIsLoading(false)}
           onError={() => {

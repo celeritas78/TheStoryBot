@@ -130,11 +130,13 @@ export function registerRoutes(app: Express) {
       // Generate media for each scene
       const segments = await Promise.all(storyContent.scenes.map(async (scene, index) => {
         try {
+          // Generate image from scene description
           const imageUrl = await generateImage(scene.description);
+          // Generate audio only from the narrative text
           const audioUrl = await generateSpeech(scene.text);
           
           return {
-            content: scene.text,
+            content: scene.text, // Store only the narrative text
             imageUrl,
             audioUrl,
             sequence: index + 1
