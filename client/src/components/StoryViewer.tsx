@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -21,6 +21,11 @@ interface StoryViewerProps {
 export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerProps) {
   const [currentSegment, setCurrentSegment] = useState(0);
   const { toast } = useToast();
+
+  // Reset currentSegment when story changes
+  useEffect(() => {
+    setCurrentSegment(0);
+  }, [story.id]);
 
   const handleSegmentChange = (index: number) => {
     // Stop current audio if playing
@@ -73,7 +78,11 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
         </div>
       )}
       <Card className="p-6">
-        <Carousel className="w-full max-w-xl mx-auto">
+        <Carousel 
+          className="w-full max-w-xl mx-auto"
+          onSelect={(index) => setCurrentSegment(index)}
+          value={currentSegment}
+        >
           <CarouselContent>
             {story.segments.map((segment: StorySegment, index: number) => (
               <CarouselItem key={index}>
