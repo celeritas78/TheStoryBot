@@ -63,6 +63,11 @@ Ensure descriptions are vivid and specific for image generation.`;
          - Ensure age-appropriate content and vocabulary
          - Include a clear beginning, middle, and end`;
 
+    console.log('Sending request to OpenAI with prompt:', {
+      systemPrompt: systemPrompt.substring(0, 100) + '...',
+      userPrompt: prompt.substring(0, 100) + '...'
+    });
+
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
@@ -77,6 +82,13 @@ Ensure descriptions are vivid and specific for image generation.`;
       ],
     });
 
+    console.log('Received raw response from OpenAI:', {
+      id: response.id,
+      model: response.model,
+      usage: response.usage,
+      choices: response.choices?.length
+    });
+
     if (!response.choices || !response.choices[0]) {
       console.error('Invalid response structure from OpenAI:', response);
       throw new Error("OpenAI response missing choices");
@@ -89,6 +101,7 @@ Ensure descriptions are vivid and specific for image generation.`;
     }
 
     const content = message.content;
+    console.log('Raw content from OpenAI:', content);
     // Parse the content into title and scenes
     const scenes: Scene[] = [];
     
@@ -109,27 +122,26 @@ Ensure descriptions are vivid and specific for image generation.`;
       throw new Error('Story generation failed: Could not create title');
     }
     
-    // Split and validate content sections
-    const parts = content.split('[SCENE DESCRIPTIONS]');
-    let storyText: string;
-    let descriptions: string;
+    // Split and validate content sections with improved parsing
+    const storyMatch = content.match(/\[STORY\]([\s\S]*?)(?=\[SCENE DESCRIPTIONS\]|$)/);
+    const descriptionsMatch = content.match(/\[SCENE DESCRIPTIONS\]([\s\S]*?)$/);
     
-    if (parts.length !== 2) {
-      console.warn('Invalid story format, attempting to recover content');
-      // Attempt to recover content by looking for scene markers
-      const sceneMatches = content.match(/\[Scene \d+\]/g);
-      if (!sceneMatches || sceneMatches.length === 0) {
-        throw new Error('Story generation failed: Could not parse story structure');
-      }
-      
-      // Use the entire content as story text and generate basic descriptions
-      storyText = content;
-      descriptions = sceneMatches
-        .map((_, index) => `[Scene ${index + 1} Description] A colorful and engaging scene from the story.`)
-        .join('\n\n');
-    } else {
-      [storyText, descriptions] = parts;
+    if (!storyMatch || !descriptionsMatch) {
+      console.error('Failed to parse story sections:', {
+        hasStorySection: !!storyMatch,
+        hasDescriptionsSection: !!descriptionsMatch,
+        content: content
+      });
+      throw new Error('Story generation failed: Invalid content structure');
     }
+    
+    const storyText = storyMatch[1].trim();
+    const descriptions = descriptionsMatch[1].trim();
+    
+    console.log('Successfully parsed story sections:', {
+      storyTextPreview: storyText.substring(0, 100) + '...',
+      descriptionsPreview: descriptions.substring(0, 100) + '...'
+    });
     
     // Validate we have both story text and descriptions
     if (!storyText.trim() || !descriptions.trim()) {
@@ -197,14 +209,21 @@ Ensure descriptions are vivid and specific for image generation.`;
 
 export async function generateImage(sceneDescription: string): Promise<string> {
   try {
-    // Sanitize and limit scene description
+    // Keep all relevant details from scene description
     const sanitizedDescription = sceneDescription
-      .replace(/[^\w\s,.()'"-]/g, '') // Remove special characters except basic punctuation
-      .trim()
-      .substring(0, 500); // Limit length to 500 characters
+      .replace(/[^\w\s,.()'"-]/g, ' ') // Replace special characters with spaces
+      .replace(/\s+/g, ' ')           // Normalize spaces
+      .trim();
 
-    // Enhance prompt with child-friendly context
-    const safePrompt = `Create a cheerful, child-friendly storybook illustration with the following scene: ${sanitizedDescription}. 
+    // Enhance prompt with detailed style guidelines and scene-specific context
+    const safePrompt = `Create a detailed, child-friendly storybook illustration for the following scene: ${sanitizedDescription}.
+    
+    Key elements to include:
+    - All characters and objects mentioned in the scene
+    - The specific setting and environment described
+    - The emotional tone and atmosphere of the scene
+    
+    Artistic style requirements: 
       Style guidelines:
       - Use bright, warm colors suitable for children's books
       - Keep the imagery gentle and non-threatening
