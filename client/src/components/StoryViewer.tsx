@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -39,7 +39,7 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
   }, [api, currentSegment]);
 
   // Audio management
-  const audioRefs = useRef<{[key: number]: HTMLAudioElement}>({});
+  const audioRefs = useRef<Record<number, HTMLAudioElement>>({});
   
   // Register audio element
   const registerAudioElement = (index: number, element: HTMLAudioElement | null) => {

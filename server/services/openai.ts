@@ -103,7 +103,6 @@ Ensure descriptions are vivid and specific for image generation.`;
     const content = message.content;
     console.log('Raw content from OpenAI:', content);
     // Parse the content into title and scenes
-    const scenes: Scene[] = [];
     
     // Extract title from ** markers with fallback
     let title: string;

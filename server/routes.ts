@@ -6,7 +6,7 @@ import { eq, desc } from "drizzle-orm";
 import fs from 'fs';
 import { getAudioFilePath, audioFileExists } from './services/audio-storage';
 
-const MIME_TYPES = {
+const MIME_TYPES: Record<string, string> = {
   'mp3': 'audio/mpeg',
   'wav': 'audio/wav',
   'm4a': 'audio/mp4',

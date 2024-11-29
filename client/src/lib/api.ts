@@ -34,17 +34,14 @@ export interface Story {
 
 // Helper to handle API errors
 async function handleApiError(response: Response): Promise<never> {
-  let errorData;
+  const clonedResponse = response.clone();
   try {
-    // Attempt to parse error as JSON
-    errorData = await response.json();
-  } catch (e) {
-    // If JSON parsing fails, use text content
-    const textContent = await response.text();
+    const errorData = await response.json();
+    throw new Error(errorData.error || 'Unknown API error');
+  } catch {
+    const textContent = await clonedResponse.text();
     throw new Error(textContent || `HTTP error ${response.status}`);
   }
-  
-  throw new Error(errorData.error || 'Unknown API error');
 }
 
 // Retry configuration
