@@ -22,6 +22,21 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
   const [currentSegment, setCurrentSegment] = useState(0);
   const { toast } = useToast();
 
+  // Check if story has segments
+  if (!story.segments || story.segments.length === 0) {
+    return (
+      <Card className="p-6">
+        <div className="text-center">
+          <p>No story segments available</p>
+        </div>
+      </Card>
+    );
+  }
+
+  // Ensure currentSegment is within bounds
+  const safeCurrentSegment = Math.min(currentSegment, story.segments.length - 1);
+  const currentSegmentData = story.segments[safeCurrentSegment];
+
   return (
     <div className="space-y-4">
       {showHomeIcon && (
@@ -53,14 +68,21 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
             {story.segments.map((segment: StorySegment, index: number) => (
               <CarouselItem key={index}>
                 <div className="space-y-4">
-                  <img
-                    src={segment.imageUrl}
-                    alt={`Story scene ${index + 1}`}
-                    className="w-full h-64 object-cover rounded-lg"
-                  />
-                  <p className="text-lg leading-relaxed">
-                    {segment.content}
-                  </p>
+                  {segment.imageUrl && (
+                    <img
+                      src={segment.imageUrl}
+                      alt={`Story scene ${index + 1}`}
+                      className="w-full h-64 object-cover rounded-lg"
+                      onError={(e) => {
+                        e.currentTarget.src = '/assets/fallback-story-image.png';
+                      }}
+                    />
+                  )}
+                  {segment.content && (
+                    <p className="text-lg leading-relaxed">
+                      {segment.content}
+                    </p>
+                  )}
                 </div>
               </CarouselItem>
             ))}
@@ -69,24 +91,24 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
           <CarouselNext />
         </Carousel>
 
-        
-
-        <div className="mt-4">
-          <AudioPlayer audioUrl={story.segments[currentSegment].audioUrl} />
-        </div>
+        {currentSegmentData?.audioUrl && (
+          <div className="mt-4">
+            <AudioPlayer audioUrl={currentSegmentData.audioUrl} />
+          </div>
+        )}
 
         <div className="mt-4 flex justify-between">
           <Button
             variant="outline"
-            disabled={currentSegment === 0}
-            onClick={() => setCurrentSegment((prev) => prev - 1)}
+            disabled={safeCurrentSegment === 0}
+            onClick={() => setCurrentSegment((prev) => Math.max(0, prev - 1))}
           >
             Previous
           </Button>
           <Button
             variant="outline"
-            disabled={currentSegment === story.segments.length - 1}
-            onClick={() => setCurrentSegment((prev) => prev + 1)}
+            disabled={safeCurrentSegment === story.segments.length - 1}
+            onClick={() => setCurrentSegment((prev) => Math.min(story.segments.length - 1, prev + 1))}
           >
             Next
           </Button>

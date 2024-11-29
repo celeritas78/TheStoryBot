@@ -80,10 +80,17 @@ Focus on visual elements, colors, expressions, and composition.`;
     }
 
     const content = message.content;
-    // Parse the content into scenes
+    // Parse the content into scenes with better error handling
     const scenes: Scene[] = [];
-    const storyText = content.split('[SCENE DESCRIPTIONS]')[0];
-    const descriptions = content.split('[SCENE DESCRIPTIONS]')[1];
+    const parts = content.split('[SCENE DESCRIPTIONS]');
+    
+    if (parts.length !== 2) {
+      console.error('Invalid story format: Missing scene descriptions section');
+      throw new Error('Story generation failed: Invalid format');
+    }
+    
+    const storyText = parts[0];
+    const descriptions = parts[1];
 
     // Extract individual scenes and their descriptions
     for (let i = 1; i <= 3; i++) {
@@ -91,14 +98,26 @@ Focus on visual elements, colors, expressions, and composition.`;
       const descRegex = new RegExp(`\\[Scene ${i} Description\\]([\\s\\S]*?)(?=\\[Scene ${i + 1} Description\\]|$)`);
       
       const sceneMatch = storyText.match(sceneRegex);
-      const descMatch = descriptions?.match(descRegex);
+      const descMatch = descriptions.match(descRegex);
 
-      if (sceneMatch && descMatch) {
-        scenes.push({
-          text: sceneMatch[1].trim(),
-          description: descMatch[1].trim()
-        });
+      if (!sceneMatch || !descMatch) {
+        console.error(`Failed to extract scene ${i}`);
+        throw new Error(`Story generation failed: Missing scene ${i}`);
       }
+
+      const text = sceneMatch[1].trim();
+      const description = descMatch[1].trim();
+
+      if (!text || !description) {
+        console.error(`Empty content in scene ${i}`);
+        throw new Error(`Story generation failed: Empty content in scene ${i}`);
+      }
+
+      scenes.push({ text, description });
+    }
+
+    if (scenes.length === 0) {
+      throw new Error('Story generation failed: No valid scenes found');
     }
 
     const parsedContent: StoryContent = {

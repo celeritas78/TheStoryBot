@@ -1,13 +1,9 @@
 import type { Express } from "express";
 import { db } from "../db";
-import type { Express } from "express";
-import { db } from "../db";
-import { stories, storySegments, type InsertStorySegment } from "@db/schema";
-import type { Story } from "@db/schema";
+import { stories, storySegments, type InsertStorySegment, type Story } from "@db/schema";
 import { generateStoryContent, generateImage, generateSpeech } from "./services/openai";
 import { eq, desc } from "drizzle-orm";
 import fs from 'fs';
-
 import { getAudioFilePath, audioFileExists } from './services/audio-storage';
 
 const MIME_TYPES = {
@@ -63,16 +59,15 @@ export function registerRoutes(app: Express) {
       res.status(500).json({ error: 'Failed to serve audio file' });
     }
   });
+
   app.post("/api/stories", async (req, res) => {
     try {
       const { childName, childAge, mainCharacter, theme } = req.body;
-      // Add request logging
       console.log('Story generation request:', {
         ...req.body,
         timestamp: new Date().toISOString()
       });
 
-      // Enhanced input validation
       if (!childName?.trim() || !childAge || !mainCharacter?.trim() || !theme?.trim()) {
         const errorDetails = {
           childName: !childName?.trim() ? "Name is required" : null,
@@ -88,27 +83,6 @@ export function registerRoutes(app: Express) {
         });
       }
 
-      // Additional validation
-      if (typeof childAge !== 'number' && isNaN(Number(childAge))) {
-        return res.status(400).json({ error: "Invalid age format" });
-      }
-
-      if (mainCharacter.length > 100) {
-        return res.status(400).json({ error: "Character name is too long" });
-      }
-
-      if (!['adventure', 'fantasy', 'friendship', 'nature'].includes(theme)) {
-        return res.status(400).json({ error: "Invalid theme" });
-      }
-
-      console.log('Starting story generation process with params:', {
-        childName,
-        childAge,
-        mainCharacter,
-        theme
-      });
-
-      // Validate and convert childAge
       const parsedAge = Number(childAge);
       if (isNaN(parsedAge)) {
         console.error('Invalid age provided:', childAge);
@@ -116,43 +90,19 @@ export function registerRoutes(app: Express) {
       }
 
       // Generate initial story content
-      let storyContent;
-      try {
-        storyContent = await generateStoryContent({
-          childName,
-          childAge: parsedAge,
-          mainCharacter,
-          theme,
-        });
-        console.log('Successfully generated story content:', {
-          numberOfScenes: storyContent.scenes.length,
-          preview: storyContent.scenes[0]?.text.substring(0, 100) + '...'
-        });
-      } catch (error) {
-        console.error('Story generation failed:', error);
-        return res.status(500).json({ 
-          error: "Failed to generate story content",
-          details: error instanceof Error ? error.message : 'Unknown error'
-        });
-      }
+      const storyContent = await generateStoryContent({
+        childName,
+        childAge: parsedAge,
+        mainCharacter,
+        theme,
+      });
 
-      // Generate images and audio for each scene
+      // Generate media for each scene
       const segments = await Promise.all(storyContent.scenes.map(async (scene, index) => {
         try {
-          // Generate image for the scene
           const imageUrl = await generateImage(scene.description);
-          if (!imageUrl) {
-            throw new Error(`Image generation failed for scene ${index + 1}`);
-          }
-          console.log(`Generated image URL for scene ${index + 1}:`, imageUrl);
-
-          // Generate audio narration for the scene
           const audioUrl = await generateSpeech(scene.text);
-          if (!audioUrl) {
-            throw new Error(`Audio generation failed for scene ${index + 1}`);
-          }
-          console.log(`Generated audio URL for scene ${index + 1}:`, audioUrl);
-
+          
           return {
             content: scene.text,
             imageUrl,
@@ -166,67 +116,35 @@ export function registerRoutes(app: Express) {
       }));
 
       // Save to database
-      let story: Story;
-      try {
-        console.log('Inserting story record:', {
+      const [story] = await db.insert(stories)
+        .values({
           childName,
           childAge: parsedAge,
+          characters: JSON.stringify({ mainCharacter }),
           theme,
-          timestamp: new Date().toISOString()
-        });
+          content: segments.map(s => s.content).join('\n\n'),
+          imageUrls: JSON.stringify(segments.map(s => s.imageUrl)),
+        })
+        .returning();
 
-        const [result] = await db.insert(stories)
-          .values({
-            childName,
-            childAge: parsedAge,
-            characters: JSON.stringify({ mainCharacter }),
-            theme,
-            content: segments.map(s => s.content).join('\n\n'),
-            imageUrls: JSON.stringify(segments.map(s => s.imageUrl)),
-          })
-          .returning();
-
-        if (!result || !result.id) {
-          console.error('Database insert returned invalid result:', {
-            result,
-            timestamp: new Date().toISOString()
-          });
-          throw new Error("Failed to create story record");
-        }
-        story = result;
-        console.log('Successfully created story record:', {
-          storyId: story.id,
-          timestamp: new Date().toISOString()
-        });
-
-        // Insert all story segments
-        const insertedSegments = await db.insert(storySegments)
-          .values(segments.map(segment => ({
-            storyId: story.id,
-            content: segment.content,
-            imageUrl: segment.imageUrl,
-            audioUrl: segment.audioUrl,
-            sequence: segment.sequence,
-          })))
-          .returning();
-
-        console.log('Successfully created story segments:', {
-          storyId: story.id,
-          segmentCount: insertedSegments.length,
-          timestamp: new Date().toISOString()
-        });
-      } catch (error) {
-        console.error('Database operation failed:', {
-          error,
-          message: error instanceof Error ? error.message : 'Unknown error'
-        });
-        throw new Error("Failed to save story to database");
+      if (!story || !story.id) {
+        throw new Error("Failed to create story record");
       }
 
-      // After story segments insertion
-      console.log('Story segment created:', {
+      // Insert all story segments
+      const insertedSegments = await db.insert(storySegments)
+        .values(segments.map(segment => ({
+          storyId: story.id,
+          content: segment.content,
+          imageUrl: segment.imageUrl,
+          audioUrl: segment.audioUrl,
+          sequence: segment.sequence,
+        })))
+        .returning();
+
+      console.log('Successfully created story segments:', {
         storyId: story.id,
-        segmentId: newSegment.id,
+        segmentCount: insertedSegments.length,
         timestamp: new Date().toISOString()
       });
 
@@ -237,7 +155,6 @@ export function registerRoutes(app: Express) {
         segments: insertedSegments,
       });
     } catch (error) {
-      // Enhanced error logging
       console.error('Story generation failed:', {
         error,
         message: error instanceof Error ? error.message : 'Unknown error',
@@ -263,16 +180,13 @@ export function registerRoutes(app: Express) {
         return res.status(404).json({ error: "Story not found" });
       }
 
-      // Parse characters JSON
       const characters = JSON.parse(story.characters as string) as { mainCharacter: string };
 
-      // Fetch existing segments
       const segments = await db.query.storySegments.findMany({
         where: eq(storySegments.storyId, story.id),
         orderBy: (storySegments, { desc }) => [desc(storySegments.sequence)],
       });
 
-      // Generate continuation
       const continuation = await generateStoryContent({
         previousContent: story.content,
         childName: story.childName,
@@ -281,7 +195,6 @@ export function registerRoutes(app: Express) {
         theme: story.theme,
       });
 
-      // Generate media for each new scene
       const newSegments = await Promise.all(continuation.scenes.map(async (scene, index) => {
         const imageUrl = await generateImage(scene.description);
         const audioUrl = await generateSpeech(scene.text);
@@ -308,7 +221,6 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  // Get all stories endpoint
   app.get("/api/stories", async (req, res) => {
     try {
       console.log('Fetching all stories...');
@@ -329,7 +241,6 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  // Get a specific story by ID
   app.get("/api/stories/:id", async (req, res) => {
     try {
       const story = await db.query.stories.findFirst({

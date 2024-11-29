@@ -1,0 +1,146 @@
+> rest-express@1.0.0 db:push
+> drizzle-kit push
+
+No config path provided, using default 'drizzle.config.ts'
+Reading config file '/home/runner/CustomBedtimeStories/drizzle.config.ts'
+Using 'pg' driver for database querying
+[✓] Pulling schema from database...
+[i] No changes detected
+
+> rest-express@1.0.0 dev
+> tsx watch --clear-screen=false --exclude vite.config.ts.* server/index.ts
+
+11:17:39 AM [express] serving on port 5000
+
+ ERROR(TypeScript)  Duplicate identifier 'Express'.
+ FILE  /home/runner/CustomBedtimeStories/server/routes.ts:1:15
+
+  > 1 | import type { Express } from "express";
+      |               ^^^^^^^
+    2 | import { db } from "../db";
+    3 | import type { Express } from "express";
+    4 | import { db } from "../db";
+
+ ERROR(TypeScript)  Duplicate identifier 'db'.
+ FILE  /home/runner/CustomBedtimeStories/server/routes.ts:2:10
+
+    1 | import type { Express } from "express";
+  > 2 | import { db } from "../db";
+      |          ^^
+    3 | import type { Express } from "express";
+    4 | import { db } from "../db";
+    5 | import { stories, storySegments, type InsertStorySegment } from "@db/schema";
+
+ ERROR(TypeScript)  Duplicate identifier 'Express'.
+ FILE  /home/runner/CustomBedtimeStories/server/routes.ts:3:15
+
+    1 | import type { Express } from "express";
+    2 | import { db } from "../db";
+  > 3 | import type { Express } from "express";
+      |               ^^^^^^^
+    4 | import { db } from "../db";
+    5 | import { stories, storySegments, type InsertStorySegment } from "@db/schema";
+    6 | import type { Story } from "@db/schema";
+
+ ERROR(TypeScript)  Duplicate identifier 'db'.
+ FILE  /home/runner/CustomBedtimeStories/server/routes.ts:4:10
+
+    2 | import { db } from "../db";
+    3 | import type { Express } from "express";
+  > 4 | import { db } from "../db";
+      |          ^^
+    5 | import { stories, storySegments, type InsertStorySegment } from "@db/schema";
+    6 | import type { Story } from "@db/schema";
+    7 | import { generateStoryContent, generateImage, generateSpeech } from "./services/openai";
+
+ ERROR(TypeScript)  Type '{ childName: string; childAge: number; theme: string; id: number; content: string; characters: unknown; imageUrls: unknown; parentApproved: boolean | null; createdAt: Date | null; }' is not assignable to type '{ childName: string; childAge: number; theme: string; id: number; content: string; characters: Json; imageUrls: Json; parentApproved: boolean | null; createdAt: Date | null; }'.
+  Types of property 'characters' are incompatible.
+    Type 'unknown' is not assignable to type 'Json'.
+ FILE  /home/runner/CustomBedtimeStories/server/routes.ts:196:9
+
+    194 |           throw new Error("Failed to create story record");
+    195 |         }
+  > 196 |         story = result;
+        |         ^^^^^
+    197 |         console.log('Successfully created story record:', {
+    198 |           storyId: story.id,
+    199 |           timestamp: new Date().toISOString()
+
+ ERROR(TypeScript)  Cannot find name 'newSegment'. Did you mean 'segments'?
+ FILE  /home/runner/CustomBedtimeStories/server/routes.ts:229:20
+
+    227 |       console.log('Story segment created:', {
+    228 |         storyId: story.id,
+  > 229 |         segmentId: newSegment.id,
+        |                    ^^^^^^^^^^
+    230 |         timestamp: new Date().toISOString()
+    231 |       });
+    232 |
+
+ ERROR(TypeScript)  Cannot find name 'insertedSegments'.
+ FILE  /home/runner/CustomBedtimeStories/server/routes.ts:237:19
+
+    235 |         childName: story.childName,
+    236 |         theme: story.theme,
+  > 237 |         segments: insertedSegments,
+        |                   ^^^^^^^^^^^^^^^^
+    238 |       });
+    239 |     } catch (error) {
+    240 |       // Enhanced error logging
+
+[TypeScript] Found 7 errors. Watching for file changes.
+Story generation request: {
+  childName: 'ana',
+  childAge: 4,
+  mainCharacter: 'fruits, garden, bees, friends',
+  theme: 'nature',
+  timestamp: '2024-11-28T11:18:21.134Z'
+}
+Starting story generation process with params: {
+  childName: 'ana',
+  childAge: 4,
+  mainCharacter: 'fruits, garden, bees, friends',
+  theme: 'nature'
+}
+Generating story content with params: {
+  childName: 'ana',
+  childAge: 4,
+  mainCharacter: 'fruits, garden, bees, friends',
+  theme: 'nature',
+  hasPreviousContent: false
+}
+Successfully generated story content: {
+  numberOfScenes: 0,
+  preview: 'undefined...',
+  firstSceneDescription: 'undefined...'
+}
+Successfully generated story content: { numberOfScenes: 0, preview: 'undefined...' }
+Inserting story record: {
+  childName: 'ana',
+  childAge: 4,
+  theme: 'nature',
+  timestamp: '2024-11-28T11:20:12.294Z'
+}
+Successfully created story record: { storyId: 12, timestamp: '2024-11-28T11:20:13.318Z' }
+Database operation failed: {
+  error: Error: values() must be called with at least one value
+      at PgInsertBuilder.values (/home/runner/CustomBedtimeStories/node_modules/src/pg-core/query-builders/insert.ts:85:10)
+      at <anonymous> (/home/runner/CustomBedtimeStories/server/routes.ts:204:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:95:5),
+  message: 'values() must be called with at least one value'
+}
+Story generation failed: {
+  error: Error: Failed to save story to database
+      at <anonymous> (/home/runner/CustomBedtimeStories/server/routes.ts:223:15)
+      at process.processTicksAndRejections (node:internal/process/task_queues:95:5),
+  message: 'Failed to save story to database',
+  stack: 'Error: Failed to save story to database\n' +
+    '    at <anonymous> (/home/runner/CustomBedtimeStories/server/routes.ts:223:15)\n' +
+    '    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)',
+  timestamp: '2024-11-28T11:20:13.323Z'
+}
+11:20:13 AM [express] POST /api/stories 500 in 112192ms :: {"error":"Failed to generate story","detai…
+Fetching all stories...
+Stories fetched: 12
+11:20:29 AM [express] GET /api/stories 200 in 1397ms :: [{"id":12,"childName":"ana","childAge":4,"cha…
+11:20:33 AM [express] GET /api/stories/12 200 in 234ms :: {"id":12,"childName":"ana","childAge":4,"ch…
