@@ -62,10 +62,28 @@ function AudioPlayerContent({ audioUrl }: AudioPlayerProps) {
 
     const handleError = () => {
       if (!audioRef.current?.error) return;
-      const errorMessage = getAudioErrorMessage(audioRef.current.error.code);
-      console.error('Audio error:', errorMessage);
+      
+      const errorMessage = getAudioErrorMessage(audioRef.current.error);
+      console.error('Audio error:', {
+        code: audioRef.current.error.code,
+        message: errorMessage,
+        source: audioRef.current.currentSrc
+      });
+      
       setError(errorMessage);
       setIsLoading(false);
+      setIsPlaying(false);
+      
+      // Log additional debugging information
+      if (audioRef.current) {
+        console.debug('Audio element state:', {
+          readyState: audioRef.current.readyState,
+          networkState: audioRef.current.networkState,
+          error: audioRef.current.error,
+          src: audioRef.current.currentSrc,
+          type: audioRef.current.currentSrc.split('.').pop()?.toLowerCase()
+        });
+      }
     };
 
     const handleTimeUpdate = () => {
@@ -121,18 +139,21 @@ function AudioPlayerContent({ audioUrl }: AudioPlayerProps) {
     setIsMuted(!isMuted);
   };
 
-  function getAudioErrorMessage(code: number): string {
-    switch (code) {
-      case 1:
+  function getAudioErrorMessage(error: MediaError | null): string {
+    if (!error) return "Unknown error occurred";
+
+    switch (error.code) {
+      case MediaError.MEDIA_ERR_ABORTED:
         return "The audio loading was aborted";
-      case 2:
+      case MediaError.MEDIA_ERR_NETWORK:
         return "Network error occurred while loading audio";
-      case 3:
-        return "Audio decoding failed";
-      case 4:
-        return "Audio format not supported";
+      case MediaError.MEDIA_ERR_DECODE:
+        return "Audio decoding failed - file may be corrupted";
+      case MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED:
+        const format = audioRef.current?.currentSrc.split('.').pop()?.toLowerCase();
+        return `Audio format ${format ? `'${format}' ` : ''}not supported by your browser. Please try using a different browser or contact support.`;
       default:
-        return "Unknown error occurred";
+        return `Unknown error occurred (Code: ${error.code})`;
     }
   }
 

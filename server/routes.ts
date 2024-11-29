@@ -50,13 +50,22 @@ export function registerRoutes(app: Express) {
   app.get("/audio/:filename", (req, res) => {
     try {
       const { filename } = req.params;
-      const filePath = getAudioFilePath(filename);
       
+      // Verify format before proceeding
+      if (!isAudioFormatSupported(filename)) {
+        return res.status(415).json({ 
+          error: "Unsupported audio format",
+          supportedFormats: Object.keys(SUPPORTED_AUDIO_FORMATS)
+        });
+      }
+
       if (!audioFileExists(filename)) {
         return res.status(404).json({ error: "Audio file not found" });
       }
 
+      const filePath = getAudioFilePath(filename);
       const stat = fs.statSync(filePath);
+      const mimeType = getMimeType(filename);
       const range = req.headers.range;
 
       // Handle range requests
@@ -71,7 +80,7 @@ export function registerRoutes(app: Express) {
           'Content-Range': `bytes ${start}-${end}/${stat.size}`,
           'Accept-Ranges': 'bytes',
           'Content-Length': chunksize,
-          'Content-Type': 'audio/mpeg',
+          'Content-Type': mimeType,
           'Cache-Control': 'no-cache',
         });
 
@@ -81,7 +90,7 @@ export function registerRoutes(app: Express) {
         // Serve full file
         res.set({
           'Content-Length': stat.size,
-          'Content-Type': 'audio/mpeg',
+          'Content-Type': mimeType,
           'Accept-Ranges': 'bytes',
           'Cache-Control': 'no-cache',
         });
@@ -89,7 +98,10 @@ export function registerRoutes(app: Express) {
       }
     } catch (error) {
       console.error('Error serving audio:', error);
-      res.status(500).json({ error: 'Failed to serve audio file' });
+      const isUnsupportedFormat = error.message?.includes('Unsupported audio format');
+      res.status(isUnsupportedFormat ? 415 : 500).json({ 
+        error: isUnsupportedFormat ? error.message : 'Failed to serve audio file'
+      });
     }
   });
 
