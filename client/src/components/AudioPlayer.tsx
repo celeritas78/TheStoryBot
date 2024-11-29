@@ -52,8 +52,7 @@ function AudioPlayerContent({ audioUrl }: AudioPlayerProps) {
       if (isInitialLoad || isLoading) {
         console.log('Audio ready to play:', {
           duration: audioRef.current.duration,
-          readyState: audioRef.current.readyState,
-          type: 'audio/mpeg'
+          readyState: audioRef.current.readyState
         });
         setIsLoading(false);
         setError(null);

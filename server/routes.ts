@@ -51,52 +51,25 @@ export function registerRoutes(app: Express) {
     try {
       const { filename } = req.params;
       
-      // Verify format before proceeding
-      if (!isAudioFormatSupported(filename)) {
-        return res.status(415).json({ 
-          error: "Unsupported audio format",
-          supportedFormats: Object.keys(SUPPORTED_AUDIO_FORMATS)
-        });
-      }
-
       if (!audioFileExists(filename)) {
         return res.status(404).json({ error: "Audio file not found" });
       }
 
       const filePath = getAudioFilePath(filename);
       const stat = fs.statSync(filePath);
-      const range = req.headers.range;
 
-      // Always set MP3 MIME type for stability
+      // Set proper headers for MP3 streaming
       res.setHeader('Content-Type', 'audio/mpeg');
       res.setHeader('Accept-Ranges', 'bytes');
-      res.setHeader('Cache-Control', 'public, max-age=0');
-      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Content-Length', stat.size);
+      res.setHeader('Cache-Control', 'no-cache');
 
-      // Handle range requests
-      if (range) {
-        const parts = range.replace(/bytes=/, "").split("-");
-        const start = parseInt(parts[0], 10);
-        const end = parts[1] ? parseInt(parts[1], 10) : stat.size - 1;
-        const chunksize = (end - start) + 1;
-
-        res.status(206);
-        res.setHeader('Content-Range', `bytes ${start}-${end}/${stat.size}`);
-        res.setHeader('Content-Length', chunksize);
-
-        const stream = fs.createReadStream(filePath, { start, end });
-        stream.pipe(res);
-      } else {
-        // Serve full file
-        res.setHeader('Content-Length', stat.size);
-        fs.createReadStream(filePath).pipe(res);
-      }
+      // Create read stream and pipe to response
+      const stream = fs.createReadStream(filePath);
+      stream.pipe(res);
     } catch (error: any) {
       console.error('Error serving audio:', error);
-      const isUnsupportedFormat = error?.message?.includes('Unsupported audio format');
-      res.status(isUnsupportedFormat ? 415 : 500).json({ 
-        error: isUnsupportedFormat ? error.message : 'Failed to serve audio file'
-      });
+      res.status(500).json({ error: 'Failed to serve audio file' });
     }
   });
 
