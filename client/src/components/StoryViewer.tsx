@@ -39,12 +39,13 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
   }, [api, currentSegment]);
 
   const handleSegmentChange = (index: number) => {
-    // Stop current audio if playing
-    const currentAudio = document.querySelector('audio');
-    if (currentAudio) {
-      currentAudio.pause();
-      currentAudio.currentTime = 0;
-    }
+    // Stop all audio elements
+    const audioElements = document.querySelectorAll('audio');
+    audioElements.forEach(audio => {
+      audio.pause();
+      audio.currentTime = 0;
+    });
+    
     setCurrentSegment(index);
   };
 
