@@ -90,24 +90,49 @@ Ensure descriptions are vivid and specific for image generation.`;
     // Parse the content into title and scenes
     const scenes: Scene[] = [];
     
-    // Extract title
+    // Extract title with fallback
+    let title: string;
     const titleMatch = content.match(/\[TITLE\]([\s\S]*?)(?=\[STORY\])/);
     if (!titleMatch) {
-      console.error('Invalid story format: Missing title section');
-      throw new Error('Story generation failed: Missing title');
+      console.warn('Title section not found, generating fallback title');
+      // Generate a fallback title based on theme and main character
+      const themeWords = content.split(/\s+/).slice(0, 10).join(' ');
+      title = `${childName}'s ${theme.charAt(0).toUpperCase() + theme.slice(1)} Adventure`;
+    } else {
+      title = titleMatch[1].trim();
     }
-    const title = titleMatch[1].trim();
+
+    if (!title) {
+      console.error('Failed to generate title');
+      throw new Error('Story generation failed: Could not create title');
+    }
     
-    // Split remaining content for scenes
+    // Split and validate content sections
     const parts = content.split('[SCENE DESCRIPTIONS]');
+    let storyText: string;
+    let descriptions: string;
     
     if (parts.length !== 2) {
-      console.error('Invalid story format: Missing scene descriptions section');
-      throw new Error('Story generation failed: Invalid format');
+      console.warn('Invalid story format, attempting to recover content');
+      // Attempt to recover content by looking for scene markers
+      const sceneMatches = content.match(/\[Scene \d+\]/g);
+      if (!sceneMatches || sceneMatches.length === 0) {
+        throw new Error('Story generation failed: Could not parse story structure');
+      }
+      
+      // Use the entire content as story text and generate basic descriptions
+      storyText = content;
+      descriptions = sceneMatches
+        .map((_, index) => `[Scene ${index + 1} Description] A colorful and engaging scene from the story.`)
+        .join('\n\n');
+    } else {
+      [storyText, descriptions] = parts;
     }
     
-    const storyText = parts[0];
-    const descriptions = parts[1];
+    // Validate we have both story text and descriptions
+    if (!storyText.trim() || !descriptions.trim()) {
+      throw new Error('Story generation failed: Missing required content sections');
+    }
 
     // Extract individual scenes and their descriptions
     for (let i = 1; i <= 3; i++) {

@@ -23,6 +23,12 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
   const { toast } = useToast();
 
   const handleSegmentChange = (index: number) => {
+    // Stop current audio if playing
+    const currentAudio = document.querySelector('audio');
+    if (currentAudio) {
+      currentAudio.pause();
+      currentAudio.currentTime = 0;
+    }
     setCurrentSegment(index);
   };
 
@@ -98,8 +104,20 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
               </CarouselItem>
             ))}
           </CarouselContent>
-          <CarouselPrevious className="bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600" />
-          <CarouselNext className="bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600" />
+          <CarouselPrevious 
+            className={`${
+              currentSegment === 0 
+                ? 'bg-gray-200 opacity-30' 
+                : 'bg-gradient-to-r from-purple-500 to-pink-500'
+            } text-white hover:from-purple-600 hover:to-pink-600`} 
+          />
+          <CarouselNext 
+            className={`${
+              currentSegment === story.segments.length - 1 
+                ? 'bg-gray-200 opacity-30' 
+                : 'bg-gradient-to-r from-purple-500 to-pink-500'
+            } text-white hover:from-purple-600 hover:to-pink-600`} 
+          />
         </Carousel>
 
         
