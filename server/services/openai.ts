@@ -48,31 +48,7 @@ Do not add extra characters like ** or ## in the output.
 For each scene, provide a detailed description for illustration, marked as [Scene 1 Description], [Scene 2 Description], [Scene 3 Description].
 The illustration description should highlight the key elements of the scene, such as characters, settings, action, and themes.
 Focus on visual elements, colors, expressions, and composition.
-Ensure descriptions are vivid and specific for image generation.
-To ensure the same characters and settings are consistently applied across all illustrations, explicitly mention each character's features, their relationships, and the environment in every scene description. Here's an example:
-
-Character Descriptions:
-Sandy: "A girl with curly hair, a bright smile, and a yellow raincoat with matching boots."
-Music: "A rainbow-feathered bird full of energy, often fluttering around or flying."
-Headphone: "A fluffy bunny with big, perked-up ears, always listening attentively."
-
-Setting Descriptions:
-Meadow: "A bright, sunny meadow filled with colorful flowers, tall green grass, and a butterfly fluttering by."
-Pond at Sunset: "A serene pond at sunset with warm hues of orange and pink, reflecting in the water. Silhouettes of trees surround the pond, and fireflies light up the scene."
-Wildflowers and Soft Grass: "A peaceful spot with soft green grass, colorful wildflowers, and gentle light filtering through trees."
-
-Scene Descriptions example:
-[Scene 1 Description] (Sunny Meadow): "Sandy, a girl with curly hair and a bright smile, wearing a yellow raincoat and matching boots, stands in a bright sunny meadow filled with colorful flowers. Music, a rainbow-feathered bird, flutters beside her with energy, while Headphone, a fluffy bunny with big perked ears, listens attentively. The background features tall green grass swaying in the breeze and a butterfly fluttering by. The sky is clear blue with fluffy white clouds, creating a sense of adventure."
-
-[Scene 2 Description] (On Soft Grass with Wildflowers): "Sandy, a girl with curly hair and a bright smile, sitting on soft green grass with Music, a rainbow-feathered bird, and Headphone, a fluffy bunny with big, perked-up ears. They are surrounded by colorful wildflowers. Sandy has her eyes closed with a joyful smile, while Music flaps his wings excitedly. The gentle light filters through the trees, creating a peaceful atmosphere full of nature's magic."
-
-[Scene 3 Description] (Serene Pond at Sunset): "Sandy, a girl with curly hair and a bright smile, sitting with Music, a rainbow-feathered bird, and Headphone, a fluffy bunny with big perked-up ears, at the edge of a serene pond during sunset. The sky is painted with warm hues of orange and pink, reflecting in the water. Sandy looks content, gazing at the sky, while Music chirps happily and Headphone listens intently with twitching ears. Silhouettes of trees surround the pond, and fireflies begin to light up, adding a whimsical touch to the scene."
-
-Key Points to Ensure Consistency:
-Always describe Sandy's appearance and outfit, and repeat the same details about Music and Headphone in every description.
-Include the same setting details for each scene (meadow, grass, pond, sunset).
-Use consistent descriptions for atmosphere, like lighting, mood, and action (e.g., music flapping, Sandy smiling).
-This will ensure the characters and settings are visually consistent across all the illustrations.`;
+Ensure descriptions are vivid and specific for image generation.`;
 
     const prompt = previousContent
       ? `Continue the following children's story about ${childName} and ${mainCharacter}, maintaining the same style and theme. Previous content: ${previousContent}`
@@ -146,93 +122,62 @@ This will ensure the characters and settings are visually consistent across all 
       throw new Error('Story generation failed: Could not create title');
     }
     
-    // Parse content sections with improved handling
-    const storyText = content.replace(/\[TITLE\][\s\S]*?\n/, '').trim(); // Remove title section
-    const scenePattern = /\[Scene (\d+)\]([\s\S]*?)\[Scene \1 Description\]([\s\S]*?)(?=\[Scene \d+\]|$)/g;
+    // Split and validate content sections with improved parsing
+    const storyMatch = content.match(/\[STORY\]([\s\S]*?)(?=\[SCENE DESCRIPTIONS\]|$)/);
+    const descriptionsMatch = content.match(/\[SCENE DESCRIPTIONS\]([\s\S]*?)$/);
     
-    let match;
-    const tempScenes: Scene[] = [];
-    
-    while ((match = scenePattern.exec(storyText)) !== null) {
-      const [, sceneNum, rawText, rawDescription] = match;
-      
-      const text = rawText
-        .trim()
-        .replace(/\[.*?\]/g, '') // Remove emotion markers
-        .replace(/\s+/g, ' ')    // Normalize spaces
-        .trim();
-      
-      const description = rawDescription.trim();
-      
-      if (!text || !description) {
-        console.error(`Empty content in scene ${sceneNum}:`, {
-          hasText: !!text,
-          hasDescription: !!description
-        });
-        continue;
-      }
-      
-      console.log(`Successfully parsed scene ${sceneNum}:`, {
-        textPreview: text.substring(0, 50) + '...',
-        descriptionPreview: description.substring(0, 50) + '...'
+    if (!storyMatch || !descriptionsMatch) {
+      console.error('Failed to parse story sections:', {
+        hasStorySection: !!storyMatch,
+        hasDescriptionsSection: !!descriptionsMatch,
+        content: content
       });
-      
-      tempScenes.push({ text, description });
+      throw new Error('Story generation failed: Invalid content structure');
     }
     
-    if (tempScenes.length === 0) {
-      console.error('No valid scenes found in content:', content);
-      throw new Error('Story generation failed: No valid scenes parsed');
-    }
+    const storyText = storyMatch[1].trim();
+    const descriptions = descriptionsMatch[1].trim();
     
-    // Sort scenes by their sequence number
-    const scenes = tempScenes.sort((a, b) => {
-      const aNum = parseInt((a.text.match(/Scene (\d+)/) || [])[1] || '0');
-      const bNum = parseInt((b.text.match(/Scene (\d+)/) || [])[1] || '0');
-      return aNum - bNum;
+    console.log('Successfully parsed story sections:', {
+      storyTextPreview: storyText.substring(0, 100) + '...',
+      descriptionsPreview: descriptions.substring(0, 100) + '...'
     });
+    
+    // Validate we have both story text and descriptions
+    if (!storyText.trim() || !descriptions.trim()) {
+      throw new Error('Story generation failed: Missing required content sections');
+    }
+
+    // Extract individual scenes and their descriptions
     for (let i = 1; i <= 3; i++) {
-      // Match scene content and its description together
-      const scenePattern = new RegExp(
-        `\\[Scene ${i}\\]([\\s\\S]*?)\\[Scene ${i} Description\\]([\\s\\S]*?)(?=\\[Scene ${i + 1}\\]|$)`,
-        'i'
-      );
+      const sceneRegex = new RegExp(`\\[Scene ${i}\\]([\\s\\S]*?)(?=\\[Scene ${i + 1}\\]|$)`);
+      const descRegex = new RegExp(`\\[Scene ${i} Description\\]([\\s\\S]*?)(?=\\[Scene ${i + 1} Description\\]|$)`);
       
-      const match = storyText.match(scenePattern);
-      if (!match) {
-        console.error(`Failed to extract scene ${i} and its description:`, {
-          sceneNumber: i,
-          contentPreview: storyText.substring(0, 200) + '...',
-          pattern: scenePattern.toString()
-        });
-        throw new Error(`Story generation failed: Missing scene ${i} or its description`);
-      }
-      
-      const [, sceneText, description] = match;
-      if (!sceneText?.trim() || !description?.trim()) {
-        console.error(`Empty content in scene ${i}:`, {
-          sceneNumber: i,
-          hasSceneText: !!sceneText?.trim(),
-          hasDescription: !!description?.trim()
-        });
-        throw new Error(`Story generation failed: Empty content in scene ${i}`);
+      const sceneMatch = storyText.match(sceneRegex);
+      const descMatch = descriptions.match(descRegex);
+
+      if (!sceneMatch || !descMatch) {
+        console.error(`Failed to extract scene ${i}`);
+        throw new Error(`Story generation failed: Missing scene ${i}`);
       }
 
-      // Clean the scene text by removing any remaining markers and normalize spacing
-      const text = sceneText
-        .trim()
+      const rawText = sceneMatch[1].trim();
+      const description = descMatch[1].trim();
+
+      // Clean the text by removing any remaining description markers and clean up spacing
+      const text = rawText
         .replace(/\[.*?\]/g, '') // Remove any remaining markers
         .replace(/\s+/g, ' ')    // Normalize spaces
         .trim();
-        
-      console.log(`Successfully parsed scene ${i}:`, {
-        textPreview: text.substring(0, 50) + '...',
-        descriptionPreview: description.substring(0, 50) + '...'
-      });
 
-      scenes.push({
-        text,
-        description: description.trim()
+      if (!text || !description) {
+        console.error(`Empty content in scene ${i}`);
+        throw new Error(`Story generation failed: Empty content in scene ${i}`);
+      }
+
+      scenes.push({ 
+        text,           // Clean narrative text for audio/display
+        description     // Separate description for image generation
       });
     }
 
