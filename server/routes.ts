@@ -12,7 +12,40 @@ const MIME_TYPES = {
   'm4a': 'audio/mp4'
 };
 
+// Error response helper function
+function sendErrorResponse(res: any, statusCode: number, error: string, details?: any) {
+  res.status(statusCode).json({
+    error,
+    details,
+    timestamp: new Date().toISOString()
+  });
+}
+
 export function registerRoutes(app: Express) {
+  // Global error middleware
+  app.use((err: any, req: any, res: any, next: any) => {
+    console.error('Global error handler:', {
+      error: err,
+      stack: err.stack,
+      timestamp: new Date().toISOString()
+    });
+    
+    // Ensure response hasn't been sent yet
+    if (res.headersSent) {
+      return next(err);
+    }
+
+    // Set JSON content type
+    res.setHeader('Content-Type', 'application/json');
+    
+    // Handle different types of errors
+    if (err.type === 'entity.parse.failed') {
+      return sendErrorResponse(res, 400, 'Invalid JSON payload', err.message);
+    }
+    
+    return sendErrorResponse(res, err.status || 500, err.message || 'Internal server error', 
+      process.env.NODE_ENV === 'development' ? err.stack : undefined);
+  });
   // Serve audio files with proper CORS and caching headers
   app.get("/audio/:filename", (req, res) => {
     try {
@@ -77,10 +110,7 @@ export function registerRoutes(app: Express) {
           timestamp: new Date().toISOString()
         };
         console.error('Validation failed:', errorDetails);
-        return res.status(400).json({ 
-          error: "Missing required fields",
-          details: errorDetails
-        });
+        return sendErrorResponse(res, 400, "Missing required fields", errorDetails);
       }
 
       const parsedAge = Number(childAge);
@@ -164,9 +194,9 @@ export function registerRoutes(app: Express) {
         stack: error instanceof Error ? error.stack : undefined,
         timestamp: new Date().toISOString()
       });
-      res.status(500).json({ 
-        error: "Failed to generate story",
-        details: error instanceof Error ? error.message : 'Unknown error'
+      sendErrorResponse(res, 500, "Failed to generate story", {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        type: error instanceof Error ? error.constructor.name : 'Unknown'
       });
     }
   });
