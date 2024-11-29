@@ -104,8 +104,7 @@ function AudioPlayerContent({ audioUrl }: AudioPlayerProps) {
       setIsPlaying(false);
     };
 
-    // Add event listeners with proper MIME type
-    audio.type = 'audio/mpeg';
+    // Add event listeners
     audio.addEventListener('loadstart', handleLoadStart);
     audio.addEventListener('canplay', handleCanPlay);
     audio.addEventListener('canplaythrough', handleCanPlayThrough);
