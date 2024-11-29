@@ -252,7 +252,7 @@ export async function generateSpeech(text: string): Promise<string> {
     const mp3 = await openai.audio.speech.create({
       model: "tts-1",
       voice: "nova",
-      input: text,
+      input: text
     });
 
     if (!mp3) {

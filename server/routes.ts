@@ -80,14 +80,39 @@ export function registerRoutes(app: Express) {
 
       // Set proper CORS headers
       res.setHeader('Access-Control-Allow-Origin', '*');
-      res.setHeader('Access-Control-Allow-Methods', 'GET');
-      res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD');
+      res.setHeader('Access-Control-Allow-Headers', 'Range, Content-Type');
       
       // Set content type and caching headers
-      res.setHeader('Content-Type', 'audio/mpeg');
+      res.setHeader('Content-Type', getMimeType(filename));
       res.setHeader('Accept-Ranges', 'bytes');
       res.setHeader('Content-Length', stat.size);
-      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Cache-Control', 'public, max-age=31536000');
+      
+      // Handle range requests
+      const range = req.headers.range;
+      if (range) {
+        const parts = range.replace(/bytes=/, "").split("-");
+        const start = parseInt(parts[0], 10);
+        const end = parts[1] ? parseInt(parts[1], 10) : stat.size - 1;
+        
+        if (start >= stat.size || end >= stat.size) {
+          res.status(416).send('Requested range not satisfiable');
+          return;
+        }
+
+        const chunksize = (end - start) + 1;
+        const stream = fs.createReadStream(filePath, { start, end });
+        
+        res.status(206);
+        res.setHeader('Content-Range', `bytes ${start}-${end}/${stat.size}`);
+        res.setHeader('Content-Length', chunksize);
+        stream.pipe(res);
+      } else {
+        // Stream the whole file if no range is requested
+        const stream = fs.createReadStream(filePath);
+        stream.pipe(res);
+      }
 
       // Stream the file
       const stream = fs.createReadStream(filePath);

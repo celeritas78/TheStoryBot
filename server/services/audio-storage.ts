@@ -2,17 +2,21 @@ import fs from 'fs';
 import path from 'path';
 import { randomUUID } from 'crypto';
 
-const AUDIO_DIR = path.join(process.cwd(), 'public', 'audio');
-
-// Only support MP3 format for stability
-export const SUPPORTED_AUDIO_FORMATS = {
-  mp3: 'audio/mpeg',
-} as const;
+// Configure audio storage directory
+export const AUDIO_DIR = path.join(process.cwd(), 'public', 'audio');
 
 // Ensure audio directory exists
 if (!fs.existsSync(AUDIO_DIR)) {
   fs.mkdirSync(AUDIO_DIR, { recursive: true });
 }
+
+// Define supported audio formats
+export const SUPPORTED_AUDIO_FORMATS = {
+  'mp3': 'audio/mpeg',
+  'm4a': 'audio/mp4',
+  'wav': 'audio/wav'
+} as const;
+
 // Log audio directory configuration
 console.log('Audio directory configuration:', {
   AUDIO_DIR,
@@ -22,7 +26,7 @@ console.log('Audio directory configuration:', {
 
 export function getMimeType(fileName: string): string {
   const ext = path.extname(fileName).toLowerCase().slice(1);
-  return SUPPORTED_AUDIO_FORMATS[ext as keyof typeof SUPPORTED_AUDIO_FORMATS] || 'application/octet-stream';
+  return SUPPORTED_AUDIO_FORMATS[ext as keyof typeof SUPPORTED_AUDIO_FORMATS] || 'audio/mpeg';
 }
 
 export function isAudioFormatSupported(fileName: string): boolean {
@@ -31,28 +35,49 @@ export function isAudioFormatSupported(fileName: string): boolean {
 }
 
 export async function saveAudioFile(audioBuffer: Buffer, format: string = 'mp3'): Promise<string> {
+  // Log input parameters
+  console.log('saveAudioFile called with:', {
+    bufferSize: audioBuffer.length,
+    originalFormat: format,
+    SUPPORTED_AUDIO_FORMATS
+  });
+
+  // Normalize format
   if (!format.startsWith('.')) {
     format = `.${format}`;
   }
   
-  if (!isAudioFormatSupported(format)) {
+  // Remove the dot for validation
+  const formatWithoutDot = format.slice(1);
+  
+  // Validate format
+  if (!(formatWithoutDot in SUPPORTED_AUDIO_FORMATS)) {
+    console.error('Unsupported format error:', {
+      format: formatWithoutDot,
+      supportedFormats: SUPPORTED_AUDIO_FORMATS
+    });
     throw new Error(`Unsupported audio format: ${format}`);
   }
 
   const fileName = `${randomUUID()}${format}`;
   const filePath = path.join(AUDIO_DIR, fileName);
   
+  // Log file operations
+  console.log('Saving audio file:', {
+    fileName,
+    filePath,
+    exists: fs.existsSync(AUDIO_DIR)
+  });
+  
   await fs.promises.writeFile(filePath, audioBuffer);
   return `/audio/${fileName}`;
 }
 
 export function getAudioFilePath(fileName: string): string {
-  if (!isAudioFormatSupported(fileName)) {
-    throw new Error(`Unsupported audio format: ${path.extname(fileName)}`);
-  }
   return path.join(AUDIO_DIR, fileName);
 }
 
 export function audioFileExists(fileName: string): boolean {
-  return fs.existsSync(path.join(AUDIO_DIR, fileName)) && isAudioFormatSupported(fileName);
+  const filePath = path.join(AUDIO_DIR, fileName);
+  return fs.existsSync(filePath) && isAudioFormatSupported(fileName);
 }
