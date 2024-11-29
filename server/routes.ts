@@ -115,7 +115,7 @@ export function registerRoutes(app: Express) {
         }
       }));
 
-      // Save to database
+      // Save to database with better error handling
       const [story] = await db.insert(stories)
         .values({
           childName,
@@ -124,6 +124,8 @@ export function registerRoutes(app: Express) {
           theme,
           content: segments.map(s => s.content).join('\n\n'),
           imageUrls: JSON.stringify(segments.map(s => s.imageUrl)),
+          parentApproved: false,
+          createdAt: new Date(),
         })
         .returning();
 

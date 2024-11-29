@@ -18,7 +18,9 @@ interface Scene {
 }
 
 interface StoryContent {
+  title: string;
   scenes: Scene[];
+  error?: string;
 }
 
 export async function generateStoryContent({
@@ -33,13 +35,18 @@ export async function generateStoryContent({
   try {
     const systemPrompt = `You are a skilled children's story writer. Create engaging, age-appropriate content with the following structure:
 
+[TITLE]
+Create a captivating, child-friendly title that reflects the story's theme and main characters.
+
 [STORY]
 Write the main story text here, divided into 3 scenes. Each scene should be clearly marked with [Scene 1], [Scene 2], [Scene 3].
 Include narration cues in brackets like [excited], [whisper], [pause] to guide the storytelling.
+Use clear paragraph breaks and engaging dialogue.
 
 [SCENE DESCRIPTIONS]
 For each scene, provide a detailed description for illustration, marked as [Scene 1 Description], [Scene 2 Description], [Scene 3 Description].
-Focus on visual elements, colors, expressions, and composition.`;
+Focus on visual elements, colors, expressions, and composition.
+Ensure descriptions are vivid and specific for image generation.`;
 
     const prompt = previousContent
       ? `Continue the following children's story about ${childName} and ${mainCharacter}, maintaining the same style and theme. Previous content: ${previousContent}`
@@ -80,8 +87,18 @@ Focus on visual elements, colors, expressions, and composition.`;
     }
 
     const content = message.content;
-    // Parse the content into scenes with better error handling
+    // Parse the content into title and scenes
     const scenes: Scene[] = [];
+    
+    // Extract title
+    const titleMatch = content.match(/\[TITLE\]([\s\S]*?)(?=\[STORY\])/);
+    if (!titleMatch) {
+      console.error('Invalid story format: Missing title section');
+      throw new Error('Story generation failed: Missing title');
+    }
+    const title = titleMatch[1].trim();
+    
+    // Split remaining content for scenes
     const parts = content.split('[SCENE DESCRIPTIONS]');
     
     if (parts.length !== 2) {
@@ -121,6 +138,7 @@ Focus on visual elements, colors, expressions, and composition.`;
     }
 
     const parsedContent: StoryContent = {
+      title,
       scenes
     };
 

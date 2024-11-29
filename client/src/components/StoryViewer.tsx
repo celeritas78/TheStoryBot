@@ -22,6 +22,10 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
   const [currentSegment, setCurrentSegment] = useState(0);
   const { toast } = useToast();
 
+  const handleSegmentChange = (index: number) => {
+    setCurrentSegment(index);
+  };
+
   // Check if story has segments
   if (!story.segments || story.segments.length === 0) {
     return (
@@ -78,6 +82,13 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
                       }}
                     />
                   )}
+                  <div className="my-4">
+                    {segment.audioUrl ? (
+                      <AudioPlayer audioUrl={segment.audioUrl} />
+                    ) : (
+                      <div className="text-gray-500 text-sm">Audio not available</div>
+                    )}
+                  </div>
                   {segment.content && (
                     <p className="text-lg leading-relaxed">
                       {segment.content}
@@ -87,32 +98,11 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
               </CarouselItem>
             ))}
           </CarouselContent>
-          <CarouselPrevious />
-          <CarouselNext />
+          <CarouselPrevious className="bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600" />
+          <CarouselNext className="bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600" />
         </Carousel>
 
-        {currentSegmentData?.audioUrl && (
-          <div className="mt-4">
-            <AudioPlayer audioUrl={currentSegmentData.audioUrl} />
-          </div>
-        )}
-
-        <div className="mt-4 flex justify-between">
-          <Button
-            variant="outline"
-            disabled={safeCurrentSegment === 0}
-            onClick={() => setCurrentSegment((prev) => Math.max(0, prev - 1))}
-          >
-            Previous
-          </Button>
-          <Button
-            variant="outline"
-            disabled={safeCurrentSegment === story.segments.length - 1}
-            onClick={() => setCurrentSegment((prev) => Math.min(story.segments.length - 1, prev + 1))}
-          >
-            Next
-          </Button>
-        </div>
+        
       </Card>
     </div>
   );

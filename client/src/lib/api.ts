@@ -17,6 +17,7 @@ export interface StorySegment {
 
 export interface Story {
   id: number;
+  title: string;
   childName: string;
   theme: string;
   segments: Array<{
