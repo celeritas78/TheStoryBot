@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -38,37 +38,26 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
     api.scrollTo(currentSegment);
   }, [api, currentSegment]);
 
-  // Audio management
-  const audioRefs = useRef<Record<number, HTMLAudioElement>>({});
-  
-  // Register audio element
-  const registerAudioElement = (index: number, element: HTMLAudioElement | null) => {
-    if (element) {
-      audioRefs.current[index] = element;
-    } else {
-      delete audioRefs.current[index];
-    }
-  };
-
-  // Stop all audio except current
-  const stopOtherAudio = (currentIndex: number) => {
-    Object.entries(audioRefs.current).forEach(([index, audio]) => {
-      if (Number(index) !== currentIndex && !audio.paused) {
-        audio.pause();
-        audio.currentTime = 0;
-      }
-    });
-  };
-
-  // Handle segment change
+  // Stop audio when currentSegment changes
   useEffect(() => {
-    stopOtherAudio(currentSegment);
+    const stopAllAudio = () => {
+      const audioElements = document.querySelectorAll('audio');
+      audioElements.forEach(audio => {
+        if (!audio.paused) {
+          audio.pause();
+          audio.currentTime = 0;
+        }
+      });
+    };
+    
+    stopAllAudio();
   }, [currentSegment]);
 
-  // Cleanup effect
+  // Cleanup effect to stop audio when unmounting
   useEffect(() => {
     return () => {
-      Object.values(audioRefs.current).forEach(audio => {
+      const audioElements = document.querySelectorAll('audio');
+      audioElements.forEach(audio => {
         if (!audio.paused) {
           audio.pause();
           audio.currentTime = 0;
@@ -148,11 +137,7 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
                   )}
                   <div className="my-4">
                     {segment.audioUrl ? (
-                      <AudioPlayer 
-                        audioUrl={segment.audioUrl} 
-                        ref={(element) => registerAudioElement(index, element)}
-                        onPlay={() => stopOtherAudio(index)}
-                      />
+                      <AudioPlayer audioUrl={segment.audioUrl} />
                     ) : (
                       <div className="text-gray-500 text-sm">Audio not available</div>
                     )}

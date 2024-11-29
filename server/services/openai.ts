@@ -63,11 +63,6 @@ Ensure descriptions are vivid and specific for image generation.`;
          - Ensure age-appropriate content and vocabulary
          - Include a clear beginning, middle, and end`;
 
-    console.log('Sending request to OpenAI with prompt:', {
-      systemPrompt: systemPrompt.substring(0, 100) + '...',
-      userPrompt: prompt.substring(0, 100) + '...'
-    });
-
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
@@ -82,13 +77,6 @@ Ensure descriptions are vivid and specific for image generation.`;
       ],
     });
 
-    console.log('Received raw response from OpenAI:', {
-      id: response.id,
-      model: response.model,
-      usage: response.usage,
-      choices: response.choices?.length
-    });
-
     if (!response.choices || !response.choices[0]) {
       console.error('Invalid response structure from OpenAI:', response);
       throw new Error("OpenAI response missing choices");
@@ -101,59 +89,47 @@ Ensure descriptions are vivid and specific for image generation.`;
     }
 
     const content = message.content;
-    console.log('Raw content from OpenAI:', content);
     // Parse the content into title and scenes
+    const scenes: Scene[] = [];
     
-    // Extract title from ** markers with fallback
+    // Extract title with fallback
     let title: string;
-    const titleMatch = content.match(/\*\*(.*?)\*\*/);
+    const titleMatch = content.match(/\[TITLE\]([\s\S]*?)(?=\[STORY\])/);
     if (!titleMatch) {
-      console.warn('Title markers not found, attempting alternative title extraction');
-      // Try to extract first line as title
-      const firstLine = content.split('\n')[0].trim();
-      if (firstLine && firstLine.length < 100) {
-        title = firstLine;
-      } else {
-        console.warn('No suitable title found in content, generating fallback');
-        title = `${childName}'s ${theme.charAt(0).toUpperCase() + theme.slice(1)} Adventure`;
-      }
+      console.warn('Title section not found, generating fallback title');
+      // Generate a fallback title based on theme and main character
+      const themeWords = content.split(/\s+/).slice(0, 10).join(' ');
+      title = `${childName}'s ${theme.charAt(0).toUpperCase() + theme.slice(1)} Adventure`;
     } else {
       title = titleMatch[1].trim();
     }
-
-    console.log('Extracted title:', { title, fromMarkers: !!titleMatch });
 
     if (!title) {
       console.error('Failed to generate title');
       throw new Error('Story generation failed: Could not create title');
     }
     
-    // Extract scenes and descriptions directly
-    const scenes: Scene[] = [];
-    const sceneMatches = content.matchAll(/\[Scene (\d+)\]([\s\S]*?)(?=\[Scene \d+\]|$)/g);
-    const descriptionMatches = content.matchAll(/\[Scene (\d+) Description\]([\s\S]*?)(?=\[Scene \d+ Description\]|$)/g);
+    // Split and validate content sections
+    const parts = content.split('[SCENE DESCRIPTIONS]');
+    let storyText: string;
+    let descriptions: string;
     
-    // Convert matches to arrays for easier processing
-    const sceneArray = Array.from(sceneMatches);
-    const descriptionArray = Array.from(descriptionMatches);
-
-    console.log('Found scenes and descriptions:', {
-      sceneCount: sceneArray.length,
-      descriptionCount: descriptionArray.length
-    });
-
-    if (sceneArray.length === 0) {
-      console.error('No scenes found in content');
-      throw new Error('Story generation failed: No scenes found');
+    if (parts.length !== 2) {
+      console.warn('Invalid story format, attempting to recover content');
+      // Attempt to recover content by looking for scene markers
+      const sceneMatches = content.match(/\[Scene \d+\]/g);
+      if (!sceneMatches || sceneMatches.length === 0) {
+        throw new Error('Story generation failed: Could not parse story structure');
+      }
+      
+      // Use the entire content as story text and generate basic descriptions
+      storyText = content;
+      descriptions = sceneMatches
+        .map((_, index) => `[Scene ${index + 1} Description] A colorful and engaging scene from the story.`)
+        .join('\n\n');
+    } else {
+      [storyText, descriptions] = parts;
     }
-
-    const storyText = sceneArray.map(match => match[2].trim()).join('\n\n');
-    const descriptions = descriptionArray.map(match => match[2].trim()).join('\n\n');
-    
-    console.log('Successfully parsed story sections:', {
-      storyTextPreview: storyText.substring(0, 100) + '...',
-      descriptionsPreview: descriptions.substring(0, 100) + '...'
-    });
     
     // Validate we have both story text and descriptions
     if (!storyText.trim() || !descriptions.trim()) {
@@ -221,21 +197,14 @@ Ensure descriptions are vivid and specific for image generation.`;
 
 export async function generateImage(sceneDescription: string): Promise<string> {
   try {
-    // Keep all relevant details from scene description
+    // Sanitize and limit scene description
     const sanitizedDescription = sceneDescription
-      .replace(/[^\w\s,.()'"-]/g, ' ') // Replace special characters with spaces
-      .replace(/\s+/g, ' ')           // Normalize spaces
-      .trim();
+      .replace(/[^\w\s,.()'"-]/g, '') // Remove special characters except basic punctuation
+      .trim()
+      .substring(0, 500); // Limit length to 500 characters
 
-    // Enhance prompt with detailed style guidelines and scene-specific context
-    const safePrompt = `Create a detailed, child-friendly storybook illustration for the following scene: ${sanitizedDescription}.
-    
-    Key elements to include:
-    - All characters and objects mentioned in the scene
-    - The specific setting and environment described
-    - The emotional tone and atmosphere of the scene
-    
-    Artistic style requirements: 
+    // Enhance prompt with child-friendly context
+    const safePrompt = `Create a cheerful, child-friendly storybook illustration with the following scene: ${sanitizedDescription}. 
       Style guidelines:
       - Use bright, warm colors suitable for children's books
       - Keep the imagery gentle and non-threatening
