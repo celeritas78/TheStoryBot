@@ -42,9 +42,11 @@ Create a captivating, child-friendly title that reflects the story's theme and m
 Write the main story text here, divided into 3 scenes. Each scene should be clearly marked with [Scene 1], [Scene 2], [Scene 3].
 Include narration cues in brackets like [excited], [whisper], [pause] to guide the storytelling.
 Use clear paragraph breaks and engaging dialogue.
+Do not add extra characters like ** or ## in the output.
 
 [SCENE DESCRIPTIONS]
 For each scene, provide a detailed description for illustration, marked as [Scene 1 Description], [Scene 2 Description], [Scene 3 Description].
+The illustration description should highlight the key elements of the scene, such as characters, settings, action, and themes.
 Focus on visual elements, colors, expressions, and composition.
 Ensure descriptions are vivid and specific for image generation.`;
 
@@ -212,7 +214,7 @@ export async function generateImage(sceneDescription: string): Promise<string> {
       model: "dall-e-3",
       prompt: safePrompt,
       n: 1,
-      size: "1024x1024",
+      size: "1792x1024",
       quality: "standard",
       style: "vivid",
     });
