@@ -47,17 +47,26 @@ export function registerRoutes(app: Express) {
       process.env.NODE_ENV === 'development' ? err.stack : undefined);
   });
   // Serve audio files with proper CORS and caching headers
-  app.get("/audio/:filename", (req, res) => {
+  app.get("/audio/:filename", async (req, res) => {
     try {
       const { filename } = req.params;
       console.log('Audio request received:', { filename });
-      
+
+      // First check if this audio file is referenced in the database
+      const segment = await db.query.storySegments.findFirst({
+        where: eq(storySegments.audioUrl, `/audio/${filename}`)
+      });
+
+      if (!segment) {
+        console.error('Audio file not found in database:', { filename });
+        return res.status(404).json({ error: "Audio file not found" });
+      }
+
       const filePath = getAudioFilePath(filename);
       console.log('Resolved file path:', { filePath });
 
-      // Check if file exists
       if (!fs.existsSync(filePath)) {
-        console.error('Audio file not found:', { filePath });
+        console.error('Audio file not found on disk:', { filePath });
         return res.status(404).json({ error: "Audio file not found" });
       }
 
