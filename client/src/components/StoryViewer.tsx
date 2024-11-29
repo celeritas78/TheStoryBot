@@ -38,15 +38,31 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
     api.scrollTo(currentSegment);
   }, [api, currentSegment]);
 
-  const handleSegmentChange = (index: number) => {
-    // Stop all audio elements
+  // Cleanup effect to stop audio when unmounting
+  useEffect(() => {
+    return () => {
+      const audioElements = document.querySelectorAll('audio');
+      audioElements.forEach(audio => {
+        if (!audio.paused) {
+          audio.pause();
+          audio.currentTime = 0;
+        }
+      });
+    };
+  }, []);
+
+  const handleSegmentChange = (index: any) => {
+    // Get all audio elements and stop them
     const audioElements = document.querySelectorAll('audio');
     audioElements.forEach(audio => {
-      audio.pause();
-      audio.currentTime = 0;
+      if (!audio.paused) {
+        audio.pause();
+        audio.currentTime = 0;
+      }
     });
     
-    setCurrentSegment(index);
+    // Update the current segment
+    setCurrentSegment(typeof index === 'number' ? index : 0);
   };
 
   // Check if story has segments
@@ -93,8 +109,7 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
         <Carousel 
           className="w-full max-w-xl mx-auto"
           setApi={setApi}
-          currentIndex={currentSegment}
-          onSelect={(index) => handleSegmentChange(index)}
+          onSelect={handleSegmentChange}
         >
           <CarouselContent>
             {story.segments.map((segment: StorySegment, index: number) => (
