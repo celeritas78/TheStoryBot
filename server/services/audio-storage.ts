@@ -4,12 +4,9 @@ import { randomUUID } from 'crypto';
 
 const AUDIO_DIR = path.join(process.cwd(), 'public', 'audio');
 
-// Supported audio formats and their MIME types
+// Only support MP3 format for stability
 export const SUPPORTED_AUDIO_FORMATS = {
   mp3: 'audio/mpeg',
-  wav: 'audio/wav',
-  m4a: 'audio/mp4',
-  ogg: 'audio/ogg',
 } as const;
 
 // Ensure audio directory exists

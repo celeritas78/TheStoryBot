@@ -150,8 +150,7 @@ function AudioPlayerContent({ audioUrl }: AudioPlayerProps) {
       case MediaError.MEDIA_ERR_DECODE:
         return "Audio decoding failed - file may be corrupted";
       case MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED:
-        const format = audioRef.current?.currentSrc.split('.').pop()?.toLowerCase();
-        return `Audio format ${format ? `'${format}' ` : ''}not supported by your browser. Please try using a different browser or contact support.`;
+        return `Audio format not supported. Please ensure you're using an MP3 file.`;
       default:
         return `Unknown error occurred (Code: ${error.code})`;
     }
