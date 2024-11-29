@@ -114,16 +114,7 @@ export function registerRoutes(app: Express) {
         stream.pipe(res);
       }
 
-      // Stream the file
-      const stream = fs.createReadStream(filePath);
-      console.log('Starting audio stream');
-      
-      stream.on('error', (error) => {
-        console.error('Stream error:', error);
-        res.status(500).json({ error: 'Failed to stream audio file' });
-      });
-
-      stream.pipe(res);
+      // Note: File streaming is already handled by the range request code above
     } catch (error: any) {
       console.error('Error serving audio:', { 
         error, 
