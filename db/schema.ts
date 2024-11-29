@@ -5,6 +5,7 @@ import { z } from "zod";
 
 export const stories = pgTable("stories", {
   id: serial("id").primaryKey(),
+  title: text("title"),
   childName: text("child_name").notNull(),
   childAge: integer("child_age").notNull(),
   characters: jsonb("characters").notNull(),

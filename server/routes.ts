@@ -118,6 +118,7 @@ export function registerRoutes(app: Express) {
       // Save to database with better error handling
       const [story] = await db.insert(stories)
         .values({
+          title: storyContent.title,
           childName,
           childAge: parsedAge,
           characters: JSON.stringify({ mainCharacter }),

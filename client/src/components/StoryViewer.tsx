@@ -107,6 +107,9 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
         </div>
       )}
       <Card className="p-6">
+        <h2 className="text-3xl font-bold text-center mb-6 bg-gradient-to-r from-purple-600 to-pink-600 text-transparent bg-clip-text">
+          {story.title}
+        </h2>
         <Carousel 
           className="w-full max-w-xl mx-auto"
           setApi={setApi}
