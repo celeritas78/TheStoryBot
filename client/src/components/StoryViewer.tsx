@@ -105,18 +105,22 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
             ))}
           </CarouselContent>
           <CarouselPrevious 
+            disabled={currentSegment === 0}
+            aria-disabled={currentSegment === 0}
             className={`${
               currentSegment === 0 
-                ? 'bg-gray-200 opacity-30' 
+                ? 'bg-gray-200 opacity-30 cursor-not-allowed pointer-events-none' 
                 : 'bg-gradient-to-r from-purple-500 to-pink-500'
-            } text-white hover:from-purple-600 hover:to-pink-600`} 
+            } text-white hover:from-purple-600 hover:to-pink-600 transition-all duration-200`} 
           />
           <CarouselNext 
+            disabled={currentSegment === story.segments.length - 1}
+            aria-disabled={currentSegment === story.segments.length - 1}
             className={`${
               currentSegment === story.segments.length - 1 
-                ? 'bg-gray-200 opacity-30' 
+                ? 'bg-gray-200 opacity-30 cursor-not-allowed pointer-events-none' 
                 : 'bg-gradient-to-r from-purple-500 to-pink-500'
-            } text-white hover:from-purple-600 hover:to-pink-600`} 
+            } text-white hover:from-purple-600 hover:to-pink-600 transition-all duration-200`} 
           />
         </Carousel>
 
