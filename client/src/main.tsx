@@ -12,6 +12,7 @@ import LibraryPage from "./pages/Library";
 import StoryPage from "./pages/StoryPage";
 import { useUser } from "./hooks/use-user";
 import { Loader2 } from "lucide-react";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
   const { user, isLoading } = useUser();
@@ -33,7 +34,7 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
   return <Component />;
 }
 
-function Router() {
+function AppRoutes() {
   const { user, isLoading } = useUser();
 
   if (isLoading) {
@@ -62,11 +63,19 @@ function Router() {
   );
 }
 
+function App() {
+  return (
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <AppRoutes />
+        <Toaster />
+      </QueryClientProvider>
+    </ErrorBoundary>
+  );
+}
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <Router />
-      <Toaster />
-    </QueryClientProvider>
-  </StrictMode>,
+    <App />
+  </StrictMode>
 );
