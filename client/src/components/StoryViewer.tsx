@@ -139,41 +139,45 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
                   )}
                   
                   {/* Navigation and Audio Controls Container */}
-                  <div className="w-full max-w-2xl mx-auto">
-                    <div className="bg-gray-100 rounded-xl p-4 shadow-sm">
-                      <div className="flex items-center justify-between gap-4">
-                        <CarouselPrevious 
-                          onClick={() => setCurrentSegment(currentSegment - 1)}
-                          disabled={currentSegment === 0}
-                          className={`relative flex-shrink-0 h-12 w-12 items-center justify-center rounded-full transition-all duration-200 ${
-                            currentSegment === 0 
-                              ? 'bg-gray-200 text-gray-400 cursor-not-allowed opacity-50' 
-                              : 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600'
-                          }`}
-                        />
+                  <div className="w-full max-w-3xl mx-auto px-4 sm:px-6">
+                    <div className="bg-white rounded-xl p-4 sm:p-6 shadow-md">
+                      <div className="flex items-center justify-between space-x-4 sm:space-x-6">
+                        <div className="flex-shrink-0">
+                          <CarouselPrevious 
+                            onClick={() => setCurrentSegment(currentSegment - 1)}
+                            disabled={currentSegment === 0}
+                            className={`relative inline-flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full shadow-sm transition-all duration-200 ${
+                              currentSegment === 0 
+                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                                : 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600 hover:shadow-md'
+                            }`}
+                          />
+                        </div>
                         
                         {/* Audio Player Container */}
-                        <div className="flex-1 min-w-0">
+                        <div className="flex-1 min-w-0 px-2 sm:px-4">
                           {segment.audioUrl ? (
-                            <div className="w-full">
+                            <div className="w-full max-w-2xl mx-auto">
                               <AudioPlayer audioUrl={segment.audioUrl} />
                             </div>
                           ) : (
-                            <div className="text-gray-500 text-sm text-center py-4">
-                              Audio not available
+                            <div className="flex items-center justify-center h-full min-h-[80px] bg-gray-50 rounded-lg">
+                              <span className="text-gray-500 text-sm">Audio not available</span>
                             </div>
                           )}
                         </div>
                         
-                        <CarouselNext 
-                          onClick={() => setCurrentSegment(currentSegment + 1)}
-                          disabled={currentSegment === story.segments.length - 1}
-                          className={`relative flex-shrink-0 h-12 w-12 items-center justify-center rounded-full transition-all duration-200 ${
-                            currentSegment === story.segments.length - 1 
-                              ? 'bg-gray-200 text-gray-400 cursor-not-allowed opacity-50' 
-                              : 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600'
-                          }`}
-                        />
+                        <div className="flex-shrink-0">
+                          <CarouselNext 
+                            onClick={() => setCurrentSegment(currentSegment + 1)}
+                            disabled={currentSegment === story.segments.length - 1}
+                            className={`relative inline-flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full shadow-sm transition-all duration-200 ${
+                              currentSegment === story.segments.length - 1 
+                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                                : 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600 hover:shadow-md'
+                            }`}
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
