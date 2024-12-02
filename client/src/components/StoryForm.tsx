@@ -41,7 +41,7 @@ const formSchema = z.object({
     .regex(/^[a-zA-Z\s,()-]+$/, "Character name can only contain letters, spaces, commas, and basic punctuation"),
   theme: z.string()
     .min(1, "Please select a theme")
-    .refine((val) => ['adventure', 'fantasy', 'friendship', 'nature'].includes(val), "Invalid theme selected"),
+    .refine((val) => ['adventure', 'animals', 'castles', 'courage', 'dinosaurs', 'discovery', 'dreams', 'exploration', 'fairyland', 'fantasy', 'friendship', 'heroes', 'imagination', 'kindness', 'magic', 'mystery', 'mythical-creatures', 'ocean', 'pirates', 'princesses', 'rainbows', 'robots', 'space', 'superpowers', 'teamwork', 'time-travel', 'treasure', 'underwater-worlds', 'wizards'].includes(val), "Invalid theme selected"),
 });
 
 export default function StoryForm({ onSubmit, isLoading }: StoryFormProps) {
@@ -102,7 +102,7 @@ export default function StoryForm({ onSubmit, isLoading }: StoryFormProps) {
               name="mainCharacter"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Main Character</FormLabel>
+                  <FormLabel>Main Characters</FormLabel>
                   <FormControl>
                     <Input
                       {...field}
@@ -131,9 +131,34 @@ export default function StoryForm({ onSubmit, isLoading }: StoryFormProps) {
                     </FormControl>
                     <SelectContent>
                       <SelectItem value="adventure">Adventure</SelectItem>
+                      <SelectItem value="animals">Animals</SelectItem>
+                      <SelectItem value="castles">Castles</SelectItem>
+                      <SelectItem value="courage">Courage</SelectItem>
+                      <SelectItem value="dinosaurs">Dinosaurs</SelectItem>
+                      <SelectItem value="discovery">Discovery</SelectItem>
+                      <SelectItem value="dreams">Dreams</SelectItem>
+                      <SelectItem value="exploration">Exploration</SelectItem>
+                      <SelectItem value="fairyland">Fairyland</SelectItem>
                       <SelectItem value="fantasy">Fantasy</SelectItem>
                       <SelectItem value="friendship">Friendship</SelectItem>
-                      <SelectItem value="nature">Nature</SelectItem>
+                      <SelectItem value="heroes">Heroes</SelectItem>
+                      <SelectItem value="imagination">Imagination</SelectItem>
+                      <SelectItem value="kindness">Kindness</SelectItem>
+                      <SelectItem value="magic">Magic</SelectItem>
+                      <SelectItem value="mystery">Mystery</SelectItem>
+                      <SelectItem value="mythical-creatures">Mythical Creatures</SelectItem>
+                      <SelectItem value="ocean">Ocean</SelectItem>
+                      <SelectItem value="pirates">Pirates</SelectItem>
+                      <SelectItem value="princesses">Princesses</SelectItem>
+                      <SelectItem value="rainbows">Rainbows</SelectItem>
+                      <SelectItem value="robots">Robots</SelectItem>
+                      <SelectItem value="space">Space</SelectItem>
+                      <SelectItem value="superpowers">Superpowers</SelectItem>
+                      <SelectItem value="teamwork">Teamwork</SelectItem>
+                      <SelectItem value="time-travel">Time Travel</SelectItem>
+                      <SelectItem value="treasure">Treasure</SelectItem>
+                      <SelectItem value="underwater-worlds">Underwater Worlds</SelectItem>
+                      <SelectItem value="wizards">Wizards</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />

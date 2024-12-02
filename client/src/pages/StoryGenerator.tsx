@@ -111,6 +111,7 @@ export default function StoryGenerator() {
               <div className="bg-white p-4 rounded-lg flex items-center space-x-2">
                 <Loader2 className="h-6 w-6 animate-spin" />
                 <span>Generating your story...</span>
+                <span>Will take upto a minute...</span>
               </div>
             </div>
           )}

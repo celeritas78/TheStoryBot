@@ -8,10 +8,10 @@ export default function HomePage() {
       <div className="container mx-auto px-4 py-8">
         <header className="text-center mb-12">
           <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 text-transparent bg-clip-text mb-4">
-            Magical Bedtime Stories
+            The Story Bot
           </h1>
           <p className="text-lg text-gray-600">
-            Create personalized stories for your little ones
+            Create personalized AI stories for your little ones
           </p>
         </header>
 
@@ -28,7 +28,7 @@ export default function HomePage() {
                 Personalized Stories
               </h2>
               <p className="text-gray-600">
-                Create unique stories featuring your child's favorite characters
+                Create unique AI stories featuring your child's favorite characters
                 and settings.
               </p>
             </CardContent>
@@ -42,7 +42,7 @@ export default function HomePage() {
             />
             <CardContent className="p-6">
               <h2 className="text-2xl font-semibold mb-2">
-                Magical Adventures
+                Imaginative Theme
               </h2>
               <p className="text-gray-600">
                 Let your child's imagination soar with AI-generated illustrations
