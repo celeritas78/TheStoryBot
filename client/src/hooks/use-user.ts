@@ -87,6 +87,13 @@ export function useUser() {
     },
   });
 
+  const updateProfileMutation = useMutation<RequestResult, Error, { username: string; email: string; }>({
+    mutationFn: (userData) => handleRequest('/api/user/profile', 'PUT', userData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['user'] });
+    },
+  });
+
   return {
     user,
     isLoading,
@@ -94,5 +101,6 @@ export function useUser() {
     login: loginMutation.mutateAsync,
     logout: logoutMutation.mutateAsync,
     register: registerMutation.mutateAsync,
+    updateProfile: updateProfileMutation.mutateAsync,
   };
 }
