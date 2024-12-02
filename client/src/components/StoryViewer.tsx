@@ -124,9 +124,9 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
           <CarouselContent>
             {story.segments.map((segment: StorySegment, index: number) => (
               <CarouselItem key={index} data-index={index}>
-                <div className="space-y-6">
+                <div className="space-y-8">
                   {segment.imageUrl && (
-                    <div className="relative w-full aspect-[4/3] overflow-hidden rounded-lg">
+                    <div className="relative w-full aspect-[4/3] overflow-hidden rounded-lg shadow-md">
                       <img
                         src={segment.imageUrl}
                         alt={`Story scene ${index + 1}`}
@@ -137,41 +137,53 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
                       />
                     </div>
                   )}
-                  <div className="space-y-6">
-                    <div className="flex-1 mx-4">
-                      <div className="flex items-center justify-between bg-gray-100 rounded-lg p-2">
+                  
+                  {/* Navigation and Audio Controls Container */}
+                  <div className="w-full max-w-2xl mx-auto">
+                    <div className="bg-gray-100 rounded-xl p-4 shadow-sm">
+                      <div className="flex items-center justify-between gap-4">
                         <CarouselPrevious 
                           onClick={() => setCurrentSegment(currentSegment - 1)}
                           disabled={currentSegment === 0}
-                          className={`relative inline-flex h-10 w-10 items-center justify-center rounded-full ${
+                          className={`relative flex-shrink-0 h-12 w-12 items-center justify-center rounded-full transition-all duration-200 ${
                             currentSegment === 0 
                               ? 'bg-gray-200 text-gray-400 cursor-not-allowed opacity-50' 
                               : 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600'
-                          } transition-all duration-200`}
+                          }`}
                         />
-                        {segment.audioUrl ? (
-                          <div className="flex-1 px-4">
-                            <AudioPlayer audioUrl={segment.audioUrl} />
-                          </div>
-                        ) : (
-                          <div className="text-gray-500 text-sm text-center flex-1">Audio not available</div>
-                        )}
+                        
+                        {/* Audio Player Container */}
+                        <div className="flex-1 min-w-0">
+                          {segment.audioUrl ? (
+                            <div className="w-full">
+                              <AudioPlayer audioUrl={segment.audioUrl} />
+                            </div>
+                          ) : (
+                            <div className="text-gray-500 text-sm text-center py-4">
+                              Audio not available
+                            </div>
+                          )}
+                        </div>
+                        
                         <CarouselNext 
                           onClick={() => setCurrentSegment(currentSegment + 1)}
                           disabled={currentSegment === story.segments.length - 1}
-                          className={`relative inline-flex h-10 w-10 items-center justify-center rounded-full ${
+                          className={`relative flex-shrink-0 h-12 w-12 items-center justify-center rounded-full transition-all duration-200 ${
                             currentSegment === story.segments.length - 1 
                               ? 'bg-gray-200 text-gray-400 cursor-not-allowed opacity-50' 
                               : 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600'
-                          } transition-all duration-200`}
+                          }`}
                         />
                       </div>
                     </div>
                   </div>
+                  
                   {segment.content && (
-                    <p className="text-lg md:text-xl leading-relaxed text-gray-800 max-w-prose mx-auto">
-                      {segment.content}
-                    </p>
+                    <div className="px-4">
+                      <p className="text-lg md:text-xl leading-relaxed text-gray-800 max-w-prose mx-auto">
+                        {segment.content}
+                      </p>
+                    </div>
                   )}
                 </div>
               </CarouselItem>
