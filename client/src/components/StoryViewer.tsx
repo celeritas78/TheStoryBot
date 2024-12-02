@@ -113,7 +113,7 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
       )}
       <Card className="p-4 px-8 md:p-6 md:px-12 lg:p-8 lg:px-16">
         <Carousel 
-          className="w-full max-w-3xl mx-auto relative"
+          className="w-full max-w-3xl mx-auto"
           setApi={setApi}
           onSelect={(index) => {
             if (typeof index === 'number' && index !== currentSegment) {
@@ -138,11 +138,11 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
                     </div>
                   )}
                   <div className="space-y-6">
-                    <div className="flex items-center justify-center gap-4 max-w-xl mx-auto">
+                    <div className="flex items-center justify-center gap-4 w-full max-w-xl mx-auto my-4">
                       <CarouselPrevious 
                         onClick={() => setCurrentSegment(currentSegment - 1)}
                         disabled={currentSegment === 0}
-                        className={`${
+                        className={`relative ${
                           currentSegment === 0 
                             ? 'bg-gray-200 text-gray-400 cursor-not-allowed opacity-50' 
                             : 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600'
@@ -158,7 +158,7 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
                       <CarouselNext 
                         onClick={() => setCurrentSegment(currentSegment + 1)}
                         disabled={currentSegment === story.segments.length - 1}
-                        className={`${
+                        className={`relative ${
                           currentSegment === story.segments.length - 1 
                             ? 'bg-gray-200 text-gray-400 cursor-not-allowed opacity-50' 
                             : 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600'
