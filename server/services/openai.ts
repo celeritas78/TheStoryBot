@@ -163,11 +163,16 @@ Ensure that:
       }
     }
 
+    // Log story content with safe access to potentially undefined values
     console.log('Successfully generated story content:', { 
       title: parsedContent.title,
       numberOfScenes: parsedContent.scenes.length,
-      preview: parsedContent.scenes[0]?.text.substring(0, 100) + '...',
-      firstSceneDescription: parsedContent.scenes[0]?.description.substring(0, 100) + '...'
+      preview: parsedContent.scenes[0]?.text ? 
+        (parsedContent.scenes[0].text.substring(0, 100) + '...') : 
+        'No preview available',
+      firstSceneDescription: parsedContent.scenes[0]?.description ? 
+        (parsedContent.scenes[0].description.substring(0, 100) + '...') : 
+        'No description available'
     });
 
     return parsedContent;
