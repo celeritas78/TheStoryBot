@@ -1,7 +1,17 @@
-import { pgTable, text, integer, jsonb, timestamp, boolean, serial } from "drizzle-orm/pg-core";
+import { pgTable, text, integer, jsonb, timestamp, boolean, serial, varchar } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
+
+export const users = pgTable("users", {
+  id: serial("id").primaryKey(),
+  username: varchar("username", { length: 255 }).notNull().unique(),
+  email: varchar("email", { length: 255 }).notNull().unique(),
+  password: varchar("password", { length: 255 }).notNull(),
+  provider: varchar("provider", { length: 50 }).default("local"),
+  providerId: varchar("provider_id", { length: 255 }),
+  createdAt: timestamp("created_at").defaultNow(),
+});
 
 export const stories = pgTable("stories", {
   id: serial("id").primaryKey(),
@@ -13,6 +23,9 @@ export const stories = pgTable("stories", {
   content: text("content").notNull(),
   imageUrls: jsonb("image_urls").notNull(),
   parentApproved: boolean("parent_approved").default(false),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -29,8 +42,16 @@ export const storySegments = pgTable("story_segments", {
 });
 
 // Define relations
-export const storiesRelations = relations(stories, ({ many }) => ({
+export const userRelations = relations(users, ({ many }) => ({
+  stories: many(stories),
+}));
+
+export const storiesRelations = relations(stories, ({ many, one }) => ({
   segments: many(storySegments),
+  user: one(users, {
+    fields: [stories.userId],
+    references: [users.id],
+  }),
 }));
 
 export const storySegmentsRelations = relations(storySegments, ({ one }) => ({
@@ -41,6 +62,11 @@ export const storySegmentsRelations = relations(storySegments, ({ one }) => ({
 }));
 
 // Schemas for validation
+export const insertUserSchema = createInsertSchema(users);
+export const selectUserSchema = createSelectSchema(users);
+export type InsertUser = z.infer<typeof insertUserSchema>;
+export type User = z.infer<typeof selectUserSchema>;
+
 export const insertStorySchema = createInsertSchema(stories);
 export const selectStorySchema = createSelectSchema(stories);
 export type InsertStory = z.infer<typeof insertStorySchema>;
