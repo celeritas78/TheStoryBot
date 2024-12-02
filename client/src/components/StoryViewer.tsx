@@ -111,7 +111,7 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
           </div>
         </div>
       )}
-      <Card className="p-4 md:p-6 lg:p-8">
+      <Card className="p-4 px-8 md:p-6 md:px-12 lg:p-8 lg:px-16">
         <Carousel 
           className="w-full max-w-3xl mx-auto relative"
           setApi={setApi}
@@ -153,7 +153,7 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
               </CarouselItem>
             ))}
           </CarouselContent>
-          <div className="absolute -left-4 md:-left-12 top-1/2 -translate-y-1/2">
+          <div className="absolute left-0 sm:-left-4 md:-left-12 top-1/2 -translate-y-1/2 z-10">
             <CarouselPrevious 
               onClick={() => setCurrentSegment(currentSegment - 1)}
               disabled={currentSegment === 0}
@@ -164,7 +164,7 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
               } transition-all duration-200`}
             />
           </div>
-          <div className="absolute -right-4 md:-right-12 top-1/2 -translate-y-1/2">
+          <div className="absolute right-0 sm:-right-4 md:-right-12 top-1/2 -translate-y-1/2 z-10">
             <CarouselNext 
               onClick={() => setCurrentSegment(currentSegment + 1)}
               disabled={currentSegment === story.segments.length - 1}
