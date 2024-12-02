@@ -110,7 +110,7 @@ export default function StoryPage() {
                 </Button>
               </Link>
               <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 text-transparent bg-clip-text">
-                {story.childName}'s Story
+                {story.title || `${story.childName}'s Story`}
               </h1>
             </div>
           </header>
