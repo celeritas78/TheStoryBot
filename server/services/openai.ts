@@ -12,6 +12,16 @@ interface StoryGenerationParams {
   previousContent?: string;
 }
 
+interface Character {
+  name: string;
+  description: string;
+}
+
+interface Setting {
+  name: string;
+  description: string;
+}
+
 interface Scene {
   text: string;
   description: string;
@@ -19,6 +29,8 @@ interface Scene {
 
 interface StoryContent {
   title: string;
+  characters: Character[];
+  settings: Setting[];
   scenes: Scene[];
   error?: string;
 }
@@ -31,24 +43,47 @@ export async function generateStoryContent({
   previousContent = "",
 }: StoryGenerationParams): Promise<StoryContent> {
   console.log('Generating story content with params:', { childName, childAge, mainCharacter, theme, hasPreviousContent: !!previousContent });
-  
+
   try {
-    const systemPrompt = `You are a skilled children's story writer. Create engaging, age-appropriate content with the following structure:
+    const systemPrompt = `You are a skilled children's story writer. Create engaging, age-appropriate content in JSON format with the following structure. Do not add extra characters or delimiters like ** or ## in the output.
 
-[TITLE]
-Create a captivating, child-friendly title that reflects the story's theme and main characters.
+{
+  "title": "Your title here",
+  "characters": [
+    {
+      "name": "Character name",
+      "description": "Detailed description of the character including appearance, attire, personality traits, relationships"
+    }
+    // Add more characters as needed
+  ],
+  "settings": [
+    {
+      "name": "Setting name",
+      "description": "Detailed description of the setting including environment, atmosphere, visual elements"
+    }
+    // Add more settings as needed
+  ],
+  "scenes": [
+    {
+      "text": "Scene 1 text",
+      "description": "Scene 1 description for illustration that highlights the key event of the scene, including characters and settings involved"
+    },
+    {
+      "text": "Scene 2 text",
+      "description": "Scene 2 description for illustration that highlights the key event of the scene, including characters and settings involved"
+    },
+    {
+      "text": "Scene 3 text",
+      "description": "Scene 3 description for illustration that highlights the key event of the scene, including characters and settings involved"
+    }
+  ]
+}
 
-[STORY]
-Write the main story text here, divided into 3 scenes. Each scene should be clearly marked with [Scene 1], [Scene 2], [Scene 3].
-Include narration cues in brackets like [excited], [whisper], [pause] to guide the storytelling.
-Use clear paragraph breaks and engaging dialogue.
-Do not add extra characters like ** or ## in the output.
+Ensure that:
 
-[SCENE DESCRIPTIONS]
-For each scene, provide a detailed description for illustration, marked as [Scene 1 Description], [Scene 2 Description], [Scene 3 Description].
-The illustration description should highlight the key elements of the scene, such as characters, settings, action, and themes.
-Focus on visual elements, colors, expressions, and composition.
-Ensure descriptions are vivid and specific for image generation.`;
+- Each scene's text is of sufficient length so that when read aloud, it lasts around 30 seconds to 1 minute.
+- Each scene's description includes the relevant characters and settings to maintain consistency across illustrations.
+- The output is valid JSON, without any missing elements or errors.`;
 
     const prompt = previousContent
       ? `Continue the following children's story about ${childName} and ${mainCharacter}, maintaining the same style and theme. Previous content: ${previousContent}`
@@ -56,10 +91,11 @@ Ensure descriptions are vivid and specific for image generation.`;
          Theme: ${theme}
          Requirements:
          - Divide the story into 3 distinct scenes
+         - Each scene's text should be long enough to last around 30 seconds to 1 minute when read aloud
          - Include dialogue and character interactions
          - Add emotional cues for narration
          - Create vivid, illustration-friendly scenes
-         - Keep each scene brief but engaging
+         - Keep each scene engaging
          - Ensure age-appropriate content and vocabulary
          - Include a clear beginning, middle, and end`;
 
@@ -89,109 +125,59 @@ Ensure descriptions are vivid and specific for image generation.`;
     }
 
     const content = message.content;
-    // Parse the content into title and scenes
-    const scenes: Scene[] = [];
-    
-    // Extract title with fallback
-    let title: string;
-    const titleMatch = content.match(/\[TITLE\]([\s\S]*?)(?=\[STORY\])/);
-    if (!titleMatch) {
-      console.warn('Title section not found, generating fallback title');
-      // Generate a fallback title based on theme and main character
-      const themeWords = content.split(/\s+/).slice(0, 10).join(' ');
-      title = `${childName}'s ${theme.charAt(0).toUpperCase() + theme.slice(1)} Adventure`;
-    } else {
-      title = titleMatch[1].trim();
+
+    console.log('AI Response Content:', content);
+
+    // Parse the JSON content
+    let parsedContent: StoryContent;
+    try {
+      parsedContent = JSON.parse(content);
+    } catch (parseError) {
+      console.error('Failed to parse JSON from AI response:', parseError);
+      throw new Error('Story generation failed: Invalid JSON format');
     }
 
-    if (!title) {
-      console.error('Failed to generate title');
-      throw new Error('Story generation failed: Could not create title');
+    // Validate the parsed content
+    if (
+      !parsedContent.title ||
+      !parsedContent.characters ||
+      !parsedContent.settings ||
+      !parsedContent.scenes ||
+      parsedContent.scenes.length !== 3
+    ) {
+      console.error('Invalid story content structure:', parsedContent);
+      throw new Error('Story generation failed: Missing or invalid story elements');
     }
-    
-    // Split and validate content sections
-    const parts = content.split('[SCENE DESCRIPTIONS]');
-    let storyText: string;
-    let descriptions: string;
-    
-    if (parts.length !== 2) {
-      console.warn('Invalid story format, attempting to recover content');
-      // Attempt to recover content by looking for scene markers
-      const sceneMatches = content.match(/\[Scene \d+\]/g);
-      if (!sceneMatches || sceneMatches.length === 0) {
-        throw new Error('Story generation failed: Could not parse story structure');
+
+    // Optionally, verify that each scene's text is long enough
+    const wordsPerMinute = 130; // Average speaking rate for children
+    const minWords = (30 / 60) * wordsPerMinute; // Minimum words for 30 seconds
+    const maxWords = (60 / 60) * wordsPerMinute; // Maximum words for 1 minute
+
+    for (let i = 0; i < parsedContent.scenes.length; i++) {
+      const scene = parsedContent.scenes[i];
+      const wordCount = scene.text.split(/\s+/).length;
+      if (wordCount < minWords || wordCount > maxWords) {
+        console.warn(`Scene ${i + 1} text length (${wordCount} words) is outside the desired range.`);
+        // Optionally, you can adjust the scene text or request a regeneration
       }
-      
-      // Use the entire content as story text and generate basic descriptions
-      storyText = content;
-      descriptions = sceneMatches
-        .map((_, index) => `[Scene ${index + 1} Description] A colorful and engaging scene from the story.`)
-        .join('\n\n');
-    } else {
-      [storyText, descriptions] = parts;
     }
-    
-    // Validate we have both story text and descriptions
-    if (!storyText.trim() || !descriptions.trim()) {
-      throw new Error('Story generation failed: Missing required content sections');
-    }
-
-    // Extract individual scenes and their descriptions
-    for (let i = 1; i <= 3; i++) {
-      const sceneRegex = new RegExp(`\\[Scene ${i}\\]([\\s\\S]*?)(?=\\[Scene ${i + 1}\\]|$)`);
-      const descRegex = new RegExp(`\\[Scene ${i} Description\\]([\\s\\S]*?)(?=\\[Scene ${i + 1} Description\\]|$)`);
-      
-      const sceneMatch = storyText.match(sceneRegex);
-      const descMatch = descriptions.match(descRegex);
-
-      if (!sceneMatch || !descMatch) {
-        console.error(`Failed to extract scene ${i}`);
-        throw new Error(`Story generation failed: Missing scene ${i}`);
-      }
-
-      const rawText = sceneMatch[1].trim();
-      const description = descMatch[1].trim();
-
-      // Clean the text by removing any remaining description markers and clean up spacing
-      const text = rawText
-        .replace(/\[.*?\]/g, '') // Remove any remaining markers
-        .replace(/\s+/g, ' ')    // Normalize spaces
-        .trim();
-
-      if (!text || !description) {
-        console.error(`Empty content in scene ${i}`);
-        throw new Error(`Story generation failed: Empty content in scene ${i}`);
-      }
-
-      scenes.push({ 
-        text,           // Clean narrative text for audio/display
-        description     // Separate description for image generation
-      });
-    }
-
-    if (scenes.length === 0) {
-      throw new Error('Story generation failed: No valid scenes found');
-    }
-
-    const parsedContent: StoryContent = {
-      title,
-      scenes
-    };
 
     console.log('Successfully generated story content:', { 
+      title: parsedContent.title,
       numberOfScenes: parsedContent.scenes.length,
       preview: parsedContent.scenes[0]?.text.substring(0, 100) + '...',
       firstSceneDescription: parsedContent.scenes[0]?.description.substring(0, 100) + '...'
     });
-    
+
     return parsedContent;
   } catch (error) {
     console.error('Error in story content generation:', {
       error,
       message: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined
+      stack: error instanceof Error ? (error as Error).stack : undefined
     });
-    throw new Error(`Failed to generate story content: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error('Failed to generate story content: ' + (error instanceof Error ? error.message : 'Unknown error'));
   }
 }
 
@@ -201,22 +187,23 @@ export async function generateImage(sceneDescription: string): Promise<string> {
     const sanitizedDescription = sceneDescription
       .replace(/[^\w\s,.()'"-]/g, '') // Remove special characters except basic punctuation
       .trim()
-      .substring(0, 500); // Limit length to 500 characters
+      .substring(0, 1500); // Increase limit to accommodate additional details
 
     // Enhance prompt with child-friendly context
-    const safePrompt = `Create a cheerful, child-friendly storybook illustration with the following scene: ${sanitizedDescription}. 
-      Style guidelines:
-      - Use bright, warm colors suitable for children's books
-      - Keep the imagery gentle and non-threatening
-      - Avoid any scary or adult themes
-      - Focus on cute, cartoon-style characters
-      - Include soft lighting and friendly expressions
-      - Make it suitable for ages 3-10`;
+    const safePrompt = `Create a cheerful, child-friendly storybook illustration with the following scene:
+${sanitizedDescription}
+Style guidelines:
+- Use bright, warm colors suitable for children's books
+- Keep the imagery gentle and non-threatening
+- Avoid any scary or adult themes
+- Focus on cute, cartoon-style characters
+- Include soft lighting and friendly expressions
+- Make it suitable for ages 3-10`;
 
     console.log('Generating image with sanitized prompt:', {
       originalLength: sceneDescription.length,
       sanitizedLength: sanitizedDescription.length,
-      promptPreview: safePrompt.substring(0, 100) + '...'
+      promptPreview: safePrompt
     });
 
     const response = await openai.images.generate({
@@ -238,7 +225,7 @@ export async function generateImage(sceneDescription: string): Promise<string> {
     console.error("OpenAI Image Generation Error:", {
       error,
       message: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined
+      stack: error instanceof Error ? (error as Error).stack : undefined
     });
     // Return fallback image URL instead of throwing
     return '/assets/fallback-story-image.png';
@@ -248,7 +235,7 @@ export async function generateImage(sceneDescription: string): Promise<string> {
 export async function generateSpeech(text: string): Promise<string> {
   try {
     console.log('Generating speech for text:', text.substring(0, 100) + '...');
-    
+
     const mp3 = await openai.audio.speech.create({
       model: "tts-1",
       voice: "nova",
@@ -269,14 +256,14 @@ export async function generateSpeech(text: string): Promise<string> {
     // Save the audio file and get its URL
     const audioUrl = await saveAudioFile(buffer);
     console.log('Successfully saved audio file:', audioUrl);
-    
+
     return audioUrl;
   } catch (error) {
     console.error("OpenAI Speech Generation Error:", {
       error,
       message: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined
+      stack: error instanceof Error ? (error as Error).stack : undefined
     });
-    throw new Error(`Failed to generate speech: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error('Failed to generate speech: ' + (error instanceof Error ? error.message : 'Unknown error'));
   }
 }

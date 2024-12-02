@@ -159,11 +159,17 @@ export function registerRoutes(app: Express) {
         theme,
       });
 
+      const characterDescriptions = storyContent.characters.map(c => `${c.name}: ${c.description}`).join('\n');
+      const settingDescriptions = storyContent.settings.map(s => `${s.name}: ${s.description}`).join('\n');
+
+
       // Generate media for each scene
       const segments = await Promise.all(storyContent.scenes.map(async (scene, index) => {
         try {
+          const fullSceneDescription = `${scene.description}\nCharacters:\n${characterDescriptions}\nSettings:\n${settingDescriptions}`;
+
           // Generate image from scene description
-          const imageUrl = await generateImage(scene.description);
+          const imageUrl = await generateImage(fullSceneDescription);
           // Generate audio only from the narrative text
           const audioUrl = await generateSpeech(scene.text);
           
