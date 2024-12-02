@@ -79,13 +79,13 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
 
   // Ensure currentSegment is within bounds
   const safeCurrentSegment = Math.min(currentSegment, story.segments.length - 1);
-  const currentSegmentData = story.segments[safeCurrentSegment];
+  const segment = story.segments[safeCurrentSegment];
 
   return (
     <div className="space-y-6">
       {showHomeIcon && (
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-          <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto">
+          <div className="flex items-center gap-2 sm:gap-4 w-full">
             <Link href="/">
               <Button variant="ghost" className="flex items-center gap-2">
                 <svg
@@ -138,41 +138,39 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
                     </div>
                   )}
                   <div className="space-y-6">
-                    <div className="flex items-center justify-center w-full max-w-2xl mx-auto my-4">
-                      <div className="flex items-center gap-2 w-full">
-                        <CarouselPrevious 
-                          onClick={() => setCurrentSegment(currentSegment - 1)}
-                          disabled={currentSegment === 0}
-                          className={`relative h-12 w-12 flex items-center justify-center ${
-                            currentSegment === 0 
-                              ? 'bg-gray-200 text-gray-400 cursor-not-allowed opacity-50' 
-                              : 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600'
-                          } transition-all duration-200`}
-                        />
-                        <div className="flex-1 mx-2">
-                          {segment.audioUrl ? (
-                            <AudioPlayer audioUrl={segment.audioUrl} />
-                          ) : (
-                            <div className="text-gray-500 text-sm text-center">Audio not available</div>
-                          )}
-                        </div>
-                        <CarouselNext 
-                          onClick={() => setCurrentSegment(currentSegment + 1)}
-                          disabled={currentSegment === story.segments.length - 1}
-                          className={`relative h-12 w-12 flex items-center justify-center ${
-                            currentSegment === story.segments.length - 1 
-                              ? 'bg-gray-200 text-gray-400 cursor-not-allowed opacity-50' 
-                              : 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600'
-                          } transition-all duration-200`}
-                        />
+                    <div className="flex items-center justify-between gap-2 w-full max-w-2xl mx-auto my-4">
+                      <CarouselPrevious 
+                        onClick={() => setCurrentSegment(currentSegment - 1)}
+                        disabled={currentSegment === 0}
+                        className={`h-12 w-12 flex items-center justify-center ${
+                          currentSegment === 0 
+                            ? 'bg-gray-200 text-gray-400 cursor-not-allowed opacity-50' 
+                            : 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600'
+                        } transition-all duration-200`}
+                      />
+                      <div className="flex-1">
+                        {segment.audioUrl ? (
+                          <AudioPlayer audioUrl={segment.audioUrl} />
+                        ) : (
+                          <div className="text-gray-500 text-sm text-center">Audio not available</div>
+                        )}
+                      </div>
+                      <CarouselNext 
+                        onClick={() => setCurrentSegment(currentSegment + 1)}
+                        disabled={currentSegment === story.segments.length - 1}
+                        className={`h-12 w-12 flex items-center justify-center ${
+                          currentSegment === story.segments.length - 1 
+                            ? 'bg-gray-200 text-gray-400 cursor-not-allowed opacity-50' 
+                            : 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600'
+                        } transition-all duration-200`}
+                      />
                     </div>
-                    </div>
-                    {segment.content && (
-                      <p className="text-lg md:text-xl leading-relaxed text-gray-800 max-w-prose mx-auto">
-                        {segment.content}
-                      </p>
-                    )}
                   </div>
+                  {segment.content && (
+                    <p className="text-lg md:text-xl leading-relaxed text-gray-800 max-w-prose mx-auto">
+                      {segment.content}
+                    </p>
+                  )}
                 </div>
               </CarouselItem>
             ))}
