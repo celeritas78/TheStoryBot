@@ -35,42 +35,34 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
 }
 
 function AppRoutes() {
-  const { user, isLoading } = useUser();
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
-  }
-
   return (
-    <Switch>
-      <Route path="/" component={HomePage} />
-      <Route path="/auth" component={AuthPage} />
-      <Route path="/create">
-        <ProtectedRoute component={StoryGenerator} />
-      </Route>
-      <Route path="/library">
-        <ProtectedRoute component={LibraryPage} />
-      </Route>
-      <Route path="/story/:id">
-        <ProtectedRoute component={StoryPage} />
-      </Route>
-      <Route>404 - Page Not Found</Route>
-    </Switch>
+    <ErrorBoundary>
+      <Switch>
+        <Route path="/" component={HomePage} />
+        <Route path="/auth" component={AuthPage} />
+        <Route path="/create">
+          <ProtectedRoute component={StoryGenerator} />
+        </Route>
+        <Route path="/library">
+          <ProtectedRoute component={LibraryPage} />
+        </Route>
+        <Route path="/story/:id">
+          <ProtectedRoute component={StoryPage} />
+        </Route>
+        <Route>404 - Page Not Found</Route>
+      </Switch>
+    </ErrorBoundary>
   );
 }
 
 function App() {
   return (
-    <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={queryClient}>
+      <ErrorBoundary>
         <AppRoutes />
         <Toaster />
-      </QueryClientProvider>
-    </ErrorBoundary>
+      </ErrorBoundary>
+    </QueryClientProvider>
   );
 }
 
