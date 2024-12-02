@@ -1,4 +1,4 @@
-import { StrictMode, useEffect, lazy, Suspense } from "react";
+import { StrictMode, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { Switch, Route, useLocation } from "wouter";
 import "./index.css";
@@ -42,29 +42,20 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
 function AppRoutes() {
   return (
     <ErrorBoundary>
-      <Suspense fallback={
-        <div className="flex items-center justify-center min-h-screen">
-          <Loader2 className="h-8 w-8 animate-spin" />
-        </div>
-      }>
-        <Switch>
-          <Route path="/" component={HomePage} />
-          <Route path="/auth" component={AuthPage} />
-          <Route path="/create">
-            <ProtectedRoute component={StoryGenerator} />
-          </Route>
-          <Route path="/library">
-            <ProtectedRoute component={LibraryPage} />
-          </Route>
-          <Route path="/story/:id">
-            <ProtectedRoute component={StoryPage} />
-          </Route>
-          <Route path="/profile">
-            <ProtectedRoute component={lazy(() => import('./pages/ProfilePage'))} />
-          </Route>
-          <Route>404 - Page Not Found</Route>
-        </Switch>
-      </Suspense>
+      <Switch>
+        <Route path="/" component={HomePage} />
+        <Route path="/auth" component={AuthPage} />
+        <Route path="/create">
+          <ProtectedRoute component={StoryGenerator} />
+        </Route>
+        <Route path="/library">
+          <ProtectedRoute component={LibraryPage} />
+        </Route>
+        <Route path="/story/:id">
+          <ProtectedRoute component={StoryPage} />
+        </Route>
+        <Route>404 - Page Not Found</Route>
+      </Switch>
     </ErrorBoundary>
   );
 }

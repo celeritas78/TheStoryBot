@@ -1,88 +1,163 @@
-import { type Express, type Response } from "express";
-import { eq, desc, and, or, neq } from "drizzle-orm";
+import type { Express } from "express";
 import { db } from "../db";
-import { users, stories, storySegments } from "@db/schema";
-import { generateStoryContent } from "./services/openai";
-import { generateImage } from "./services/dalle";
-import { generateSpeech } from "./services/elevenlabs";
+import { stories, storySegments, type InsertStorySegment, type Story } from "@db/schema";
+import { generateStoryContent, generateImage, generateSpeech } from "./services/openai";
+import { eq, desc } from "drizzle-orm";
+import fs from 'fs';
+import { 
+  getAudioFilePath, 
+  audioFileExists, 
+  isAudioFormatSupported, 
+  SUPPORTED_AUDIO_FORMATS,
+  getMimeType 
+} from './services/audio-storage';
 
-function sendErrorResponse(res: Response, status: number, message: string, details?: any) {
-  console.error(`Error ${status}: ${message}`, details);
-  res.status(status).json({ error: message, ...(details && { details }) });
+// Error response helper function
+function sendErrorResponse(res: any, statusCode: number, error: string, details?: any) {
+  res.status(statusCode).json({
+    error,
+    details,
+    timestamp: new Date().toISOString()
+  });
 }
 
-export function setupRoutes(app: Express) {
-  app.put("/api/user/profile", async (req, res) => {
+export function registerRoutes(app: Express) {
+  // Global error middleware
+  app.use((err: any, req: any, res: any, next: any) => {
+    console.error('Global error handler:', {
+      error: err,
+      stack: err.stack,
+      timestamp: new Date().toISOString()
+    });
+    
+    // Ensure response hasn't been sent yet
+    if (res.headersSent) {
+      return next(err);
+    }
+
+    // Set JSON content type
+    res.setHeader('Content-Type', 'application/json');
+    
+    // Handle different types of errors
+    if (err.type === 'entity.parse.failed') {
+      return sendErrorResponse(res, 400, 'Invalid JSON payload', err.message);
+    }
+    
+    return sendErrorResponse(res, err.status || 500, err.message || 'Internal server error', 
+      process.env.NODE_ENV === 'development' ? err.stack : undefined);
+  });
+  // Serve audio files with proper CORS and caching headers
+  app.get("/audio/:filename", async (req, res) => {
     try {
-      if (!req.isAuthenticated()) {
-        return sendErrorResponse(res, 401, "Authentication required");
-      }
+      const { filename } = req.params;
+      console.log('Audio request received:', { filename });
 
-      const { username, email } = req.body;
-
-      // Validate input
-      if (!username?.trim() || !email?.trim()) {
-        return sendErrorResponse(res, 400, "Username and email are required");
-      }
-
-      // Check if username or email is already taken by another user
-      const [existingUser] = await db
-        .select()
-        .from(users)
-        .where(
-          and(
-            or(eq(users.username, username), eq(users.email, email)),
-            neq(users.id, req.user.id)
-          )
-        )
-        .limit(1);
-
-      if (existingUser) {
-        if (existingUser.username === username) {
-          return sendErrorResponse(res, 400, "Username is already taken");
-        }
-        return sendErrorResponse(res, 400, "Email is already registered");
-      }
-
-      // Update user profile
-      const [updatedUser] = await db
-        .update(users)
-        .set({
-          username,
-          email,
-        })
-        .where(eq(users.id, req.user.id))
-        .returning();
-
-      res.json({
-        message: "Profile updated successfully",
-        user: {
-          id: updatedUser.id,
-          username: updatedUser.username,
-          email: updatedUser.email,
-        },
+      // First check if this audio file is referenced in the database
+      const segment = await db.query.storySegments.findFirst({
+        where: eq(storySegments.audioUrl, `/audio/${filename}`)
       });
-    } catch (error) {
-      console.error("Profile update error:", error);
-      sendErrorResponse(res, 500, "Failed to update profile");
+
+      if (!segment) {
+        console.error('Audio file not found in database:', { filename });
+        return res.status(404).json({ error: "Audio file not found" });
+      }
+
+      const filePath = getAudioFilePath(filename);
+      console.log('Resolved file path:', { filePath });
+
+      if (!fs.existsSync(filePath)) {
+        console.error('Audio file not found on disk:', { filePath });
+        return res.status(404).json({ error: "Audio file not found" });
+      }
+
+      // Log file stats
+      const stat = fs.statSync(filePath);
+      console.log('Audio file stats:', { 
+        size: stat.size,
+        path: filePath,
+        exists: fs.existsSync(filePath)
+      });
+
+      // Set proper CORS headers
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD');
+      res.setHeader('Access-Control-Allow-Headers', 'Range, Content-Type');
+      
+      // Set content type and caching headers
+      res.setHeader('Content-Type', getMimeType(filename));
+      res.setHeader('Accept-Ranges', 'bytes');
+      res.setHeader('Content-Length', stat.size);
+      res.setHeader('Cache-Control', 'public, max-age=31536000');
+      
+      // Handle range requests
+      const range = req.headers.range;
+      if (range) {
+        const parts = range.replace(/bytes=/, "").split("-");
+        const start = parseInt(parts[0], 10);
+        const end = parts[1] ? parseInt(parts[1], 10) : stat.size - 1;
+        
+        if (start >= stat.size || end >= stat.size) {
+          res.status(416).send('Requested range not satisfiable');
+          return;
+        }
+
+        const chunksize = (end - start) + 1;
+        const stream = fs.createReadStream(filePath, { start, end });
+        
+        res.status(206);
+        res.setHeader('Content-Range', `bytes ${start}-${end}/${stat.size}`);
+        res.setHeader('Content-Length', chunksize);
+        stream.pipe(res);
+      } else {
+        // Stream the whole file if no range is requested
+        const stream = fs.createReadStream(filePath);
+        stream.pipe(res);
+      }
+
+      // Note: File streaming is already handled by the range request code above
+    } catch (error: any) {
+      console.error('Error serving audio:', { 
+        error, 
+        message: error.message,
+        stack: error.stack 
+      });
+      res.status(500).json({ error: 'Failed to serve audio file' });
     }
   });
 
-  // Story related routes
   app.post("/api/stories", async (req, res) => {
     try {
+      // Check if user is authenticated
       if (!req.isAuthenticated()) {
         return sendErrorResponse(res, 401, "Authentication required");
       }
 
       const { childName, childAge, mainCharacter, theme } = req.body;
+      console.log('Story generation request:', {
+        ...req.body,
+        userId: req.user.id,
+        timestamp: new Date().toISOString()
+      });
 
-      // Validate childAge
-      const parsedAge = parseInt(childAge);
-      if (isNaN(parsedAge) || parsedAge < 2 || parsedAge > 12) {
-        return sendErrorResponse(res, 400, "Child age must be between 2 and 12");
+      if (!childName?.trim() || !childAge || !mainCharacter?.trim() || !theme?.trim()) {
+        const errorDetails = {
+          childName: !childName?.trim() ? "Name is required" : null,
+          childAge: !childAge ? "Age is required" : null,
+          mainCharacter: !mainCharacter?.trim() ? "Character is required" : null,
+          theme: !theme?.trim() ? "Theme is required" : null,
+          timestamp: new Date().toISOString()
+        };
+        console.error('Validation failed:', errorDetails);
+        return sendErrorResponse(res, 400, "Missing required fields", errorDetails);
       }
 
+      const parsedAge = Number(childAge);
+      if (isNaN(parsedAge)) {
+        console.error('Invalid age provided:', childAge);
+        return res.status(400).json({ error: "Invalid age format" });
+      }
+
+      // Generate initial story content
       const storyContent = await generateStoryContent({
         childName,
         childAge: parsedAge,
@@ -90,36 +165,61 @@ export function setupRoutes(app: Express) {
         theme,
       });
 
+      const characterDescriptions = storyContent.characters.map(c => `${c.name}: ${c.description}`).join('\n');
+      const settingDescriptions = storyContent.settings.map(s => `${s.name}: ${s.description}`).join('\n');
+
+
+      // Generate media for each scene
+      const segments = await Promise.all(storyContent.scenes.map(async (scene, index) => {
+        try {
+          const fullSceneDescription = `${scene.description}\nCharacters:\n${characterDescriptions}\nSettings:\n${settingDescriptions}`;
+
+          // Generate image from scene description
+          const imageUrl = await generateImage(fullSceneDescription);
+          // Generate audio only from the narrative text
+          const audioUrl = await generateSpeech(scene.text);
+          
+          return {
+            content: scene.text, // Store only the narrative text
+            imageUrl,
+            audioUrl,
+            sequence: index + 1
+          };
+        } catch (error) {
+          console.error(`Failed to generate media for scene ${index + 1}:`, error);
+          throw error;
+        }
+      }));
+
       // Save to database with better error handling
       const [story] = await db.insert(stories)
         .values({
-          userId: req.user.id,
+          title: storyContent.title,
           childName,
           childAge: parsedAge,
           characters: JSON.stringify({ mainCharacter }),
           theme,
-          content: storyContent.content,
+          content: segments.map(s => s.content).join('\n\n'),
+          imageUrls: JSON.stringify(segments.map(s => s.imageUrl)),
           parentApproved: false,
+          userId: req.user.id,
           createdAt: new Date(),
         })
         .returning();
 
-      // Generate and save segments
-      const segments = await Promise.all(storyContent.scenes.map(async (scene, index) => {
-        const imageUrl = await generateImage(scene.description);
-        const audioUrl = await generateSpeech(scene.text);
-        
-        return {
-          storyId: story.id,
-          content: scene.text,
-          imageUrl,
-          audioUrl,
-          sequence: index + 1,
-        };
-      }));
+      if (!story || !story.id) {
+        throw new Error("Failed to create story record");
+      }
 
+      // Insert all story segments
       const insertedSegments = await db.insert(storySegments)
-        .values(segments)
+        .values(segments.map(segment => ({
+          storyId: story.id,
+          content: segment.content,
+          imageUrl: segment.imageUrl,
+          audioUrl: segment.audioUrl,
+          sequence: segment.sequence,
+        })))
         .returning();
 
       console.log('Successfully created story segments:', {
