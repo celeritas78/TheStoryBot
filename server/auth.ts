@@ -53,6 +53,13 @@ const registrationSchema = z.object({
     .regex(/[0-9]/, "Password must contain at least one number")
 });
 
+// Profile update validation schema
+const profileUpdateSchema = z.object({
+  displayName: z.string().min(1).max(255).optional(),
+  bio: z.string().max(1000).optional(),
+  avatarUrl: z.string().url().max(512).optional(),
+});
+
 export function setupAuth(app: Express) {
   const MemoryStore = createMemoryStore(session);
   const sessionSettings: session.SessionOptions = {
@@ -229,5 +236,37 @@ export function setupAuth(app: Express) {
     }
 
     res.status(401).json({ error: "Not logged in" });
+  });
+
+  app.put("/api/profile", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Not logged in" });
+    }
+
+    try {
+      const result = profileUpdateSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({
+          error: "Validation failed",
+          details: result.error.errors.map(err => ({
+            field: err.path[0],
+            message: err.message
+          }))
+        });
+      }
+
+      const [updatedUser] = await db
+        .update(users)
+        .set(result.data)
+        .where(eq(users.id, req.user.id))
+        .returning();
+
+      res.json({
+        message: "Profile updated successfully",
+        user: updatedUser
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update profile" });
+    }
   });
 }

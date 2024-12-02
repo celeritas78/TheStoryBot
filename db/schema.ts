@@ -10,6 +10,9 @@ export const users = pgTable("users", {
   password: varchar("password", { length: 255 }).notNull(),
   provider: varchar("provider", { length: 50 }).default("local"),
   providerId: varchar("provider_id", { length: 255 }),
+  displayName: varchar("display_name", { length: 255 }),
+  avatarUrl: varchar("avatar_url", { length: 512 }),
+  bio: text("bio"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

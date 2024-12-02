@@ -11,7 +11,7 @@ type RequestResult = {
 async function handleRequest(
   url: string,
   method: string,
-  body?: InsertUser
+  body?: InsertUser | Partial<User>
 ): Promise<RequestResult> {
   try {
     const response = await fetch(url, {
@@ -87,6 +87,13 @@ export function useUser() {
     },
   });
 
+  const updateProfileMutation = useMutation<RequestResult, Error, Partial<User>>({
+    mutationFn: (profileData) => handleRequest('/api/profile', 'PUT', profileData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['user'] });
+    },
+  });
+
   return {
     user,
     isLoading,
@@ -94,5 +101,6 @@ export function useUser() {
     login: loginMutation.mutateAsync,
     logout: logoutMutation.mutateAsync,
     register: registerMutation.mutateAsync,
+    updateProfile: updateProfileMutation.mutateAsync,
   };
 }

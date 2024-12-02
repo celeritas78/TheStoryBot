@@ -10,6 +10,7 @@ import AuthPage from "./pages/AuthPage";
 import StoryGenerator from "./pages/StoryGenerator";
 import LibraryPage from "./pages/Library";
 import StoryPage from "./pages/StoryPage";
+import ProfilePage from "./pages/ProfilePage";
 import { useUser } from "./hooks/use-user";
 import { Loader2 } from "lucide-react";
 import { ErrorBoundary } from "./components/ErrorBoundary";
@@ -53,6 +54,9 @@ function AppRoutes() {
         </Route>
         <Route path="/story/:id">
           <ProtectedRoute component={StoryPage} />
+        </Route>
+        <Route path="/profile">
+          <ProtectedRoute component={ProfilePage} />
         </Route>
         <Route>404 - Page Not Found</Route>
       </Switch>
