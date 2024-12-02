@@ -19,6 +19,7 @@ export default function HomePage() {
           <Card className="overflow-hidden">
             <img
               src="https://images.unsplash.com/photo-1485546246426-74dc88dec4d9"
+              //src="https://unsplash.com/photos/two-babies-and-woman-sitting-on-sofa-while-holding-baby-and-watching-on-tablet-UH-xs-FizTk"
               alt="Child reading"
               className="w-full h-48 object-cover"
             />
