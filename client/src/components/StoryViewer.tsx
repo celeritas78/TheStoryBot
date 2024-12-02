@@ -137,12 +137,34 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
                       />
                     </div>
                   )}
-                  <div className="space-y-4">
-                    {segment.audioUrl ? (
-                      <AudioPlayer audioUrl={segment.audioUrl} />
-                    ) : (
-                      <div className="text-gray-500 text-sm text-center">Audio not available</div>
-                    )}
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-center gap-4 max-w-xl mx-auto">
+                      <CarouselPrevious 
+                        onClick={() => setCurrentSegment(currentSegment - 1)}
+                        disabled={currentSegment === 0}
+                        className={`${
+                          currentSegment === 0 
+                            ? 'bg-gray-200 text-gray-400 cursor-not-allowed opacity-50' 
+                            : 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600'
+                        } transition-all duration-200`}
+                      />
+                      <div className="flex-1">
+                        {segment.audioUrl ? (
+                          <AudioPlayer audioUrl={segment.audioUrl} />
+                        ) : (
+                          <div className="text-gray-500 text-sm text-center">Audio not available</div>
+                        )}
+                      </div>
+                      <CarouselNext 
+                        onClick={() => setCurrentSegment(currentSegment + 1)}
+                        disabled={currentSegment === story.segments.length - 1}
+                        className={`${
+                          currentSegment === story.segments.length - 1 
+                            ? 'bg-gray-200 text-gray-400 cursor-not-allowed opacity-50' 
+                            : 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600'
+                        } transition-all duration-200`}
+                      />
+                    </div>
                     {segment.content && (
                       <p className="text-lg md:text-xl leading-relaxed text-gray-800 max-w-prose mx-auto">
                         {segment.content}
@@ -153,28 +175,6 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
               </CarouselItem>
             ))}
           </CarouselContent>
-          <div className="absolute left-0 sm:-left-4 md:-left-12 top-1/2 -translate-y-1/2 z-10">
-            <CarouselPrevious 
-              onClick={() => setCurrentSegment(currentSegment - 1)}
-              disabled={currentSegment === 0}
-              className={`${
-                currentSegment === 0 
-                  ? 'bg-gray-200 text-gray-400 cursor-not-allowed opacity-50' 
-                  : 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600'
-              } transition-all duration-200`}
-            />
-          </div>
-          <div className="absolute right-0 sm:-right-4 md:-right-12 top-1/2 -translate-y-1/2 z-10">
-            <CarouselNext 
-              onClick={() => setCurrentSegment(currentSegment + 1)}
-              disabled={currentSegment === story.segments.length - 1}
-              className={`${
-                currentSegment === story.segments.length - 1 
-                  ? 'bg-gray-200 text-gray-400 cursor-not-allowed opacity-50' 
-                  : 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600'
-              } transition-all duration-200`}
-            />
-          </div>
         </Carousel>
       </Card>
     </div>
