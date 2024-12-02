@@ -8,6 +8,7 @@ import { promisify } from "util";
 import { users, insertUserSchema, type User as SelectUser } from "@db/schema";
 import { db } from "../db";
 import { eq, or } from "drizzle-orm";
+import { z } from "zod";
 
 const scryptAsync = promisify(scrypt);
 const crypto = {
@@ -34,6 +35,23 @@ declare global {
     interface User extends SelectUser { }
   }
 }
+
+// Enhanced validation schema for registration
+const registrationSchema = z.object({
+  username: z.string()
+    .min(3, "Username must be at least 3 characters")
+    .max(50, "Username must not exceed 50 characters")
+    .regex(/^[a-zA-Z0-9_-]+$/, "Username can only contain letters, numbers, underscores and hyphens"),
+  email: z.string()
+    .email("Please enter a valid email address")
+    .min(5, "Email is too short")
+    .max(255, "Email must not exceed 255 characters"),
+  password: z.string()
+    .min(8, "Password must be at least 8 characters")
+    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+    .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+    .regex(/[0-9]/, "Password must contain at least one number")
+});
 
 export function setupAuth(app: Express) {
   const MemoryStore = createMemoryStore(session);
@@ -69,11 +87,11 @@ export function setupAuth(app: Express) {
           .limit(1);
 
         if (!user) {
-          return done(null, false, { message: "Incorrect username or email." });
+          return done(null, false, { message: "Invalid username/email or password" });
         }
         const isMatch = await crypto.compare(password, user.password);
         if (!isMatch) {
-          return done(null, false, { message: "Incorrect password." });
+          return done(null, false, { message: "Invalid username/email or password" });
         }
         return done(null, user);
       } catch (err) {
@@ -101,11 +119,18 @@ export function setupAuth(app: Express) {
 
   app.post("/api/register", async (req, res, next) => {
     try {
-      const result = insertUserSchema.safeParse(req.body);
+      // Validate input with enhanced schema
+      const result = registrationSchema.safeParse(req.body);
       if (!result.success) {
         return res
           .status(400)
-          .send("Invalid input: " + result.error.issues.map(i => i.message).join(", "));
+          .json({ 
+            error: "Validation failed", 
+            details: result.error.errors.map(err => ({
+              field: err.path[0],
+              message: err.message
+            }))
+          });
       }
 
       const { username, email, password } = result.data;
@@ -119,9 +144,9 @@ export function setupAuth(app: Express) {
 
       if (existingUser) {
         if (existingUser.username === username) {
-          return res.status(400).send("Username already exists");
+          return res.status(400).json({ error: "Username is already taken" });
         }
-        return res.status(400).send("Email already registered");
+        return res.status(400).json({ error: "Email is already registered" });
       }
 
       // Hash the password
@@ -134,6 +159,7 @@ export function setupAuth(app: Express) {
           username,
           email,
           password: hashedPassword,
+          provider: 'local'
         })
         .returning();
 
@@ -155,9 +181,13 @@ export function setupAuth(app: Express) {
   app.post("/api/login", (req, res, next) => {
     const result = insertUserSchema.safeParse(req.body);
     if (!result.success) {
-      return res
-        .status(400)
-        .send("Invalid input: " + result.error.issues.map(i => i.message).join(", "));
+      return res.status(400).json({
+        error: "Invalid input",
+        details: result.error.errors.map(err => ({
+          field: err.path[0],
+          message: err.message
+        }))
+      });
     }
 
     const cb = (err: any, user: Express.User, info: IVerifyOptions) => {
@@ -166,7 +196,7 @@ export function setupAuth(app: Express) {
       }
 
       if (!user) {
-        return res.status(400).send(info.message ?? "Login failed");
+        return res.status(400).json({ error: info.message ?? "Login failed" });
       }
 
       req.logIn(user, (err) => {
@@ -186,7 +216,7 @@ export function setupAuth(app: Express) {
   app.post("/api/logout", (req, res) => {
     req.logout((err) => {
       if (err) {
-        return res.status(500).send("Logout failed");
+        return res.status(500).json({ error: "Logout failed" });
       }
 
       res.json({ message: "Logout successful" });
@@ -198,6 +228,6 @@ export function setupAuth(app: Express) {
       return res.json(req.user);
     }
 
-    res.status(401).send("Not logged in");
+    res.status(401).json({ error: "Not logged in" });
   });
 }
