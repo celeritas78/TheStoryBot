@@ -304,15 +304,22 @@ export function setupAuth(app: Express) {
         });
       });
     } catch (error) {
-      authLogger.error('Registration process failed', error, {
+      // Type assertion for known error types
+      if (error instanceof Error && error.message === "Email is already registered") {
+        authLogger.error('Registration process failed', error, {
+          ip: req.ip,
+          reason: 'duplicate_email'
+        }, 'registration');
+        return res.status(400).json({ error: error.message });
+      }
+
+      // Handle unknown errors
+      const err = error instanceof Error ? error : new Error('Unknown registration error');
+      authLogger.error('Registration process failed', err, {
         ip: req.ip
       }, 'registration');
       
-      if (error.message === "Email is already registered") {
-        return res.status(400).json({ error: error.message });
-      }
-      
-      next(error);
+      next(err);
     }
   });
 
