@@ -1,6 +1,6 @@
 import { drizzle } from "drizzle-orm/node-postgres";
-import { type Pool } from "pg";
 import pg from 'pg';
+import { type Pool } from 'pg';
 import * as schema from "./schema";
 
 // Enhanced Logger utility for database operations
