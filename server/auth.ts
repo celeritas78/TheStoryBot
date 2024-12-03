@@ -219,6 +219,8 @@ export function setupAuth(app: Express) {
   });
 
   app.post("/api/register", async (req, res, next) => {
+    const client = await pool.connect();
+    
     try {
       authLogger.info('Registration attempt started', { ip: req.ip }, 'registration');
       
@@ -242,63 +244,74 @@ export function setupAuth(app: Express) {
 
       const { email, password } = result.data;
 
-      // Check if user already exists
-      const [existingUser] = await db
-        .select()
-        .from(users)
-        .where(eq(users.email, email))
-        .limit(1);
+      await client.query('BEGIN');
 
-      if (existingUser) {
-        authLogger.security('Registration attempt with existing email', { 
-          email,
+      try {
+        // Check if user already exists - using parameterized query
+        const existingUserResult = await client.query(
+          'SELECT id, email FROM users WHERE email = $1 LIMIT 1',
+          [email]
+        );
+
+        if (existingUserResult.rows.length > 0) {
+          await client.query('ROLLBACK');
+          authLogger.security('Registration attempt with existing email', { 
+            email,
+            ip: req.ip 
+          }, 'registration');
+          return res.status(400).json({ error: "Email is already registered" });
+        }
+
+        // Hash the password
+        const hashedPassword = await crypto.hash(password);
+
+        // Create the new user with parameterized query
+        const insertResult = await client.query(
+          `INSERT INTO users (email, password, provider, email_verified, active, created_at, updated_at)
+           VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+           RETURNING id, email, email_verified, active, created_at`,
+          [email, hashedPassword, 'local', false, true]
+        );
+
+        const newUser = insertResult.rows[0];
+
+        await client.query('COMMIT');
+
+        authLogger.info('User created successfully', { 
+          userId: newUser.id,
+          email: newUser.email,
           ip: req.ip 
         }, 'registration');
-        return res.status(400).json({ error: "Email is already registered" });
-      }
 
-      // Hash the password
-      const hashedPassword = await crypto.hash(password);
-
-      // Create the new user
-      const [newUser] = await db
-        .insert(users)
-        .values({
-          email,
-          password: hashedPassword,
-          provider: 'local'
-        })
-        .returning();
-
-      authLogger.info('User created successfully', { 
-        userId: newUser.id,
-        email: newUser.email,
-        ip: req.ip 
-      }, 'registration');
-
-      // Log the user in after registration
-      req.login(newUser, (err) => {
-        if (err) {
-          authLogger.error('Auto-login after registration failed', err, {
-            userId: newUser.id,
-            ip: req.ip
-          }, 'registration');
-          return next(err);
-        }
-        authLogger.audit('User registered and logged in', {
-          ip: req.ip,
-          provider: 'local'
-        }, newUser.id);
-        return res.json({
-          message: "Registration successful",
-          user: { id: newUser.id, email: newUser.email },
+        // Log the user in after registration
+        req.login(newUser, (err) => {
+          if (err) {
+            authLogger.error('Auto-login after registration failed', err, {
+              userId: newUser.id,
+              ip: req.ip
+            }, 'registration');
+            return next(err);
+          }
+          authLogger.audit('User registered and logged in', {
+            ip: req.ip,
+            provider: 'local'
+          }, newUser.id);
+          return res.json({
+            message: "Registration successful",
+            user: { id: newUser.id, email: newUser.email },
+          });
         });
-      });
+      } catch (error) {
+        await client.query('ROLLBACK');
+        throw error;
+      }
     } catch (error) {
       authLogger.error('Registration process failed', error, {
         ip: req.ip
       }, 'registration');
       next(error);
+    } finally {
+      client.release();
     }
   });
 
