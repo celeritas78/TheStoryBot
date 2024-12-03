@@ -1,24 +1,86 @@
-// Logger utility for authentication
+// Enhanced Logger utility for authentication
 const authLogger = {
-  info: (message: string, data: Record<string, any> = {}) => {
-    // Mask sensitive data
+  maskSensitiveData: (data: Record<string, any> = {}): Record<string, any> => {
     const maskedData = { ...data };
-    if (maskedData.password) maskedData.password = '****';
-    if (maskedData.token) maskedData.token = '****';
-    if (maskedData.email) maskedData.email = maskedData.email.replace(/(?<=.{3}).(?=.*@)/g, '*');
-    console.log(`[Auth] ${message}`, maskedData);
-  },
-  error: (message: string, error: any, data: Record<string, any> = {}) => {
-    // Mask sensitive data
-    const maskedData = { ...data };
-    if (maskedData.password) maskedData.password = '****';
-    if (maskedData.token) maskedData.token = '****';
-    if (maskedData.email) maskedData.email = maskedData.email.replace(/(?<=.{3}).(?=.*@)/g, '*');
-    console.error(`[Auth Error] ${message}`, {
-      error: error.message || error,
-      stack: error.stack,
-      ...maskedData
+    const sensitiveFields = ['password', 'token', 'resetToken', 'currentPassword', 'newPassword'];
+    
+    // Mask all sensitive fields
+    sensitiveFields.forEach(field => {
+      if (maskedData[field]) maskedData[field] = '****';
     });
+
+    // Special handling for email
+    if (maskedData.email) {
+      maskedData.email = maskedData.email.replace(/(?<=.{3}).(?=.*@)/g, '*');
+    }
+
+    return maskedData;
+  },
+
+  info: (message: string, data: Record<string, any> = {}, context: string = 'general') => {
+    const timestamp = new Date().toISOString();
+    const maskedData = authLogger.maskSensitiveData(data);
+    console.log(JSON.stringify({
+      timestamp,
+      level: 'INFO',
+      context,
+      message,
+      data: maskedData
+    }));
+  },
+
+  warn: (message: string, data: Record<string, any> = {}, context: string = 'general') => {
+    const timestamp = new Date().toISOString();
+    const maskedData = authLogger.maskSensitiveData(data);
+    console.warn(JSON.stringify({
+      timestamp,
+      level: 'WARN',
+      context,
+      message,
+      data: maskedData
+    }));
+  },
+
+  error: (message: string, error: any, data: Record<string, any> = {}, context: string = 'general') => {
+    const timestamp = new Date().toISOString();
+    const maskedData = authLogger.maskSensitiveData(data);
+    console.error(JSON.stringify({
+      timestamp,
+      level: 'ERROR',
+      context,
+      message,
+      error: {
+        message: error.message || error,
+        stack: error.stack,
+        code: error.code,
+      },
+      data: maskedData
+    }));
+  },
+
+  security: (message: string, data: Record<string, any> = {}, context: string = 'security') => {
+    const timestamp = new Date().toISOString();
+    const maskedData = authLogger.maskSensitiveData(data);
+    console.log(JSON.stringify({
+      timestamp,
+      level: 'SECURITY',
+      context,
+      message,
+      data: maskedData
+    }));
+  },
+
+  audit: (message: string, data: Record<string, any> = {}, userId?: number) => {
+    const timestamp = new Date().toISOString();
+    const maskedData = authLogger.maskSensitiveData(data);
+    console.log(JSON.stringify({
+      timestamp,
+      level: 'AUDIT',
+      context: 'user_activity',
+      message,
+      userId,
+      data: maskedData
+    }));
   }
 };
 import passport from "passport";
@@ -158,16 +220,23 @@ export function setupAuth(app: Express) {
 
   app.post("/api/register", async (req, res, next) => {
     try {
+      authLogger.info('Registration attempt started', { ip: req.ip }, 'registration');
+      
       const result = registrationSchema.safeParse(req.body);
       if (!result.success) {
+        const validationErrors = result.error.errors.map(err => ({
+          field: err.path[0],
+          message: err.message
+        }));
+        authLogger.warn('Registration validation failed', { 
+          errors: validationErrors,
+          ip: req.ip 
+        }, 'registration');
         return res
           .status(400)
           .json({ 
             error: "Validation failed", 
-            details: result.error.errors.map(err => ({
-              field: err.path[0],
-              message: err.message
-            }))
+            details: validationErrors
           });
       }
 
@@ -181,6 +250,10 @@ export function setupAuth(app: Express) {
         .limit(1);
 
       if (existingUser) {
+        authLogger.security('Registration attempt with existing email', { 
+          email,
+          ip: req.ip 
+        }, 'registration');
         return res.status(400).json({ error: "Email is already registered" });
       }
 
@@ -197,17 +270,34 @@ export function setupAuth(app: Express) {
         })
         .returning();
 
+      authLogger.info('User created successfully', { 
+        userId: newUser.id,
+        email: newUser.email,
+        ip: req.ip 
+      }, 'registration');
+
       // Log the user in after registration
       req.login(newUser, (err) => {
         if (err) {
+          authLogger.error('Auto-login after registration failed', err, {
+            userId: newUser.id,
+            ip: req.ip
+          }, 'registration');
           return next(err);
         }
+        authLogger.audit('User registered and logged in', {
+          ip: req.ip,
+          provider: 'local'
+        }, newUser.id);
         return res.json({
           message: "Registration successful",
           user: { id: newUser.id, email: newUser.email },
         });
       });
     } catch (error) {
+      authLogger.error('Registration process failed', error, {
+        ip: req.ip
+      }, 'registration');
       next(error);
     }
   });
@@ -287,30 +377,58 @@ export function setupAuth(app: Express) {
   });
 
   app.post("/api/login", (req, res, next) => {
+    authLogger.info('Login attempt started', { 
+      ip: req.ip,
+      userAgent: req.headers['user-agent']
+    }, 'login');
+
     const result = insertUserSchema.safeParse(req.body);
     if (!result.success) {
+      const validationErrors = result.error.errors.map(err => ({
+        field: err.path[0],
+        message: err.message
+      }));
+      authLogger.warn('Login validation failed', {
+        errors: validationErrors,
+        ip: req.ip
+      }, 'login');
       return res.status(400).json({
         error: "Invalid input",
-        details: result.error.errors.map(err => ({
-          field: err.path[0],
-          message: err.message
-        }))
+        details: validationErrors
       });
     }
 
     const cb = (err: any, user: Express.User, info: IVerifyOptions) => {
       if (err) {
+        authLogger.error('Login authentication error', err, {
+          ip: req.ip
+        }, 'login');
         return next(err);
       }
 
       if (!user) {
+        authLogger.security('Failed login attempt', {
+          email: req.body.email,
+          reason: info.message,
+          ip: req.ip
+        }, 'login');
         return res.status(400).json({ error: info.message ?? "Login failed" });
       }
 
       req.logIn(user, (err) => {
         if (err) {
+          authLogger.error('Session creation failed', err, {
+            userId: user.id,
+            ip: req.ip
+          }, 'login');
           return next(err);
         }
+
+        authLogger.audit('User logged in', {
+          ip: req.ip,
+          userAgent: req.headers['user-agent'],
+          provider: 'local'
+        }, user.id);
 
         return res.json({
           message: "Login successful",
@@ -322,10 +440,28 @@ export function setupAuth(app: Express) {
   });
 
   app.post("/api/logout", (req, res) => {
+    const userId = req.user?.id;
+    const userEmail = req.user?.email;
+
+    authLogger.info('Logout initiated', {
+      userId,
+      email: userEmail,
+      ip: req.ip
+    }, 'logout');
+
     req.logout((err) => {
       if (err) {
+        authLogger.error('Logout failed', err, {
+          userId,
+          ip: req.ip
+        }, 'logout');
         return res.status(500).json({ error: "Logout failed" });
       }
+
+      authLogger.audit('User logged out', {
+        ip: req.ip,
+        sessionDestroyed: true
+      }, userId);
 
       res.json({ message: "Logout successful" });
     });
