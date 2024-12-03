@@ -38,14 +38,24 @@ declare global {
 
 // Enhanced validation schema for registration
 const registrationSchema = z.object({
-  username: z.string()
-    .min(3, "Username must be at least 3 characters")
-    .max(50, "Username must not exceed 50 characters")
-    .regex(/^[a-zA-Z0-9_-]+$/, "Username can only contain letters, numbers, underscores and hyphens"),
   email: z.string()
     .email("Please enter a valid email address")
     .min(5, "Email is too short")
     .max(255, "Email must not exceed 255 characters"),
+  password: z.string()
+    .min(8, "Password must be at least 8 characters")
+    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+    .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+    .regex(/[0-9]/, "Password must contain at least one number")
+});
+
+// Password reset validation schemas
+const requestResetSchema = z.object({
+  email: z.string().email("Please enter a valid email address")
+});
+
+const resetPasswordSchema = z.object({
+  token: z.string().min(1, "Reset token is required"),
   password: z.string()
     .min(8, "Password must be at least 8 characters")
     .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
@@ -84,21 +94,20 @@ export function setupAuth(app: Express) {
   app.use(passport.session());
 
   passport.use(
-    new LocalStrategy(async (username, password, done) => {
+    new LocalStrategy({ usernameField: 'email' }, async (email, password, done) => {
       try {
-        // Check for user by username or email
         const [user] = await db
           .select()
           .from(users)
-          .where(or(eq(users.username, username), eq(users.email, username)))
+          .where(eq(users.email, email))
           .limit(1);
 
         if (!user) {
-          return done(null, false, { message: "Invalid username/email or password" });
+          return done(null, false, { message: "Invalid email or password" });
         }
         const isMatch = await crypto.compare(password, user.password);
         if (!isMatch) {
-          return done(null, false, { message: "Invalid username/email or password" });
+          return done(null, false, { message: "Invalid email or password" });
         }
         return done(null, user);
       } catch (err) {
@@ -126,7 +135,6 @@ export function setupAuth(app: Express) {
 
   app.post("/api/register", async (req, res, next) => {
     try {
-      // Validate input with enhanced schema
       const result = registrationSchema.safeParse(req.body);
       if (!result.success) {
         return res
@@ -140,19 +148,16 @@ export function setupAuth(app: Express) {
           });
       }
 
-      const { username, email, password } = result.data;
+      const { email, password } = result.data;
 
-      // Check if user already exists (by username or email)
+      // Check if user already exists
       const [existingUser] = await db
         .select()
         .from(users)
-        .where(or(eq(users.username, username), eq(users.email, email)))
+        .where(eq(users.email, email))
         .limit(1);
 
       if (existingUser) {
-        if (existingUser.username === username) {
-          return res.status(400).json({ error: "Username is already taken" });
-        }
         return res.status(400).json({ error: "Email is already registered" });
       }
 
@@ -163,7 +168,6 @@ export function setupAuth(app: Express) {
       const [newUser] = await db
         .insert(users)
         .values({
-          username,
           email,
           password: hashedPassword,
           provider: 'local'
@@ -177,11 +181,85 @@ export function setupAuth(app: Express) {
         }
         return res.json({
           message: "Registration successful",
-          user: { id: newUser.id, username: newUser.username, email: newUser.email },
+          user: { id: newUser.id, email: newUser.email },
         });
       });
     } catch (error) {
       next(error);
+    }
+  });
+
+  // Password reset request endpoint
+  app.post("/api/request-password-reset", async (req, res) => {
+    try {
+      const { email } = req.body;
+      
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, email))
+        .limit(1);
+
+      if (!user) {
+        // Don't reveal whether a user exists
+        return res.json({ message: "If an account exists, a password reset link will be sent" });
+      }
+
+      // Generate reset token
+      const resetToken = randomBytes(32).toString('hex');
+      const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour from now
+
+      // Update user with reset token
+      await db
+        .update(users)
+        .set({
+          resetToken,
+          resetTokenExpiry
+        })
+        .where(eq(users.id, user.id));
+
+      // TODO: Send email with reset token
+      // For now, we'll just return the token in the response (only for development)
+      res.json({ 
+        message: "If an account exists, a password reset link will be sent",
+        token: process.env.NODE_ENV === 'development' ? resetToken : undefined 
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to process password reset request" });
+    }
+  });
+
+  // Reset password endpoint
+  app.post("/api/reset-password", async (req, res) => {
+    try {
+      const { token, password } = req.body;
+
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.resetToken, token))
+        .limit(1);
+
+      if (!user || !user.resetTokenExpiry || user.resetTokenExpiry < new Date()) {
+        return res.status(400).json({ error: "Invalid or expired reset token" });
+      }
+
+      // Hash the new password
+      const hashedPassword = await crypto.hash(password);
+
+      // Update user's password and clear reset token
+      await db
+        .update(users)
+        .set({
+          password: hashedPassword,
+          resetToken: null,
+          resetTokenExpiry: null
+        })
+        .where(eq(users.id, user.id));
+
+      res.json({ message: "Password has been reset successfully" });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to reset password" });
     }
   });
 
