@@ -300,9 +300,16 @@ export function setupAuth(app: Express) {
               })
               .returning();
 
-            // Verify the inserted user data structure
-            if (!insertedUser || !insertedUser.id || !insertedUser.email) {
-              throw new Error("Invalid user data structure after insertion");
+            // Strict validation of inserted user data
+            if (!insertedUser?.id || !insertedUser?.email) {
+              const validationError = new Error('User creation failed - invalid database response');
+              authLogger.error('User data validation failed', validationError, {
+                email,
+                ip: req.ip,
+                transactionState: 'validation_failed',
+                responseData: insertedUser
+              }, 'registration_transaction');
+              throw validationError;
             }
 
             authLogger.info('User record created in transaction', {
@@ -313,21 +320,27 @@ export function setupAuth(app: Express) {
             }, 'registration_transaction');
 
             return insertedUser;
-          } catch (txError: unknown) {
-            // Log transaction error and ensure rollback
-            if (txError instanceof Error) {
-              transactionError = txError;
-            } else {
-              transactionError = new Error(String(txError));
-            }
-            authLogger.error('Transaction error occurred', transactionError, {
+          } catch (error: unknown) {
+            // Ensure error is properly typed
+            const txError = error instanceof Error ? error : new Error(String(error));
+            transactionError = txError;
+            
+            authLogger.error('Transaction error occurred', txError, {
               email,
               ip: req.ip,
-              transactionState: 'error_rollback'
+              transactionState: 'error_rollback',
+              errorType: txError.name,
+              errorMessage: txError.message
             }, 'registration_transaction');
-            throw transactionError; // Re-throw to trigger rollback
+            
+            throw txError; // Re-throw to trigger rollback
           }
         });
+
+        // Additional validation after successful transaction
+        if (!newUser?.id || !newUser?.email) {
+          throw new Error('User creation failed - transaction did not return valid user data');
+        }
 
         // Validate transaction result
         if (!newUser || !newUser.id) {
@@ -375,10 +388,10 @@ export function setupAuth(app: Express) {
           authLogger.error('Database error during registration', dbError, {
             ip: req.ip,
             email,
-            errorCode: (dbError as any).code,
-            errorDetail: (dbError as any).detail,
+            errorCode: (dbError as { code?: string }).code,
+            errorDetail: (dbError as { detail?: string }).detail,
             transactionState: 'rolled_back',
-            transactionError: transactionError ? transactionError.message : 'Unknown error'
+            transactionError: transactionError?.message ?? 'Unknown error'
           }, 'registration_transaction');
 
           // Return appropriate error response
