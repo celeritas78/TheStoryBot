@@ -305,7 +305,28 @@ export function setupAuth(app: Express) {
   // Password reset request endpoint
   app.post("/api/request-password-reset", async (req, res) => {
     try {
-      const { email } = req.body;
+      authLogger.info('Password reset request initiated', { 
+        ip: req.ip,
+        userAgent: req.headers['user-agent'] 
+      }, 'password_reset');
+
+      const result = requestResetSchema.safeParse(req.body);
+      if (!result.success) {
+        const validationErrors = result.error.errors.map(err => ({
+          field: err.path[0],
+          message: err.message
+        }));
+        authLogger.warn('Password reset validation failed', {
+          errors: validationErrors,
+          ip: req.ip
+        }, 'password_reset');
+        return res.status(400).json({ 
+          error: "Validation failed",
+          details: validationErrors
+        });
+      }
+
+      const { email } = result.data;
       
       const [user] = await db
         .select()
@@ -315,12 +336,22 @@ export function setupAuth(app: Express) {
 
       if (!user) {
         // Don't reveal whether a user exists
+        authLogger.security('Password reset requested for non-existent email', {
+          email,
+          ip: req.ip
+        }, 'password_reset');
         return res.json({ message: "If an account exists, a password reset link will be sent" });
       }
 
       // Generate reset token
       const resetToken = randomBytes(32).toString('hex');
       const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour from now
+
+      authLogger.info('Reset token generated', {
+        userId: user.id,
+        tokenExpiry: resetTokenExpiry,
+        ip: req.ip
+      }, 'password_reset');
 
       // Update user with reset token
       await db
@@ -331,6 +362,12 @@ export function setupAuth(app: Express) {
         })
         .where(eq(users.id, user.id));
 
+      authLogger.audit('Password reset token created', {
+        userId: user.id,
+        ip: req.ip,
+        tokenExpiry: resetTokenExpiry
+      });
+
       // TODO: Send email with reset token
       // For now, we'll just return the token in the response (only for development)
       res.json({ 
@@ -338,6 +375,9 @@ export function setupAuth(app: Express) {
         token: process.env.NODE_ENV === 'development' ? resetToken : undefined 
       });
     } catch (error) {
+      authLogger.error('Failed to process password reset request', error, {
+        ip: req.ip
+      }, 'password_reset');
       res.status(500).json({ error: "Failed to process password reset request" });
     }
   });
@@ -345,7 +385,28 @@ export function setupAuth(app: Express) {
   // Reset password endpoint
   app.post("/api/reset-password", async (req, res) => {
     try {
-      const { token, password } = req.body;
+      authLogger.info('Password reset attempt started', { 
+        ip: req.ip,
+        userAgent: req.headers['user-agent']
+      }, 'password_reset');
+
+      const result = resetPasswordSchema.safeParse(req.body);
+      if (!result.success) {
+        const validationErrors = result.error.errors.map(err => ({
+          field: err.path[0],
+          message: err.message
+        }));
+        authLogger.warn('Password reset validation failed', {
+          errors: validationErrors,
+          ip: req.ip
+        }, 'password_reset');
+        return res.status(400).json({ 
+          error: "Validation failed",
+          details: validationErrors
+        });
+      }
+
+      const { token, password } = result.data;
 
       const [user] = await db
         .select()
@@ -354,11 +415,25 @@ export function setupAuth(app: Express) {
         .limit(1);
 
       if (!user || !user.resetTokenExpiry || user.resetTokenExpiry < new Date()) {
+        authLogger.security('Invalid or expired reset token used', {
+          ip: req.ip,
+          tokenExpired: user?.resetTokenExpiry ? user.resetTokenExpiry < new Date() : false
+        }, 'password_reset');
         return res.status(400).json({ error: "Invalid or expired reset token" });
       }
 
+      authLogger.info('Valid reset token provided', {
+        userId: user.id,
+        ip: req.ip
+      }, 'password_reset');
+
       // Hash the new password
       const hashedPassword = await crypto.hash(password);
+      
+      authLogger.info('New password hashed successfully', {
+        userId: user.id,
+        ip: req.ip
+      }, 'password_reset');
 
       // Update user's password and clear reset token
       await db
@@ -370,8 +445,17 @@ export function setupAuth(app: Express) {
         })
         .where(eq(users.id, user.id));
 
+      authLogger.audit('Password reset completed', {
+        userId: user.id,
+        ip: req.ip,
+        resetTokenCleared: true
+      });
+
       res.json({ message: "Password has been reset successfully" });
     } catch (error) {
+      authLogger.error('Failed to reset password', error, {
+        ip: req.ip
+      }, 'password_reset');
       res.status(500).json({ error: "Failed to reset password" });
     }
   });
@@ -477,18 +561,34 @@ export function setupAuth(app: Express) {
 
   app.put("/api/profile", async (req, res) => {
     if (!req.isAuthenticated()) {
+      authLogger.security('Unauthorized profile update attempt', {
+        ip: req.ip,
+        userAgent: req.headers['user-agent']
+      }, 'profile_update');
       return res.status(401).json({ error: "Not logged in" });
     }
 
     try {
+      authLogger.info('Profile update initiated', {
+        userId: req.user.id,
+        ip: req.ip,
+        userAgent: req.headers['user-agent']
+      }, 'profile_update');
+
       const result = profileUpdateSchema.safeParse(req.body);
       if (!result.success) {
+        const validationErrors = result.error.errors.map(err => ({
+          field: err.path[0],
+          message: err.message
+        }));
+        authLogger.warn('Profile update validation failed', {
+          userId: req.user.id,
+          errors: validationErrors,
+          ip: req.ip
+        }, 'profile_update');
         return res.status(400).json({
           error: "Validation failed",
-          details: result.error.errors.map(err => ({
-            field: err.path[0],
-            message: err.message
-          }))
+          details: validationErrors
         });
       }
 
@@ -498,11 +598,21 @@ export function setupAuth(app: Express) {
         .where(eq(users.id, req.user.id))
         .returning();
 
+      authLogger.audit('Profile updated successfully', {
+        userId: req.user.id,
+        ip: req.ip,
+        updatedFields: Object.keys(result.data)
+      });
+
       res.json({
         message: "Profile updated successfully",
         user: updatedUser
       });
     } catch (error) {
+      authLogger.error('Failed to update profile', error, {
+        userId: req.user.id,
+        ip: req.ip
+      }, 'profile_update');
       res.status(500).json({ error: "Failed to update profile" });
     }
   });
