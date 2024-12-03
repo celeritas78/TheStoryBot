@@ -35,35 +35,28 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
 
   useEffect(() => {
     const stopAllAudio = () => {
-      const audioElements = document.querySelectorAll(
-        '.story-viewer audio'
-      );
+      const audioElements = document.querySelectorAll('.story-viewer audio');
       audioElements.forEach(audio => {
-        const audioElement = audio as HTMLAudioElement; // Type assertion to HTMLAudioElement
+        const audioElement = audio as HTMLAudioElement;
         if (!audioElement.paused) {
           audioElement.pause();
           audioElement.currentTime = 0;
         }
       });
-
-
     };
     stopAllAudio();
   }, [currentSegment]);
 
   useEffect(() => {
     return () => {
-      const audioElements = document.querySelectorAll(
-        '.story-viewer audio'
-      );
+      const audioElements = document.querySelectorAll('.story-viewer audio');
       audioElements.forEach(audio => {
-        const audioElement = audio as HTMLAudioElement; // Type assertion to HTMLAudioElement
+        const audioElement = audio as HTMLAudioElement;
         if (!audioElement.paused) {
           audioElement.pause();
           audioElement.currentTime = 0;
         }
       });
-
     };
   }, []);
 
@@ -136,15 +129,10 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
                       />
                     </div>
                   )}
-                  <div className="w-full max-w-3xl mx-auto px-4 sm:px-6">
+                  <div className="w-full max-w-3xl mx-auto relative">
                     <div className="bg-white rounded-xl p-4 sm:p-6 shadow-md">
-                      <div className="flex items-center justify-between space-x-4 sm:space-x-6">
-                        <CarouselPrevious 
-                          onClick={() => setCurrentSegment(currentSegment - 1)}
-                          disabled={currentSegment === 0}
-                          aria-label="Previous segment"
-                        />
-                        <div className="flex-1 min-w-0 px-2 sm:px-4">
+                      <div className="flex items-center justify-between space-x-4 sm:space-x-8">
+                        <div className="flex-1 min-w-0">
                           {segment.audioUrl ? (
                             <div className="w-full max-w-2xl mx-auto">
                               <AudioPlayer audioUrl={segment.audioUrl} />
@@ -155,13 +143,50 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
                             </div>
                           )}
                         </div>
-                        <CarouselNext 
-                          onClick={() => setCurrentSegment(currentSegment + 1)}
-                          disabled={currentSegment === story.segments.length - 1}
-                          aria-label="Next segment"
-                        />
                       </div>
                     </div>
+                    <button
+                      onClick={() => setCurrentSegment(currentSegment - 1)}
+                      disabled={currentSegment === 0}
+                      className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-16 h-10 w-10 rounded-full bg-white shadow-lg border-2 border-primary/50 hover:border-primary/75 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      aria-label="Previous segment"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        className="w-6 h-6 mx-auto"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 19l-7-7 7-7"
+                        />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => setCurrentSegment(currentSegment + 1)}
+                      disabled={currentSegment === story.segments.length - 1}
+                      className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-16 h-10 w-10 rounded-full bg-white shadow-lg border-2 border-primary/50 hover:border-primary/75 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      aria-label="Next segment"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        className="w-6 h-6 mx-auto"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 5l7 7-7 7"
+                        />
+                      </svg>
+                    </button>
                   </div>
                   {segment.content && (
                     <div className="px-4">
