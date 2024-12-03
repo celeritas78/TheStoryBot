@@ -247,7 +247,7 @@ export function setupAuth(app: Express) {
       const { email, password } = result.data;
 
       let newUser;
-      let transactionError = null;
+      let transactionError: Error | null = null;
       
       try {
         authLogger.info('Starting registration transaction', {
@@ -369,7 +369,7 @@ export function setupAuth(app: Express) {
             errorCode: (dbError as any).code,
             errorDetail: (dbError as any).detail,
             transactionState: 'rolled_back',
-            transactionError: transactionError?.message
+            transactionError: transactionError instanceof Error ? transactionError.message : String(transactionError)
           }, 'registration_transaction');
 
           // Return appropriate error response
