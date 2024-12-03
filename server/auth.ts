@@ -313,17 +313,26 @@ export function setupAuth(app: Express) {
             }, 'registration_transaction');
 
             return insertedUser;
-          } catch (txError) {
+          } catch (txError: unknown) {
             // Log transaction error and ensure rollback
-            transactionError = txError;
-            authLogger.error('Transaction error occurred', txError, {
+            if (txError instanceof Error) {
+              transactionError = txError;
+            } else {
+              transactionError = new Error(String(txError));
+            }
+            authLogger.error('Transaction error occurred', transactionError, {
               email,
               ip: req.ip,
               transactionState: 'error_rollback'
             }, 'registration_transaction');
-            throw txError; // Re-throw to trigger rollback
+            throw transactionError; // Re-throw to trigger rollback
           }
         });
+
+        // Validate transaction result
+        if (!newUser || !newUser.id) {
+          throw new Error('User creation failed - invalid response from database');
+        }
 
         // Log successful transaction completion
         authLogger.info('Transaction committed successfully', { 
@@ -369,7 +378,7 @@ export function setupAuth(app: Express) {
             errorCode: (dbError as any).code,
             errorDetail: (dbError as any).detail,
             transactionState: 'rolled_back',
-            transactionError: transactionError instanceof Error ? transactionError.message : String(transactionError)
+            transactionError: transactionError ? transactionError.message : 'Unknown error'
           }, 'registration_transaction');
 
           // Return appropriate error response
