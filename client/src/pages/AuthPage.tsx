@@ -11,6 +11,7 @@ export default function AuthPage() {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { login, register } = useUser();
+  const [, setLocation] = useLocation();
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>, type: "login" | "register") => {
     event.preventDefault();
@@ -34,6 +35,10 @@ export default function AuthPage() {
         title: type === "login" ? "Login successful" : "Registration successful",
         description: "Welcome to the Story Generator!",
       });
+
+      // Navigate to the originally requested page or home
+      const destination = new URLSearchParams(window.location.search).get('redirect') || '/';
+      setLocation(destination);
     } catch (error) {
       toast({
         variant: "destructive",

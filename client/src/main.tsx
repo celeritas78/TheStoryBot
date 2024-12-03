@@ -21,7 +21,8 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
 
   useEffect(() => {
     if (!isLoading && !user) {
-      setLocation("/auth");
+      const currentPath = window.location.pathname;
+      setLocation(`/auth?redirect=${encodeURIComponent(currentPath)}`);
     }
   }, [user, isLoading, setLocation]);
 
