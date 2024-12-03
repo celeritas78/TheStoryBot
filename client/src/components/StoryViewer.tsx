@@ -114,20 +114,6 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
               }
             }}
           >
-            <div className="fixed left-4 top-1/2 -translate-y-1/2 z-50">
-              <CarouselPrevious 
-                onClick={() => setCurrentSegment(currentSegment - 1)}
-                disabled={currentSegment === 0}
-                className="h-14 w-14 rounded-full border-2 border-primary/50 hover:border-primary/75 transition-colors shadow-lg bg-white/90 backdrop-blur-sm"
-              />
-            </div>
-            <div className="fixed right-4 top-1/2 -translate-y-1/2 z-50">
-              <CarouselNext 
-                onClick={() => setCurrentSegment(currentSegment + 1)}
-                disabled={currentSegment === story.segments.length - 1}
-                className="h-14 w-14 rounded-full border-2 border-primary/50 hover:border-primary/75 transition-colors shadow-lg bg-white/90 backdrop-blur-sm"
-              />
-            </div>
             <CarouselContent>
               {story.segments.map((segment: StorySegment, index: number) => (
                 <CarouselItem key={index} data-index={index}>
@@ -145,7 +131,21 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
                       </div>
                     )}
                     <div className="w-full max-w-3xl mx-auto px-4 sm:px-6">
-                      <div className="bg-white rounded-xl p-4 sm:p-6 shadow-md">
+                      <div className="relative bg-white rounded-xl p-4 sm:p-6 shadow-md">
+                        <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-50">
+                          <CarouselPrevious 
+                            onClick={() => setCurrentSegment(currentSegment - 1)}
+                            disabled={currentSegment === 0}
+                            className="h-14 w-14 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:opacity-90 transition-opacity shadow-lg"
+                          />
+                        </div>
+                        <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 z-50">
+                          <CarouselNext 
+                            onClick={() => setCurrentSegment(currentSegment + 1)}
+                            disabled={currentSegment === story.segments.length - 1}
+                            className="h-14 w-14 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:opacity-90 transition-opacity shadow-lg"
+                          />
+                        </div>
                         <div className="flex-1 min-w-0">
                           {segment.audioUrl ? (
                             <div className="w-full max-w-2xl mx-auto">
