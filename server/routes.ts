@@ -127,15 +127,9 @@ export function registerRoutes(app: Express) {
 
   app.post("/api/stories", async (req, res) => {
     try {
-      // Check if user is authenticated
-      if (!req.isAuthenticated()) {
-        return sendErrorResponse(res, 401, "Authentication required");
-      }
-
       const { childName, childAge, mainCharacter, theme } = req.body;
       console.log('Story generation request:', {
         ...req.body,
-        userId: req.user.id,
         timestamp: new Date().toISOString()
       });
 
@@ -202,7 +196,6 @@ export function registerRoutes(app: Express) {
           content: segments.map(s => s.content).join('\n\n'),
           imageUrls: JSON.stringify(segments.map(s => s.imageUrl)),
           parentApproved: false,
-          userId: req.user.id,
           createdAt: new Date(),
         })
         .returning();
@@ -303,20 +296,15 @@ export function registerRoutes(app: Express) {
 
   app.get("/api/stories", async (req, res) => {
     try {
-      // Check if user is authenticated
-      if (!req.isAuthenticated()) {
-        return sendErrorResponse(res, 401, "Authentication required");
-      }
-
-      console.log('Fetching stories for user:', req.user.id);
+      console.log('Fetching all stories');
       const allStories = await db.query.stories.findMany({
-        where: eq(stories.userId, req.user.id),
         with: {
           segments: {
             where: eq(storySegments.sequence, 1),
           },
         },
         orderBy: [desc(stories.createdAt)],
+        take: 10 // Limit to recent 10 stories
       });
 
       console.log('Stories fetched:', allStories.length);
@@ -329,26 +317,15 @@ export function registerRoutes(app: Express) {
 
   app.get("/api/stories/:id", async (req, res) => {
     try {
-      // Check if user is authenticated
-      if (!req.isAuthenticated()) {
-        return sendErrorResponse(res, 401, "Authentication required");
-      }
-
       const story = await db.query.stories.findFirst({
         where: eq(stories.id, parseInt(req.params.id)),
         with: {
-          segments: true,
-          user: true,
+          segments: true
         }
       });
       
-      // Check if story exists and belongs to the user
       if (!story) {
         return res.status(404).json({ error: "Story not found" });
-      }
-      
-      if (story.userId !== req.user.id) {
-        return sendErrorResponse(res, 403, "Unauthorized access to story");
       }
       
       res.json(story);
