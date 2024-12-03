@@ -24,7 +24,7 @@ setupAuth(app);
 
 // Middleware to debug req.isAuthenticated
 app.use((req, res, next) => {
-  console.log("Middleware stack check: ", req.isAuthenticated ? req.isAuthenticated() : "Undefined");
+  //console.log("Middleware stack check: ", req.isAuthenticated ? req.isAuthenticated() : "Undefined");
   next();
 });
 

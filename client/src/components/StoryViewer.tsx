@@ -105,7 +105,7 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
       )}
       <div className="relative">
         <Card className="p-4 px-4 sm:px-6 md:p-6 md:px-8 lg:p-8 lg:px-12 xl:px-16">
-          <Carousel 
+          <Carousel
             className="w-full max-w-xl mx-auto"
             setApi={setApi}
             onSelect={(index) => {
@@ -130,33 +130,34 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
                         />
                       </div>
                     )}
-                    <div className="w-full max-w-xl mx-auto">
-                      <div className="relative bg-white rounded-xl p-4 sm:p-6 shadow-md">
-                        <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-12">
-                          <CarouselPrevious 
-                            onClick={() => setCurrentSegment(currentSegment - 1)}
-                            disabled={currentSegment === 0}
-                            className="h-14 w-14 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:opacity-90 transition-opacity shadow-lg"
-                          />
-                        </div>
-                        <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-12">
-                          <CarouselNext 
-                            onClick={() => setCurrentSegment(currentSegment + 1)}
-                            disabled={currentSegment === story.segments.length - 1}
-                            className="h-14 w-14 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:opacity-90 transition-opacity shadow-lg"
-                          />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          {segment.audioUrl ? (
-                            <div className="w-full max-w-xl mx-auto">
-                              <AudioPlayer audioUrl={segment.audioUrl} />
-                            </div>
-                          ) : (
-                            <div className="flex items-center justify-center h-full min-h-[80px] bg-gray-50 rounded-lg">
-                              <span className="text-gray-500 text-sm">Audio not available</span>
-                            </div>
-                          )}
-                        </div>
+                    <div className="w-full max-w-xl mx-auto relative flex items-center">
+                      {/* Back button on the left */}
+                      <div className="absolute left-0 transform -translate-x-16 top-1/2 -translate-y-1/2">
+                        <CarouselPrevious
+                          onClick={() => setCurrentSegment(currentSegment - 1)}
+                          disabled={currentSegment === 0}
+                          className="h-14 w-14 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:opacity-90 transition-opacity shadow-lg"
+                        />
+                      </div>
+
+                      {/* Audio container */}
+                      <div className="flex-1">
+                        {segment.audioUrl ? (
+                          <AudioPlayer audioUrl={segment.audioUrl} />
+                        ) : (
+                          <div className="flex items-center justify-center h-full min-h-[80px] bg-gray-50 rounded-lg">
+                            <span className="text-gray-500 text-sm">Audio not available</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Next button on the right */}
+                      <div className="absolute right-0 transform translate-x-16 top-1/2 -translate-y-1/2">
+                        <CarouselNext
+                          onClick={() => setCurrentSegment(currentSegment + 1)}
+                          disabled={currentSegment === story.segments.length - 1}
+                          className="h-14 w-14 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:opacity-90 transition-opacity shadow-lg"
+                        />
                       </div>
                     </div>
                     {segment.content && (
@@ -173,6 +174,8 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
           </Carousel>
         </Card>
       </div>
+
+
     </div>
   );
 }
