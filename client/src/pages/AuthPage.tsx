@@ -32,22 +32,22 @@ export default function AuthPage() {
         throw new Error(result.message);
       }
 
+      // Wait for user query to be updated
+      await queryClient.refetchQueries({ queryKey: ['user'] });
+
       toast({
         title: type === "login" ? "Login successful" : "Registration successful",
         description: "Welcome to the Story Generator!",
       });
 
-      // Navigate to the originally requested page or home
+      // Get the destination from URL params or default to home
       const destination = new URLSearchParams(window.location.search).get('redirect') || '/';
-      console.log('Attempting navigation to:', destination);
-      try {
-        setLocation(destination);
-      } catch (error) {
-        console.error('Navigation error:', error);
-        // Fallback navigation
-        window.location.href = destination;
-      }
+      console.log('Navigation destination:', destination);
+      
+      // Use window.location for more reliable navigation
+      window.location.href = destination;
     } catch (error) {
+      console.error('Authentication error:', error);
       toast({
         variant: "destructive",
         title: "Error",

@@ -68,8 +68,11 @@ export function useUser() {
 
   const loginMutation = useMutation<RequestResult, Error, InsertUser>({
     mutationFn: (userData) => handleRequest('/api/login', 'POST', userData),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['user'] });
+    onSuccess: async () => {
+      // Force a refetch of user data after login
+      await queryClient.invalidateQueries({ queryKey: ['user'] });
+      // Wait for the new data to be fetched
+      await queryClient.refetchQueries({ queryKey: ['user'] });
     },
   });
 
