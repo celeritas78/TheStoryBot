@@ -7,14 +7,20 @@ export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   email: varchar("email", { length: 255 }).notNull().unique(),
   password: varchar("password", { length: 255 }).notNull(),
-  provider: varchar("provider", { length: 50 }).default("local"),
+  provider: varchar("provider", { length: 50 }).notNull().default("local"),
   providerId: varchar("provider_id", { length: 255 }),
   displayName: varchar("display_name", { length: 255 }),
   avatarUrl: varchar("avatar_url", { length: 512 }),
   bio: text("bio"),
+  emailVerified: boolean("email_verified").notNull().default(false),
+  verificationToken: varchar("verification_token", { length: 255 }),
+  verificationTokenExpiry: timestamp("verification_token_expiry"),
   resetToken: varchar("reset_token", { length: 255 }),
   resetTokenExpiry: timestamp("reset_token_expiry"),
-  createdAt: timestamp("created_at").defaultNow(),
+  lastLoginAt: timestamp("last_login_at"),
+  active: boolean("active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
 export const stories = pgTable("stories", {
