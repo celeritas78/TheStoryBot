@@ -67,12 +67,16 @@ export function useUser() {
   });
 
   const loginMutation = useMutation<RequestResult, Error, InsertUser>({
-    mutationFn: (userData) => handleRequest('/api/login', 'POST', userData),
+    mutationFn: (userData) => {
+      console.log('Initiating login mutation');
+      return handleRequest('/api/login', 'POST', userData);
+    },
     onSuccess: async () => {
-      // Force a refetch of user data after login
+      console.log('Login mutation successful, invalidating queries');
       await queryClient.invalidateQueries({ queryKey: ['user'] });
-      // Wait for the new data to be fetched
+      console.log('Queries invalidated, refetching user data');
       await queryClient.refetchQueries({ queryKey: ['user'] });
+      console.log('User data refetched');
     },
   });
 

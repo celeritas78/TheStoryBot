@@ -19,13 +19,14 @@ export default function AuthPage() {
     event.preventDefault();
     setIsLoading(true);
 
-    const formData = new FormData(event.currentTarget);
-    const userData = {
-      email: formData.get("email") as string,
-      password: formData.get("password") as string,
-    };
-
     try {
+      const formData = new FormData(event.currentTarget);
+      const userData = {
+        email: formData.get("email") as string,
+        password: formData.get("password") as string,
+      };
+
+      console.log(`Attempting ${type} for user:`, userData.email);
       const action = type === "login" ? login : register;
       const result = await action(userData);
       
@@ -33,8 +34,12 @@ export default function AuthPage() {
         throw new Error(result.message);
       }
 
+      console.log(`${type} successful for user:`, userData.email);
+      
       // Wait for user query to be updated
-      await queryClient.refetchQueries({ queryKey: ['user'] });
+      await queryClient.invalidateQueries({ queryKey: ['user'] });
+      const updatedUserData = await queryClient.refetchQueries({ queryKey: ['user'] });
+      console.log('User data updated:', updatedUserData);
 
       toast({
         title: type === "login" ? "Login successful" : "Registration successful",
@@ -43,10 +48,10 @@ export default function AuthPage() {
 
       // Get the destination from URL params or default to home
       const destination = new URLSearchParams(window.location.search).get('redirect') || '/';
-      console.log('Navigation destination:', destination);
+      console.log('Navigating to:', destination);
       
-      // Use window.location for more reliable navigation
-      window.location.href = destination;
+      // Use setLocation for navigation within the React app
+      setLocation(destination);
     } catch (error) {
       console.error('Authentication error:', error);
       toast({
