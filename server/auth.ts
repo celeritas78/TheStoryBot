@@ -91,7 +91,7 @@ import createMemoryStore from "memorystore";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { users, insertUserSchema, type User as SelectUser } from "@db/schema";
-import { db } from "../db";
+import { db, pool } from "../db";
 import { eq, or } from "drizzle-orm";
 import { z } from "zod";
 
