@@ -220,7 +220,10 @@ export function setupAuth(app: Express) {
 
   app.post("/api/register", async (req, res, next) => {
     try {
-      authLogger.info('Registration attempt started', { ip: req.ip }, 'registration');
+      authLogger.info('Registration attempt started', { 
+        ip: req.ip,
+        userAgent: req.headers['user-agent'] 
+      }, 'registration');
       
       const result = registrationSchema.safeParse(req.body);
       if (!result.success) {
@@ -230,7 +233,8 @@ export function setupAuth(app: Express) {
         }));
         authLogger.warn('Registration validation failed', { 
           errors: validationErrors,
-          ip: req.ip 
+          ip: req.ip,
+          requestBody: JSON.stringify(req.body)
         }, 'registration');
         return res
           .status(400)
@@ -242,84 +246,139 @@ export function setupAuth(app: Express) {
 
       const { email, password } = result.data;
 
-      // Use Drizzle transaction
-      const newUser = await db.transaction(async (tx) => {
-        // Check if user already exists
-        const existingUser = await tx
-          .select()
-          .from(users)
-          .where(eq(users.email, email))
-          .limit(1);
+      let newUser;
+      try {
+        // Use Drizzle transaction with explicit rollback
+        newUser = await db.transaction(async (tx) => {
+          // Check if user already exists using a database constraint
+          const existingUser = await tx
+            .select({ id: users.id, email: users.email })
+            .from(users)
+            .where(eq(users.email, email))
+            .limit(1);
 
-        if (existingUser.length > 0) {
-          authLogger.security('Registration attempt with existing email', { 
+          if (existingUser.length > 0) {
+            authLogger.security('Registration attempt with existing email', { 
+              email,
+              ip: req.ip,
+              existingUserId: existingUser[0].id
+            }, 'registration');
+            throw new Error("Email is already registered");
+          }
+
+          authLogger.info('Creating new user record', {
             email,
-            ip: req.ip 
+            ip: req.ip
           }, 'registration');
-          throw new Error("Email is already registered");
-        }
 
-        // Hash the password
-        const hashedPassword = await crypto.hash(password);
+          // Hash the password
+          const hashedPassword = await crypto.hash(password);
 
-        // Create the new user using Drizzle
-        const [insertedUser] = await tx
-          .insert(users)
-          .values({
+          // Create the new user using Drizzle with proper timestamps
+          const now = new Date();
+          const [insertedUser] = await tx
+            .insert(users)
+            .values({
+              email,
+              password: hashedPassword,
+              provider: 'local',
+              emailVerified: false,
+              active: true,
+              createdAt: now,
+              updatedAt: now
+            })
+            .returning();
+
+          authLogger.info('User record created in transaction', {
+            userId: insertedUser.id,
+            email: insertedUser.email
+          }, 'registration');
+
+          return insertedUser;
+        });
+
+        authLogger.info('User created successfully', { 
+          userId: newUser.id,
+          email: newUser.email,
+          ip: req.ip 
+        }, 'registration');
+
+      } catch (dbError) {
+        // Handle database-specific errors
+        if (dbError instanceof Error) {
+          // Check for unique constraint violation
+          if (dbError.message.includes('unique constraint') || dbError.message.includes('duplicate key')) {
+            authLogger.security('Concurrent registration attempt with existing email', {
+              email,
+              ip: req.ip,
+              error: dbError.message
+            }, 'registration');
+            return res.status(409).json({ error: "Email is already registered" });
+          }
+
+          // Log detailed database error
+          authLogger.error('Database error during registration', dbError, {
+            ip: req.ip,
             email,
-            password: hashedPassword,
-            provider: 'local',
-            emailVerified: false,
-            active: true,
-            createdAt: new Date(),
-            updatedAt: new Date()
-          })
-          .returning();
+            errorCode: (dbError as any).code,
+            errorDetail: (dbError as any).detail
+          }, 'registration');
+        }
+        throw dbError; // Re-throw for general error handling
+      }
 
-        return insertedUser;
-      });
-
-      authLogger.info('User created successfully', { 
-        userId: newUser.id,
-        email: newUser.email,
-        ip: req.ip 
-      }, 'registration');
-
-      // Log the user in after registration
+      // Log the user in after successful registration
       req.login(newUser, (err) => {
         if (err) {
           authLogger.error('Auto-login after registration failed', err, {
             userId: newUser.id,
-            ip: req.ip
+            ip: req.ip,
+            sessionData: req.session
           }, 'registration');
           return next(err);
         }
+
         authLogger.audit('User registered and logged in', {
           ip: req.ip,
-          provider: 'local'
+          provider: 'local',
+          userId: newUser.id,
+          timestamp: new Date().toISOString()
         }, newUser.id);
+
         return res.json({
           message: "Registration successful",
           user: { id: newUser.id, email: newUser.email },
         });
       });
     } catch (error) {
-      // Type assertion for known error types
-      if (error instanceof Error && error.message === "Email is already registered") {
+      // Handle known error types
+      if (error instanceof Error) {
+        if (error.message === "Email is already registered") {
+          authLogger.error('Registration process failed', error, {
+            ip: req.ip,
+            reason: 'duplicate_email',
+            timestamp: new Date().toISOString()
+          }, 'registration');
+          return res.status(400).json({ error: error.message });
+        }
+
+        // Log detailed error information
         authLogger.error('Registration process failed', error, {
           ip: req.ip,
-          reason: 'duplicate_email'
+          errorName: error.name,
+          errorStack: error.stack,
+          timestamp: new Date().toISOString()
         }, 'registration');
-        return res.status(400).json({ error: error.message });
+      } else {
+        // Handle non-Error objects
+        authLogger.error('Unknown registration error', new Error('Unknown error type'), {
+          ip: req.ip,
+          errorObject: JSON.stringify(error),
+          timestamp: new Date().toISOString()
+        }, 'registration');
       }
-
-      // Handle unknown errors
-      const err = error instanceof Error ? error : new Error('Unknown registration error');
-      authLogger.error('Registration process failed', err, {
-        ip: req.ip
-      }, 'registration');
       
-      next(err);
+      next(error);
     }
   });
 
