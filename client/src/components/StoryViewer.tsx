@@ -132,14 +132,14 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
                     )}
                     <div className="w-full max-w-xl mx-auto">
                       <div className="relative bg-white rounded-xl p-4 sm:p-6 shadow-md">
-                        <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-12 z-50">
+                        <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-12">
                           <CarouselPrevious 
                             onClick={() => setCurrentSegment(currentSegment - 1)}
                             disabled={currentSegment === 0}
                             className="h-14 w-14 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:opacity-90 transition-opacity shadow-lg"
                           />
                         </div>
-                        <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-12 z-50">
+                        <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-12">
                           <CarouselNext 
                             onClick={() => setCurrentSegment(currentSegment + 1)}
                             disabled={currentSegment === story.segments.length - 1}
