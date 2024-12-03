@@ -9,8 +9,9 @@ import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 
 export default function ProfilePage() {
-  const { user, isLoading, updateProfile } = useUser();
+  const { user, isLoading, updateProfile, deleteAccount } = useUser();
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -107,6 +108,50 @@ export default function ProfilePage() {
               )}
             </Button>
           </form>
+
+          <div className="mt-8 pt-6 border-t">
+            <h3 className="text-lg font-semibold text-red-600 mb-4">Danger Zone</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Once you delete your account, there is no going back. Please be certain.
+            </p>
+            <Button
+              variant="destructive"
+              disabled={isDeleting}
+              onClick={async () => {
+                if (window.confirm("Are you sure you want to delete your account? This action cannot be undone.")) {
+                  setIsDeleting(true);
+                  try {
+                    const result = await deleteAccount();
+                    if (!result.ok) {
+                      throw new Error(result.message);
+                    }
+                    toast({
+                      title: "Account deleted",
+                      description: "Your account has been permanently deleted.",
+                    });
+                    window.location.href = "/";
+                  } catch (error) {
+                    toast({
+                      variant: "destructive",
+                      title: "Error",
+                      description: error instanceof Error ? error.message : "Failed to delete account",
+                    });
+                  } finally {
+                    setIsDeleting(false);
+                  }
+                }
+              }}
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting Account
+                </>
+              ) : (
+                "Delete Account"
+              )}
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>

@@ -347,4 +347,25 @@ export function setupAuth(app: Express) {
       res.status(500).json({ error: "Failed to update profile" });
     }
   });
+  // Delete account endpoint
+  app.delete("/api/account", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Not logged in" });
+    }
+
+    try {
+      // Delete the user and associated data
+      await db.delete(users).where(eq(users.id, req.user.id));
+
+      // Logout the user after deletion
+      req.logout((err) => {
+        if (err) {
+          return res.status(500).json({ error: "Failed to logout after account deletion" });
+        }
+        res.json({ message: "Account deleted successfully" });
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete account" });
+    }
+  });
 }
