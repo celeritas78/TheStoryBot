@@ -1,8 +1,12 @@
+import { eq, desc } from "drizzle-orm";
 import type { Express } from "express";
+import { z } from "zod";
 import { db } from "../db";
+import { users } from "@db/schema";
+import { crypto } from "./auth"; // Ensure crypto utilities are imported
 import { stories, storySegments, type InsertStorySegment, type Story } from "@db/schema";
 import { generateStoryContent, generateImage, generateSpeech } from "./services/openai";
-import { eq, desc } from "drizzle-orm";
+
 import fs from 'fs';
 import { 
   getAudioFilePath, 
@@ -11,6 +15,11 @@ import {
   SUPPORTED_AUDIO_FORMATS,
   getMimeType 
 } from './services/audio-storage';
+
+const registrationSchema = z.object({
+  email: z.string().email("Invalid email").max(255, "Email too long"),
+  password: z.string().min(8, "Password too short"),
+});
 
 // Error response helper function
 function sendErrorResponse(res: any, statusCode: number, error: string, details?: any) {
@@ -46,6 +55,42 @@ export function registerRoutes(app: Express) {
     return sendErrorResponse(res, err.status || 500, err.message || 'Internal server error', 
       process.env.NODE_ENV === 'development' ? err.stack : undefined);
   });
+
+  app.post("/api/register", async (req, res) => {
+    try {
+      const result = registrationSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ error: "Validation failed", details: result.error.errors });
+      }
+
+      const { email, password } = result.data;
+
+      // Check if the user already exists
+      // Check if the user already exists
+      const [existingUser] = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, email))
+        .limit(1);
+      if (existingUser) {
+        return res.status(409).json({ error: "Email already registered" });
+      }
+
+      // Hash password and insert the user
+      const hashedPassword = await crypto.hash(password);
+      const [newUser] = await db.insert(users).values({
+        email,
+        password: hashedPassword,
+        createdAt: new Date(),
+      }).returning();
+
+      res.status(201).json({ message: "Registration successful", user: { id: newUser.id, email: newUser.email } });
+    } catch (err) {
+      console.error("Error registering user:", err);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+  
   // Serve audio files with proper CORS and caching headers
   app.get("/audio/:filename", async (req, res) => {
     try {
@@ -127,9 +172,20 @@ export function registerRoutes(app: Express) {
 
   app.post("/api/stories", async (req, res) => {
     try {
+      // Ensure the user is authenticated
+      if (!req.isAuthenticated || !req.isAuthenticated()) {
+        return res.status(401).json({ error: "Not logged in" });
+      }
+
       const { childName, childAge, mainCharacter, theme } = req.body;
+      const userId = req.user?.id; // Retrieve the authenticated user's ID
+
       console.log('Story generation request:', {
-        ...req.body,
+        userId,
+        childName,
+        childAge,
+        mainCharacter,
+        theme,
         timestamp: new Date().toISOString()
       });
 
@@ -162,7 +218,6 @@ export function registerRoutes(app: Express) {
       const characterDescriptions = storyContent.characters.map(c => `${c.name}: ${c.description}`).join('\n');
       const settingDescriptions = storyContent.settings.map(s => `${s.name}: ${s.description}`).join('\n');
 
-
       // Generate media for each scene
       const segments = await Promise.all(storyContent.scenes.map(async (scene, index) => {
         try {
@@ -172,7 +227,7 @@ export function registerRoutes(app: Express) {
           const imageUrl = await generateImage(fullSceneDescription);
           // Generate audio only from the narrative text
           const audioUrl = await generateSpeech(scene.text);
-          
+
           return {
             content: scene.text, // Store only the narrative text
             imageUrl,
@@ -185,9 +240,10 @@ export function registerRoutes(app: Express) {
         }
       }));
 
-      // Save to database with better error handling
+      // Save story to the database, including the userId
       const [story] = await db.insert(stories)
         .values({
+          userId, // Attach the user ID to the story
           title: storyContent.title,
           childName,
           childAge: parsedAge,
@@ -223,6 +279,7 @@ export function registerRoutes(app: Express) {
 
       res.json({
         id: story.id,
+        userId, // Include userId in the response
         childName: story.childName,
         theme: story.theme,
         segments: insertedSegments,
@@ -240,6 +297,7 @@ export function registerRoutes(app: Express) {
       });
     }
   });
+
 
   app.post("/api/stories/:id/continue", async (req, res) => {
     try {
@@ -304,7 +362,7 @@ export function registerRoutes(app: Express) {
           },
         },
         orderBy: [desc(stories.createdAt)],
-        take: 10 // Limit to recent 10 stories
+        //take: 10 as number, // Explicitly cast to avoid type mismatch
       });
 
       console.log('Stories fetched:', allStories.length);

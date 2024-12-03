@@ -1,0 +1,55 @@
+> rest-express@1.0.0 dev
+> tsx watch --clear-screen=false --exclude vite.config.ts.* server/index.ts
+
+Audio directory configuration: {
+  AUDIO_DIR: '/home/runner/CustomBedtimeStories/public/audio',
+  exists: true,
+  files: []
+}
+09:03:04 AM [express] serving on port 5000
+{"timestamp":"2024-12-03T09:03:08.470Z","level":"INFO","context":"database","message":"New client connected to the pool"}
+{"timestamp":"2024-12-03T09:03:08.470Z","level":"INFO","context":"database","message":"Client acquired from pool"}
+{"timestamp":"2024-12-03T09:03:08.470Z","level":"INFO","context":"database","message":"Successfully connected to database","attempt":1,"status":"success"}
+
+ ERROR(TypeScript)  Property 'message' does not exist on type 'never'.
+ FILE  /home/runner/CustomBedtimeStories/server/auth.ts:394:49
+
+    392 |             errorDetail: (dbError as { detail?: string }).detail,
+    393 |             transactionState: 'rolled_back',
+  > 394 |             transactionError: transactionError?.message ?? 'Unknown error'
+        |                                                 ^^^^^^^
+    395 |           }, 'registration_transaction');
+    396 |
+    397 |           // Return appropriate error response
+
+ ERROR(TypeScript)  No overload matches this call.
+  Overload 1 of 2, '(value: { childName: string | SQL<unknown> | Placeholder<string, any>; childAge: number | SQL<unknown> | Placeholder<string, any>; characters: unknown; theme: string | SQL<...> | Placeholder<...>; ... 6 more ...; parentApproved?: boolean | ... 3 more ... | undefined; }): PgInsertBase<...>', gave the following error.
+    Argument of type '{ title: string; childName: any; childAge: number; characters: string; theme: any; content: string; imageUrls: string; parentApproved: false; createdAt: Date; }' is not assignable to parameter of type '{ childName: string | SQL<unknown> | Placeholder<string, any>; childAge: number | SQL<unknown> | Placeholder<string, any>; characters: unknown; theme: string | SQL<...> | Placeholder<...>; ... 6 more ...; parentApproved?: boolean | ... 3 more ... | undefined; }'.
+      Property 'userId' is missing in type '{ title: string; childName: any; childAge: number; characters: string; theme: any; content: string; imageUrls: string; parentApproved: false; createdAt: Date; }' but required in type '{ childName: string | SQL<unknown> | Placeholder<string, any>; childAge: number | SQL<unknown> | Placeholder<string, any>; characters: unknown; theme: string | SQL<...> | Placeholder<...>; ... 6 more ...; parentApproved?: boolean | ... 3 more ... | undefined; }'.
+  Overload 2 of 2, '(values: { childName: string | SQL<unknown> | Placeholder<string, any>; childAge: number | SQL<unknown> | Placeholder<string, any>; characters: unknown; theme: string | SQL<...> | Placeholder<...>; ... 6 more ...; parentApproved?: boolean | ... 3 more ... | undefined; }[]): PgInsertBase<...>', gave the following error.
+    Object literal may only specify known properties, and 'title' does not exist in type '{ childName: string | SQL<unknown> | Placeholder<string, any>; childAge: number | SQL<unknown> | Placeholder<string, any>; characters: unknown; theme: string | SQL<...> | Placeholder<...>; ... 6 more ...; parentApproved?: boolean | ... 3 more ... | undefined; }[]'.
+ FILE  /home/runner/CustomBedtimeStories/server/routes.ts:190:10
+
+    188 |       // Save to database with better error handling
+    189 |       const [story] = await db.insert(stories)
+  > 190 |         .values({
+        |          ^^^^^^
+    191 |           title: storyContent.title,
+    192 |           childName,
+    193 |           childAge: parsedAge,
+
+ ERROR(TypeScript)  Type 'number' is not assignable to type 'never'.
+ FILE  /home/runner/CustomBedtimeStories/server/routes.ts:307:9
+
+    305 |         },
+    306 |         orderBy: [desc(stories.createdAt)],
+  > 307 |         take: 10 // Limit to recent 10 stories
+        |         ^^^^
+    308 |       });
+    309 |
+    310 |       console.log('Stories fetched:', allStories.length);
+
+[TypeScript] Found 3 errors. Watching for file changes.
+{"timestamp":"2024-12-03T09:03:38.472Z","level":"INFO","context":"database","message":"Client removed from pool"}
+09:04:46 AM [express] GET /api/user 200 in 4ms
+09:04:46 AM [express] GET /api/user 200 in 2ms

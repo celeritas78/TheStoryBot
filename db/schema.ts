@@ -33,9 +33,7 @@ export const stories = pgTable("stories", {
   content: text("content").notNull(),
   imageUrls: jsonb("image_urls").notNull(),
   parentApproved: boolean("parent_approved").default(false),
-  userId: integer("user_id")
-    .notNull()
-    .references(() => users.id),
+  userId: integer("user_id"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

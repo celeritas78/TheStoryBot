@@ -2,6 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic } from "./vite";
 import { createServer } from "http";
+import { setupAuth } from "./auth";
 
 function log(message: string) {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
@@ -18,6 +19,17 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// Call setupAuth before routes
+setupAuth(app);
+
+// Middleware to debug req.isAuthenticated
+app.use((req, res, next) => {
+  console.log("Middleware stack check: ", req.isAuthenticated ? req.isAuthenticated() : "Undefined");
+  next();
+});
+
+
+// Logging middleware for API routes
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
@@ -49,28 +61,27 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Register API routes before Vite middleware or static serving
   registerRoutes(app);
-  const server = createServer(app);
 
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
+  // Error-handling middleware
+  app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
+    const status = err.status || 500;
     const message = err.message || "Internal Server Error";
-
+    console.error(`${req.method} ${req.url} - Error:`, { status, message, stack: err.stack });
     res.status(status).json({ message });
-    throw err;
   });
 
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
+  const server = createServer(app);
+
   if (app.get("env") === "development") {
+    // Vite middleware in development
     await setupVite(app, server);
   } else {
+    // Serve static files in production
     serveStatic(app);
   }
 
-  // ALWAYS serve the app on port 5000
-  // this serves both the API and the client
   const PORT = 5000;
   server.listen(PORT, "0.0.0.0", () => {
     log(`serving on port ${PORT}`);

@@ -27,21 +27,63 @@ interface StoryFormProps {
 }
 
 const formSchema = z.object({
-  childName: z.string()
+  childName: z
+    .string()
     .min(2, "Name must be at least 2 characters")
     .max(50, "Name cannot be longer than 50 characters")
-    .regex(/^[a-zA-Z\s'-]+$/, "Name can only contain letters, spaces, hyphens and apostrophes"),
-  childAge: z.string()
+    .regex(/^[a-zA-Z\s'-]+$/, "Name can only contain letters, spaces, hyphens, and apostrophes"),
+  childAge: z
+    .string()
     .min(1, "Age is required")
-    .transform(Number)
+    .transform((value) => {
+      const num = Number(value);
+      console.log("Transforming childAge to number:", num);
+      return num;
+    })
     .refine((n) => n >= 2 && n <= 12, "Age must be between 2 and 12 years"),
-  mainCharacter: z.string()
+  mainCharacter: z
+    .string()
     .min(2, "Character name must be at least 2 characters")
     .max(100, "Character name is too long")
     .regex(/^[a-zA-Z\s,()-]+$/, "Character name can only contain letters, spaces, commas, and basic punctuation"),
-  theme: z.string()
+  theme: z
+    .string()
     .min(1, "Please select a theme")
-    .refine((val) => ['adventure', 'animals', 'castles', 'courage', 'dinosaurs', 'discovery', 'dreams', 'exploration', 'fairyland', 'fantasy', 'friendship', 'heroes', 'imagination', 'kindness', 'magic', 'mystery', 'mythical-creatures', 'ocean', 'pirates', 'princesses', 'rainbows', 'robots', 'space', 'superpowers', 'teamwork', 'time-travel', 'treasure', 'underwater-worlds', 'wizards'].includes(val), "Invalid theme selected"),
+    .refine(
+      (val) =>
+        [
+          "adventure",
+          "animals",
+          "castles",
+          "courage",
+          "dinosaurs",
+          "discovery",
+          "dreams",
+          "exploration",
+          "fairyland",
+          "fantasy",
+          "friendship",
+          "heroes",
+          "imagination",
+          "kindness",
+          "magic",
+          "mystery",
+          "mythical-creatures",
+          "ocean",
+          "pirates",
+          "princesses",
+          "rainbows",
+          "robots",
+          "space",
+          "superpowers",
+          "teamwork",
+          "time-travel",
+          "treasure",
+          "underwater-worlds",
+          "wizards",
+        ].includes(val),
+      "Invalid theme selected"
+    ),
 });
 
 export default function StoryForm({ onSubmit, isLoading }: StoryFormProps) {
@@ -55,12 +97,20 @@ export default function StoryForm({ onSubmit, isLoading }: StoryFormProps) {
     },
   });
 
+  const handleSubmit = (data: StoryFormData) => {
+    console.log("Form submitted with data:", data);
+    onSubmit(data);
+  };
+
   return (
     <Card className="w-full">
+      <CardHeader>
+        <CardTitle>Create a Story</CardTitle>
+      </CardHeader>
       <CardContent className="pt-6">
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(onSubmit)}
+            onSubmit={form.handleSubmit(handleSubmit)}
             className="space-y-6"
           >
             <FormField
@@ -121,7 +171,10 @@ export default function StoryForm({ onSubmit, isLoading }: StoryFormProps) {
                 <FormItem>
                   <FormLabel>Story Theme</FormLabel>
                   <Select
-                    onValueChange={field.onChange}
+                    onValueChange={(value) => {
+                      console.log("Theme selected:", value);
+                      field.onChange(value);
+                    }}
                     defaultValue={field.value}
                   >
                     <FormControl>
@@ -130,35 +183,41 @@ export default function StoryForm({ onSubmit, isLoading }: StoryFormProps) {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="adventure">Adventure</SelectItem>
-                      <SelectItem value="animals">Animals</SelectItem>
-                      <SelectItem value="castles">Castles</SelectItem>
-                      <SelectItem value="courage">Courage</SelectItem>
-                      <SelectItem value="dinosaurs">Dinosaurs</SelectItem>
-                      <SelectItem value="discovery">Discovery</SelectItem>
-                      <SelectItem value="dreams">Dreams</SelectItem>
-                      <SelectItem value="exploration">Exploration</SelectItem>
-                      <SelectItem value="fairyland">Fairyland</SelectItem>
-                      <SelectItem value="fantasy">Fantasy</SelectItem>
-                      <SelectItem value="friendship">Friendship</SelectItem>
-                      <SelectItem value="heroes">Heroes</SelectItem>
-                      <SelectItem value="imagination">Imagination</SelectItem>
-                      <SelectItem value="kindness">Kindness</SelectItem>
-                      <SelectItem value="magic">Magic</SelectItem>
-                      <SelectItem value="mystery">Mystery</SelectItem>
-                      <SelectItem value="mythical-creatures">Mythical Creatures</SelectItem>
-                      <SelectItem value="ocean">Ocean</SelectItem>
-                      <SelectItem value="pirates">Pirates</SelectItem>
-                      <SelectItem value="princesses">Princesses</SelectItem>
-                      <SelectItem value="rainbows">Rainbows</SelectItem>
-                      <SelectItem value="robots">Robots</SelectItem>
-                      <SelectItem value="space">Space</SelectItem>
-                      <SelectItem value="superpowers">Superpowers</SelectItem>
-                      <SelectItem value="teamwork">Teamwork</SelectItem>
-                      <SelectItem value="time-travel">Time Travel</SelectItem>
-                      <SelectItem value="treasure">Treasure</SelectItem>
-                      <SelectItem value="underwater-worlds">Underwater Worlds</SelectItem>
-                      <SelectItem value="wizards">Wizards</SelectItem>
+                      {[
+                        "adventure",
+                        "animals",
+                        "castles",
+                        "courage",
+                        "dinosaurs",
+                        "discovery",
+                        "dreams",
+                        "exploration",
+                        "fairyland",
+                        "fantasy",
+                        "friendship",
+                        "heroes",
+                        "imagination",
+                        "kindness",
+                        "magic",
+                        "mystery",
+                        "mythical-creatures",
+                        "ocean",
+                        "pirates",
+                        "princesses",
+                        "rainbows",
+                        "robots",
+                        "space",
+                        "superpowers",
+                        "teamwork",
+                        "time-travel",
+                        "treasure",
+                        "underwater-worlds",
+                        "wizards",
+                      ].map((theme) => (
+                        <SelectItem key={theme} value={theme}>
+                          {theme.charAt(0).toUpperCase() + theme.slice(1)}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <FormMessage />

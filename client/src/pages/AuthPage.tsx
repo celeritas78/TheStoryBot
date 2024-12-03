@@ -26,34 +26,25 @@ export default function AuthPage() {
         password: formData.get("password") as string,
       };
 
-      console.log(`Attempting ${type} for user:`, userData.email);
       const action = type === "login" ? login : register;
       const result = await action(userData);
-      
+
       if (!result.ok) {
         throw new Error(result.message);
       }
 
-      console.log(`${type} successful for user:`, userData.email);
-      
-      // Wait for user query to be updated
+      // Update user cache and redirect
       await queryClient.invalidateQueries({ queryKey: ['user'] });
-      const updatedUserData = await queryClient.refetchQueries({ queryKey: ['user'] });
-      console.log('User data updated:', updatedUserData);
+      await queryClient.refetchQueries({ queryKey: ['user'] });
 
       toast({
         title: type === "login" ? "Login successful" : "Registration successful",
         description: "Welcome to the Story Generator!",
       });
 
-      // Get the destination from URL params or default to home
       const destination = new URLSearchParams(window.location.search).get('redirect') || '/';
-      console.log('Navigating to:', destination);
-      
-      // Use setLocation for navigation within the React app
       setLocation(destination);
     } catch (error) {
-      console.error('Authentication error:', error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -81,9 +72,9 @@ export default function AuthPage() {
               <form onSubmit={(e) => handleSubmit(e, "login")}>
                 <div className="grid gap-4">
                   <div className="grid gap-2">
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="login-email">Email</Label>
                     <Input
-                      id="email"
+                      id="login-email"
                       name="email"
                       type="email"
                       required
@@ -91,9 +82,9 @@ export default function AuthPage() {
                     />
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="password">Password</Label>
+                    <Label htmlFor="login-password">Password</Label>
                     <Input
-                      id="password"
+                      id="login-password"
                       name="password"
                       type="password"
                       required
@@ -109,11 +100,10 @@ export default function AuthPage() {
             <TabsContent value="register">
               <form onSubmit={(e) => handleSubmit(e, "register")}>
                 <div className="grid gap-4">
-                  
                   <div className="grid gap-2">
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="register-email">Email</Label>
                     <Input
-                      id="email"
+                      id="register-email"
                       name="email"
                       type="email"
                       required
@@ -121,9 +111,9 @@ export default function AuthPage() {
                     />
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="reg-password">Password</Label>
+                    <Label htmlFor="register-password">Password</Label>
                     <Input
-                      id="reg-password"
+                      id="register-password"
                       name="password"
                       type="password"
                       required

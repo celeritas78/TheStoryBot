@@ -21,52 +21,52 @@ interface StoryViewerProps {
 
 export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerProps) {
   const [currentSegment, setCurrentSegment] = useState(0);
-  const [api, setApi] = useState<CarouselApi>();
+  const [api, setApi] = useState<CarouselApi | null>(null);
   const { toast } = useToast();
 
-  // Reset currentSegment when story changes
   useEffect(() => {
     setCurrentSegment(0);
-    if (api) {
-      api.scrollTo(0);
-    }
+    api?.scrollTo(0);
   }, [story.id, api]);
 
-  // Sync carousel with currentSegment
   useEffect(() => {
-    if (!api) return;
-    api.scrollTo(currentSegment);
+    api?.scrollTo(currentSegment);
   }, [api, currentSegment]);
 
-  // Stop audio when currentSegment changes
   useEffect(() => {
     const stopAllAudio = () => {
-      const audioElements = document.querySelectorAll('audio');
+      const audioElements = document.querySelectorAll(
+        '.story-viewer audio'
+      );
       audioElements.forEach(audio => {
-        if (!audio.paused) {
-          audio.pause();
-          audio.currentTime = 0;
+        const audioElement = audio as HTMLAudioElement; // Type assertion to HTMLAudioElement
+        if (!audioElement.paused) {
+          audioElement.pause();
+          audioElement.currentTime = 0;
         }
       });
+
+
     };
-    
     stopAllAudio();
   }, [currentSegment]);
 
-  // Cleanup effect to stop audio when unmounting
   useEffect(() => {
     return () => {
-      const audioElements = document.querySelectorAll('audio');
+      const audioElements = document.querySelectorAll(
+        '.story-viewer audio'
+      );
       audioElements.forEach(audio => {
-        if (!audio.paused) {
-          audio.pause();
-          audio.currentTime = 0;
+        const audioElement = audio as HTMLAudioElement; // Type assertion to HTMLAudioElement
+        if (!audioElement.paused) {
+          audioElement.pause();
+          audioElement.currentTime = 0;
         }
       });
+
     };
   }, []);
 
-  // Check if story has segments
   if (!story.segments || story.segments.length === 0) {
     return (
       <Card className="p-6">
@@ -77,17 +77,16 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
     );
   }
 
-  // Ensure currentSegment is within bounds
   const safeCurrentSegment = Math.min(currentSegment, story.segments.length - 1);
   const segment = story.segments[safeCurrentSegment];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 story-viewer">
       {showHomeIcon && (
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-2 sm:gap-4 w-full">
             <Link href="/">
-              <Button variant="ghost" className="flex items-center gap-2">
+              <Button variant="ghost" className="flex items-center gap-2" aria-label="Go to Home">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="24"
@@ -137,24 +136,14 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
                       />
                     </div>
                   )}
-                  
-                  {/* Navigation and Audio Controls Container */}
                   <div className="w-full max-w-3xl mx-auto px-4 sm:px-6">
                     <div className="bg-white rounded-xl p-4 sm:p-6 shadow-md">
                       <div className="flex items-center justify-between space-x-4 sm:space-x-6">
-                        <div className="flex-shrink-0">
-                          <CarouselPrevious 
-                            onClick={() => setCurrentSegment(currentSegment - 1)}
-                            disabled={currentSegment === 0}
-                            className={`relative inline-flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full shadow-sm transition-all duration-200 ${
-                              currentSegment === 0 
-                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                                : 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600 hover:shadow-md'
-                            }`}
-                          />
-                        </div>
-                        
-                        {/* Audio Player Container */}
+                        <CarouselPrevious 
+                          onClick={() => setCurrentSegment(currentSegment - 1)}
+                          disabled={currentSegment === 0}
+                          aria-label="Previous segment"
+                        />
                         <div className="flex-1 min-w-0 px-2 sm:px-4">
                           {segment.audioUrl ? (
                             <div className="w-full max-w-2xl mx-auto">
@@ -166,22 +155,14 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
                             </div>
                           )}
                         </div>
-                        
-                        <div className="flex-shrink-0">
-                          <CarouselNext 
-                            onClick={() => setCurrentSegment(currentSegment + 1)}
-                            disabled={currentSegment === story.segments.length - 1}
-                            className={`relative inline-flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full shadow-sm transition-all duration-200 ${
-                              currentSegment === story.segments.length - 1 
-                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                                : 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600 hover:shadow-md'
-                            }`}
-                          />
-                        </div>
+                        <CarouselNext 
+                          onClick={() => setCurrentSegment(currentSegment + 1)}
+                          disabled={currentSegment === story.segments.length - 1}
+                          aria-label="Next segment"
+                        />
                       </div>
                     </div>
                   </div>
-                  
                   {segment.content && (
                     <div className="px-4">
                       <p className="text-lg md:text-xl leading-relaxed text-gray-800 max-w-prose mx-auto">

@@ -14,10 +14,12 @@ export default function Header() {
 
   const handleLogout = async () => {
     try {
+      console.log("Attempting to log out user:", user);
       await logout();
+      console.log("User logged out successfully");
       window.location.href = "/";
     } catch (error) {
-      console.error("Failed to logout:", error);
+      console.error("Failed to log out:", error);
     }
   };
 

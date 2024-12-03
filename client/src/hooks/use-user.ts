@@ -8,10 +8,10 @@ type RequestResult = {
   message: string;
 };
 
-async function handleRequest(
+async function handleRequest<T extends Record<string, unknown>>(
   url: string,
-  method: string,
-  body?: InsertUser | Partial<User>
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE',
+  body?: T
 ): Promise<RequestResult> {
   try {
     const response = await fetch(url, {
@@ -22,38 +22,30 @@ async function handleRequest(
     });
 
     if (!response.ok) {
-      if (response.status >= 500) {
-        return { ok: false, message: response.statusText };
-      }
-
-      const message = await response.text();
+      const message = response.status >= 500
+        ? response.statusText
+        : await response.text();
       return { ok: false, message };
     }
 
     return { ok: true };
-  } catch (e: any) {
-    return { ok: false, message: e.toString() };
+  } catch (error: any) {
+    return { ok: false, message: error.message || 'Unexpected error occurred' };
   }
 }
 
 async function fetchUser(): Promise<User | null> {
-  const response = await fetch('/api/user', {
-    credentials: 'include'
-  });
-
-  if (!response.ok) {
-    if (response.status === 401) {
-      return null;
+  try {
+    const response = await fetch('/api/user', { credentials: 'include' });
+    if (!response.ok) {
+      if (response.status === 401) return null;
+      throw new Error(`Error ${response.status}: ${response.statusText}`);
     }
-
-    if (response.status >= 500) {
-      throw new Error(`${response.status}: ${response.statusText}`);
-    }
-
-    throw new Error(`${response.status}: ${await response.text()}`);
+    return await response.json();
+  } catch (error: any) {
+    console.error('Failed to fetch user:', error);
+    throw error;
   }
-
-  return response.json();
 }
 
 export function useUser() {
@@ -63,20 +55,15 @@ export function useUser() {
     queryKey: ['user'],
     queryFn: fetchUser,
     staleTime: Infinity,
-    retry: false
+    retry: false,
   });
 
   const loginMutation = useMutation<RequestResult, Error, InsertUser>({
-    mutationFn: (userData) => {
-      console.log('Initiating login mutation');
-      return handleRequest('/api/login', 'POST', userData);
-    },
+    mutationFn: (userData) => handleRequest('/api/login', 'POST', userData),
     onSuccess: async () => {
-      console.log('Login mutation successful, invalidating queries');
       await queryClient.invalidateQueries({ queryKey: ['user'] });
-      console.log('Queries invalidated, refetching user data');
       await queryClient.refetchQueries({ queryKey: ['user'] });
-      console.log('User data refetched');
+
     },
   });
 
