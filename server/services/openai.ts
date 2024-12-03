@@ -87,7 +87,8 @@ Ensure that:
 
     const prompt = previousContent
       ? `Continue the following children's story about ${childName} and ${mainCharacter}, maintaining the same style and theme. Previous content: ${previousContent}`
-      : `Create an engaging children's story about ${childName} (age ${childAge}) and their friend ${mainCharacter}. 
+      : `Create an engaging children's story about ${childName} (age ${childAge}) and following main characters and things ${mainCharacter}. 
+         The story should have following main theme. 
          Theme: ${theme}
          Requirements:
          - Divide the story into 3 distinct scenes
@@ -203,7 +204,7 @@ Style guidelines:
 - Avoid any scary or adult themes
 - Focus on cute, cartoon-style characters
 - Include soft lighting and friendly expressions
-- Make it suitable for ages 3-10`;
+- Make it suitable for ages 2-12`;
 
     console.log('Generating image with sanitized prompt:', {
       originalLength: sceneDescription.length,
