@@ -39,7 +39,14 @@ export default function AuthPage() {
 
       // Navigate to the originally requested page or home
       const destination = new URLSearchParams(window.location.search).get('redirect') || '/';
-      setLocation(destination);
+      console.log('Attempting navigation to:', destination);
+      try {
+        setLocation(destination);
+      } catch (error) {
+        console.error('Navigation error:', error);
+        // Fallback navigation
+        window.location.href = destination;
+      }
     } catch (error) {
       toast({
         variant: "destructive",
