@@ -1,3 +1,26 @@
+// Logger utility for authentication
+const authLogger = {
+  info: (message: string, data: Record<string, any> = {}) => {
+    // Mask sensitive data
+    const maskedData = { ...data };
+    if (maskedData.password) maskedData.password = '****';
+    if (maskedData.token) maskedData.token = '****';
+    if (maskedData.email) maskedData.email = maskedData.email.replace(/(?<=.{3}).(?=.*@)/g, '*');
+    console.log(`[Auth] ${message}`, maskedData);
+  },
+  error: (message: string, error: any, data: Record<string, any> = {}) => {
+    // Mask sensitive data
+    const maskedData = { ...data };
+    if (maskedData.password) maskedData.password = '****';
+    if (maskedData.token) maskedData.token = '****';
+    if (maskedData.email) maskedData.email = maskedData.email.replace(/(?<=.{3}).(?=.*@)/g, '*');
+    console.error(`[Auth Error] ${message}`, {
+      error: error.message || error,
+      stack: error.stack,
+      ...maskedData
+    });
+  }
+};
 import passport from "passport";
 import { IVerifyOptions, Strategy as LocalStrategy } from "passport-local";
 import { type Express } from "express";
