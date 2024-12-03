@@ -103,35 +103,49 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
           </div>
         </div>
       )}
-      <Card className="p-4 px-4 sm:px-6 md:p-6 md:px-8 lg:p-8 lg:px-12 xl:px-16">
-        <Carousel 
-          className="w-full max-w-3xl mx-auto"
-          setApi={setApi}
-          onSelect={(index) => {
-            if (typeof index === 'number' && index !== currentSegment) {
-              setCurrentSegment(index);
-            }
-          }}
-        >
-          <CarouselContent>
-            {story.segments.map((segment: StorySegment, index: number) => (
-              <CarouselItem key={index} data-index={index}>
-                <div className="space-y-8">
-                  {segment.imageUrl && (
-                    <div className="relative w-full aspect-[4/3] overflow-hidden rounded-lg shadow-md">
-                      <img
-                        src={segment.imageUrl}
-                        alt={`Story scene ${index + 1}`}
-                        className="absolute inset-0 w-full h-full object-cover"
-                        onError={(e) => {
-                          e.currentTarget.src = '/assets/fallback-story-image.png';
-                        }}
-                      />
-                    </div>
-                  )}
-                  <div className="w-full max-w-3xl mx-auto relative">
-                    <div className="bg-white rounded-xl p-4 sm:p-6 shadow-md">
-                      <div className="flex items-center justify-between space-x-4 sm:space-x-8">
+      <div className="relative">
+        <Card className="p-4 px-4 sm:px-6 md:p-6 md:px-8 lg:p-8 lg:px-12 xl:px-16">
+          <Carousel 
+            className="w-full max-w-3xl mx-auto"
+            setApi={setApi}
+            onSelect={(index) => {
+              if (typeof index === 'number' && index !== currentSegment) {
+                setCurrentSegment(index);
+              }
+            }}
+          >
+            <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-12 z-10">
+              <CarouselPrevious 
+                onClick={() => setCurrentSegment(currentSegment - 1)}
+                disabled={currentSegment === 0}
+                className="h-12 w-12 rounded-full border-2 border-primary/50 hover:border-primary/75 transition-colors"
+              />
+            </div>
+            <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-12 z-10">
+              <CarouselNext 
+                onClick={() => setCurrentSegment(currentSegment + 1)}
+                disabled={currentSegment === story.segments.length - 1}
+                className="h-12 w-12 rounded-full border-2 border-primary/50 hover:border-primary/75 transition-colors"
+              />
+            </div>
+            <CarouselContent>
+              {story.segments.map((segment: StorySegment, index: number) => (
+                <CarouselItem key={index} data-index={index}>
+                  <div className="space-y-8">
+                    {segment.imageUrl && (
+                      <div className="relative w-full aspect-[4/3] overflow-hidden rounded-lg shadow-md">
+                        <img
+                          src={segment.imageUrl}
+                          alt={`Story scene ${index + 1}`}
+                          className="absolute inset-0 w-full h-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.src = '/assets/fallback-story-image.png';
+                          }}
+                        />
+                      </div>
+                    )}
+                    <div className="w-full max-w-3xl mx-auto px-4 sm:px-6">
+                      <div className="bg-white rounded-xl p-4 sm:p-6 shadow-md">
                         <div className="flex-1 min-w-0">
                           {segment.audioUrl ? (
                             <div className="w-full max-w-2xl mx-auto">
@@ -145,62 +159,20 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
                         </div>
                       </div>
                     </div>
-                    <button
-                      onClick={() => setCurrentSegment(currentSegment - 1)}
-                      disabled={currentSegment === 0}
-                      className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-16 h-10 w-10 rounded-full bg-white shadow-lg border-2 border-primary/50 hover:border-primary/75 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      aria-label="Previous segment"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        className="w-6 h-6 mx-auto"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M15 19l-7-7 7-7"
-                        />
-                      </svg>
-                    </button>
-                    <button
-                      onClick={() => setCurrentSegment(currentSegment + 1)}
-                      disabled={currentSegment === story.segments.length - 1}
-                      className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-16 h-10 w-10 rounded-full bg-white shadow-lg border-2 border-primary/50 hover:border-primary/75 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      aria-label="Next segment"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        className="w-6 h-6 mx-auto"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 5l7 7-7 7"
-                        />
-                      </svg>
-                    </button>
+                    {segment.content && (
+                      <div className="px-4">
+                        <p className="text-lg md:text-xl leading-relaxed text-gray-800 max-w-prose mx-auto">
+                          {segment.content}
+                        </p>
+                      </div>
+                    )}
                   </div>
-                  {segment.content && (
-                    <div className="px-4">
-                      <p className="text-lg md:text-xl leading-relaxed text-gray-800 max-w-prose mx-auto">
-                        {segment.content}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-        </Carousel>
-      </Card>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+          </Carousel>
+        </Card>
+      </div>
     </div>
   );
 }
