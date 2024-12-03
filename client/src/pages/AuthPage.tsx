@@ -18,7 +18,6 @@ export default function AuthPage() {
 
     const formData = new FormData(event.currentTarget);
     const userData = {
-      username: formData.get("username") as string,
       email: formData.get("email") as string,
       password: formData.get("password") as string,
     };
@@ -63,11 +62,11 @@ export default function AuthPage() {
               <form onSubmit={(e) => handleSubmit(e, "login")}>
                 <div className="grid gap-4">
                   <div className="grid gap-2">
-                    <Label htmlFor="username">Username</Label>
+                    <Label htmlFor="email">Email</Label>
                     <Input
-                      id="username"
-                      name="username"
-                      type="text"
+                      id="email"
+                      name="email"
+                      type="email"
                       required
                       disabled={isLoading}
                     />
@@ -91,16 +90,7 @@ export default function AuthPage() {
             <TabsContent value="register">
               <form onSubmit={(e) => handleSubmit(e, "register")}>
                 <div className="grid gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="reg-username">Username</Label>
-                    <Input
-                      id="reg-username"
-                      name="username"
-                      type="text"
-                      required
-                      disabled={isLoading}
-                    />
-                  </div>
+                  
                   <div className="grid gap-2">
                     <Label htmlFor="email">Email</Label>
                     <Input
