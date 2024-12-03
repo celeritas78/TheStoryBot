@@ -247,61 +247,103 @@ export function setupAuth(app: Express) {
       const { email, password } = result.data;
 
       let newUser;
+      let transactionError = null;
+      
       try {
-        // Use Drizzle transaction with explicit rollback
-        newUser = await db.transaction(async (tx) => {
-          // Check if user already exists using a database constraint
-          const existingUser = await tx
-            .select({ id: users.id, email: users.email })
-            .from(users)
-            .where(eq(users.email, email))
-            .limit(1);
+        authLogger.info('Starting registration transaction', {
+          email,
+          ip: req.ip,
+          timestamp: new Date().toISOString()
+        }, 'registration_transaction');
 
-          if (existingUser.length > 0) {
-            authLogger.security('Registration attempt with existing email', { 
+        // Use Drizzle transaction with explicit rollback and commit logging
+        newUser = await db.transaction(async (tx) => {
+          try {
+            // Check if user already exists using a database constraint
+            const existingUser = await tx
+              .select({ id: users.id, email: users.email })
+              .from(users)
+              .where(eq(users.email, email))
+              .limit(1);
+
+            if (existingUser.length > 0) {
+              authLogger.security('Registration attempt with existing email - rolling back transaction', { 
+                email,
+                ip: req.ip,
+                existingUserId: existingUser[0].id,
+                transactionState: 'rollback_initiated'
+              }, 'registration_transaction');
+              throw new Error("Email is already registered");
+            }
+
+            authLogger.info('Email verification passed, proceeding with user creation', {
               email,
               ip: req.ip,
-              existingUserId: existingUser[0].id
-            }, 'registration');
-            throw new Error("Email is already registered");
-          }
+              transactionState: 'in_progress'
+            }, 'registration_transaction');
 
-          authLogger.info('Creating new user record', {
-            email,
-            ip: req.ip
-          }, 'registration');
+            // Hash the password
+            const hashedPassword = await crypto.hash(password);
 
-          // Hash the password
-          const hashedPassword = await crypto.hash(password);
+            // Create the new user using Drizzle with proper timestamps
+            const now = new Date();
+            const [insertedUser] = await tx
+              .insert(users)
+              .values({
+                email,
+                password: hashedPassword,
+                provider: 'local',
+                emailVerified: false,
+                active: true,
+                createdAt: now,
+                updatedAt: now
+              })
+              .returning();
 
-          // Create the new user using Drizzle with proper timestamps
-          const now = new Date();
-          const [insertedUser] = await tx
-            .insert(users)
-            .values({
+            // Verify the inserted user data structure
+            if (!insertedUser || !insertedUser.id || !insertedUser.email) {
+              throw new Error("Invalid user data structure after insertion");
+            }
+
+            authLogger.info('User record created in transaction', {
+              userId: insertedUser.id,
+              email: insertedUser.email,
+              transactionState: 'pre_commit',
+              userDataValid: true
+            }, 'registration_transaction');
+
+            return insertedUser;
+          } catch (txError) {
+            // Log transaction error and ensure rollback
+            transactionError = txError;
+            authLogger.error('Transaction error occurred', txError, {
               email,
-              password: hashedPassword,
-              provider: 'local',
-              emailVerified: false,
-              active: true,
-              createdAt: now,
-              updatedAt: now
-            })
-            .returning();
-
-          authLogger.info('User record created in transaction', {
-            userId: insertedUser.id,
-            email: insertedUser.email
-          }, 'registration');
-
-          return insertedUser;
+              ip: req.ip,
+              transactionState: 'error_rollback'
+            }, 'registration_transaction');
+            throw txError; // Re-throw to trigger rollback
+          }
         });
 
-        authLogger.info('User created successfully', { 
+        // Log successful transaction completion
+        authLogger.info('Transaction committed successfully', { 
           userId: newUser.id,
           email: newUser.email,
-          ip: req.ip 
-        }, 'registration');
+          ip: req.ip,
+          transactionState: 'committed'
+        }, 'registration_transaction');
+
+        // Debug log for user data structure
+        authLogger.info('User data structure verification', {
+          userId: newUser.id,
+          email: newUser.email,
+          hasPassword: !!newUser.password,
+          provider: newUser.provider,
+          emailVerified: newUser.emailVerified,
+          active: newUser.active,
+          timestamp: newUser.createdAt,
+          dataComplete: true
+        }, 'registration_debug');
 
       } catch (dbError) {
         // Handle database-specific errors
@@ -311,20 +353,32 @@ export function setupAuth(app: Express) {
             authLogger.security('Concurrent registration attempt with existing email', {
               email,
               ip: req.ip,
-              error: dbError.message
-            }, 'registration');
-            return res.status(409).json({ error: "Email is already registered" });
+              error: dbError.message,
+              transactionState: 'rolled_back'
+            }, 'registration_transaction');
+            return res.status(409).json({ 
+              error: "Email is already registered",
+              details: "A user with this email already exists"
+            });
           }
 
-          // Log detailed database error
+          // Log detailed database error with transaction state
           authLogger.error('Database error during registration', dbError, {
             ip: req.ip,
             email,
             errorCode: (dbError as any).code,
-            errorDetail: (dbError as any).detail
-          }, 'registration');
+            errorDetail: (dbError as any).detail,
+            transactionState: 'rolled_back',
+            transactionError: transactionError?.message
+          }, 'registration_transaction');
+
+          // Return appropriate error response
+          return res.status(500).json({ 
+            error: "Registration failed",
+            details: "An error occurred while creating your account"
+          });
         }
-        throw dbError; // Re-throw for general error handling
+        throw dbError; // Re-throw unexpected errors
       }
 
       // Log the user in after successful registration
