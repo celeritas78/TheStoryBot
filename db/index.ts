@@ -3,18 +3,75 @@ import pg from 'pg';
 import { type Pool } from 'pg';
 import * as schema from "./schema";
 
-// Enhanced Logger utility for database operations
+// Enhanced Logger utility for database operations with rate limiting
 const dbLogger = {
-  info: (message: string, data: Record<string, any> = {}) => {
-    console.log(JSON.stringify({
-      timestamp: new Date().toISOString(),
-      level: "INFO",
-      context: "database",
-      message,
-      ...data,
-    }));
+  // Store last log timestamp and count for rate limiting
+  lastLog: { timestamp: 0, message: '', count: 0 },
+  
+  // Log levels
+  levels: {
+    ERROR: 0,
+    WARN: 1,
+    INFO: 2,
+    DEBUG: 3
   },
+  
+  // Current log level (can be adjusted based on environment)
+  currentLevel: process.env.NODE_ENV === 'production' ? 1 : 2,
+
+  shouldLog(message: string): boolean {
+    const now = Date.now();
+    const rateLimitWindow = 5000; // 5 seconds window
+    
+    if (this.lastLog.message === message) {
+      // If the same message appears within the window
+      if (now - this.lastLog.timestamp < rateLimitWindow) {
+        this.lastLog.count++;
+        // Only log every 10th occurrence within window
+        return this.lastLog.count % 10 === 0;
+      } else {
+        // Reset counter if outside window
+        if (this.lastLog.count > 1) {
+          this.summarize();
+        }
+        this.lastLog = { timestamp: now, message, count: 1 };
+        return true;
+      }
+    } else {
+      // Different message, reset counter
+      if (this.lastLog.count > 1) {
+        this.summarize();
+      }
+      this.lastLog = { timestamp: now, message, count: 1 };
+      return true;
+    }
+  },
+
+  summarize() {
+    if (this.lastLog.count > 1) {
+      console.log(JSON.stringify({
+        timestamp: new Date().toISOString(),
+        level: "INFO",
+        context: "database",
+        message: `${this.lastLog.message} (occurred ${this.lastLog.count} times)`,
+      }));
+    }
+  },
+
+  info: (message: string, data: Record<string, any> = {}) => {
+    if (dbLogger.currentLevel >= dbLogger.levels.INFO && dbLogger.shouldLog(message)) {
+      console.log(JSON.stringify({
+        timestamp: new Date().toISOString(),
+        level: "INFO",
+        context: "database",
+        message,
+        ...data,
+      }));
+    }
+  },
+
   error: (message: string, error: any) => {
+    // Always log errors regardless of rate limiting
     console.error(JSON.stringify({
       timestamp: new Date().toISOString(),
       level: "ERROR",
@@ -76,35 +133,54 @@ testConnection().then(success => {
   }
 });
 
-// Add event listeners for pool events
+// Add event listeners for pool events with reduced noise
 pool.on('connect', () => {
-  dbLogger.info('New client connected to the pool');
+  if (process.env.NODE_ENV !== 'production') {
+    dbLogger.info('Database pool connection established');
+  }
 });
 
 pool.on('error', (err) => {
-  dbLogger.error('Unexpected error on idle client', err);
+  dbLogger.error('Unexpected database pool error', err);
 });
 
-pool.on('acquire', () => {
-  dbLogger.info('Client acquired from pool');
-});
+// Only log pool events in development with high verbosity
+if (process.env.NODE_ENV === 'development' && process.env.DB_LOG_LEVEL === 'debug') {
+  pool.on('acquire', () => {
+    dbLogger.info('Client acquired from pool');
+  });
 
-pool.on('remove', () => {
-  dbLogger.info('Client removed from pool');
-});
+  pool.on('remove', () => {
+    dbLogger.info('Client removed from pool');
+  });
+}
 
 // Initialize Drizzle with the pool
 export const db = drizzle(pool, {
   schema,
   logger: {
     logQuery: (query: string, params: unknown[]) => {
+      // Skip logging for common queries in production
+      if (process.env.NODE_ENV === 'production' && (
+        query.toLowerCase().includes('select') || 
+        query.toLowerCase().includes('where id =')
+      )) {
+        return;
+      }
+
       const maskedParams = params.map(param => 
         typeof param === 'string' && (param.includes('@') || param.length > 20) 
           ? '****' 
           : param
       );
-      dbLogger.info('Executing query', {
-        query,
+
+      // Truncate long queries in logs
+      const truncatedQuery = query.length > 100 
+        ? query.substring(0, 100) + '...' 
+        : query;
+
+      dbLogger.info('DB Query', {
+        query: truncatedQuery,
         params: maskedParams
       });
     },
