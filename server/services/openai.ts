@@ -187,6 +187,8 @@ Ensure that:
   }
 }
 
+import { saveImageFile } from './image-storage';
+
 export async function generateImage(sceneDescription: string): Promise<string> {
   try {
     // Sanitize and limit scene description
@@ -226,7 +228,20 @@ Style guidelines:
       return '/assets/fallback-story-image.png';
     }
 
-    return response.data[0].url;
+    // Download the image from OpenAI
+    const imageUrl = response.data[0].url;
+    const imageResponse = await fetch(imageUrl);
+    if (!imageResponse.ok) {
+      throw new Error(`Failed to download image: ${imageResponse.statusText}`);
+    }
+
+    const imageBuffer = Buffer.from(await imageResponse.arrayBuffer());
+    
+    // Save the image locally and get the local URL
+    const localImageUrl = await saveImageFile(imageBuffer, 'png');
+    console.log('Successfully saved image file:', localImageUrl);
+
+    return localImageUrl;
   } catch (error) {
     console.error("OpenAI Image Generation Error:", {
       error,

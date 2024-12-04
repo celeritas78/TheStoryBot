@@ -1,5 +1,5 @@
 import express, { type Request, Response, NextFunction } from "express";
-import { registerRoutes } from "./routes";
+import { setupRoutes } from "./routes";
 import { setupVite, serveStatic } from "./vite";
 import { createServer } from "http";
 import { setupAuth } from "./auth";
@@ -62,7 +62,7 @@ app.use((req, res, next) => {
 
 (async () => {
   // Register API routes before Vite middleware or static serving
-  registerRoutes(app);
+  setupRoutes(app);
 
   // Error-handling middleware
   app.use((err: any, req: Request, res: Response, _next: NextFunction) => {

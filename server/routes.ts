@@ -1,37 +1,41 @@
-import { eq, desc } from "drizzle-orm";
-import type { Express } from "express";
-import { z } from "zod";
-import { db } from "../db";
-import { users } from "@db/schema";
-import { crypto } from "./auth"; // Ensure crypto utilities are imported
-import { stories, storySegments, type InsertStorySegment, type Story } from "@db/schema";
-import { generateStoryContent, generateImage, generateSpeech } from "./services/openai";
-
+import express from 'express';
 import fs from 'fs';
+import { z } from 'zod';
+import { db } from '../db';
+import { stories, storySegments, users } from '../db/schema';
+import { eq, desc } from 'drizzle-orm';
+import bcrypt from 'bcryptjs';
+import { 
+  generateStoryContent, 
+  generateImage, 
+  generateSpeech 
+} from './services/openai';
+import { sendErrorResponse } from './utils/error';
 import { 
   getAudioFilePath, 
   audioFileExists, 
-  isAudioFormatSupported, 
+  isAudioFormatSupported,
   SUPPORTED_AUDIO_FORMATS,
   getMimeType 
 } from './services/audio-storage';
+import { 
+  getImageFilePath, 
+  imageFileExists, 
+  isImageFormatSupported, 
+  SUPPORTED_IMAGE_FORMATS,
+  getMimeType as getImageMimeType 
+} from './services/image-storage';
 
 const registrationSchema = z.object({
   email: z.string().email("Invalid email").max(255, "Email too long"),
-  password: z.string().min(8, "Password too short"),
+  password: z.string().min(8, "Password too short").max(255, "Password too long"),
+  displayName: z.string().min(2, "Display name too short").max(255, "Display name too long"),
 });
 
-// Error response helper function
-function sendErrorResponse(res: any, statusCode: number, error: string, details?: any) {
-  res.status(statusCode).json({
-    error,
-    details,
-    timestamp: new Date().toISOString()
-  });
-}
+// Using imported sendErrorResponse from utils/error
 
-export function registerRoutes(app: Express) {
-  // Global error middleware
+export function setupRoutes(app: express.Application) {
+  // Global error middleware (from original code)
   app.use((err: any, req: any, res: any, next: any) => {
     console.error('Global error handler:', {
       error: err,
@@ -56,16 +60,15 @@ export function registerRoutes(app: Express) {
       process.env.NODE_ENV === 'development' ? err.stack : undefined);
   });
 
-  app.post("/api/register", async (req, res) => {
+  app.post("/api/register", async (req, res) => { //from original code
     try {
       const result = registrationSchema.safeParse(req.body);
       if (!result.success) {
         return res.status(400).json({ error: "Validation failed", details: result.error.errors });
       }
 
-      const { email, password } = result.data;
+      const { email, password, displayName } = result.data;
 
-      // Check if the user already exists
       // Check if the user already exists
       const [existingUser] = await db
         .select()
@@ -77,20 +80,22 @@ export function registerRoutes(app: Express) {
       }
 
       // Hash password and insert the user
-      const hashedPassword = await crypto.hash(password);
+      const hashedPassword = await bcrypt.hash(password, 10);
       const [newUser] = await db.insert(users).values({
         email,
         password: hashedPassword,
+        displayName, // Added displayName
         createdAt: new Date(),
       }).returning();
 
-      res.status(201).json({ message: "Registration successful", user: { id: newUser.id, email: newUser.email } });
+      res.status(201).json({ message: "Registration successful", user: { id: newUser.id, email: newUser.email, displayName: newUser.displayName } });
     } catch (err) {
       console.error("Error registering user:", err);
       res.status(500).json({ error: "Internal server error" });
     }
   });
-  
+
+
   // Serve audio files with proper CORS and caching headers
   app.get("/audio/:filename", async (req, res) => {
     try {
@@ -123,43 +128,42 @@ export function registerRoutes(app: Express) {
         exists: fs.existsSync(filePath)
       });
 
-      // Set proper CORS headers
-      res.setHeader('Access-Control-Allow-Origin', '*');
-      res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD');
-      res.setHeader('Access-Control-Allow-Headers', 'Range, Content-Type');
-      
-      // Set content type and caching headers
-      res.setHeader('Content-Type', getMimeType(filename));
-      res.setHeader('Accept-Ranges', 'bytes');
-      res.setHeader('Content-Length', stat.size);
-      res.setHeader('Cache-Control', 'public, max-age=31536000');
-      
       // Handle range requests
       const range = req.headers.range;
       if (range) {
         const parts = range.replace(/bytes=/, "").split("-");
         const start = parseInt(parts[0], 10);
         const end = parts[1] ? parseInt(parts[1], 10) : stat.size - 1;
-        
-        if (start >= stat.size || end >= stat.size) {
-          res.status(416).send('Requested range not satisfiable');
-          return;
-        }
-
         const chunksize = (end - start) + 1;
         const stream = fs.createReadStream(filePath, { start, end });
-        
-        res.status(206);
-        res.setHeader('Content-Range', `bytes ${start}-${end}/${stat.size}`);
-        res.setHeader('Content-Length', chunksize);
+
+        res.writeHead(206, {
+          'Content-Range': `bytes ${start}-${end}/${stat.size}`,
+          'Accept-Ranges': 'bytes',
+          'Content-Length': chunksize,
+          'Content-Type': getMimeType(filename),
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, HEAD',
+          'Access-Control-Allow-Headers': 'Range',
+          'Cache-Control': 'public, max-age=31536000'
+        });
+
         stream.pipe(res);
       } else {
-        // Stream the whole file if no range is requested
+        // Set proper CORS headers
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD');
+        res.setHeader('Access-Control-Allow-Headers', 'Range');
+        
+        // Set content type and caching headers
+        res.setHeader('Content-Type', getMimeType(filename));
+        res.setHeader('Content-Length', stat.size);
+        res.setHeader('Cache-Control', 'public, max-age=31536000');
+
+        // Stream the audio file
         const stream = fs.createReadStream(filePath);
         stream.pipe(res);
       }
-
-      // Note: File streaming is already handled by the range request code above
     } catch (error: any) {
       console.error('Error serving audio:', { 
         error, 
@@ -167,6 +171,62 @@ export function registerRoutes(app: Express) {
         stack: error.stack 
       });
       res.status(500).json({ error: 'Failed to serve audio file' });
+    }
+  });
+
+  // Serve image files with proper CORS and caching headers
+  app.get("/images/:filename", async (req, res) => {
+    try {
+      const { filename } = req.params;
+      console.log('Image request received:', { filename });
+
+      // First check if this image file is referenced in the database
+      const segment = await db.query.storySegments.findFirst({
+        where: eq(storySegments.imageUrl, `/images/${filename}`)
+      });
+
+      if (!segment) {
+        console.error('Image file not found in database:', { filename });
+        return res.status(404).json({ error: "Image file not found" });
+      }
+
+      const filePath = getImageFilePath(filename);
+      console.log('Resolved file path:', { filePath });
+
+      if (!fs.existsSync(filePath)) {
+        console.error('Image file not found on disk:', { filePath });
+        return res.status(404).json({ error: "Image file not found" });
+      }
+
+      // Log file stats
+      const stat = fs.statSync(filePath);
+      console.log('Image file stats:', { 
+        size: stat.size,
+        path: filePath,
+        exists: fs.existsSync(filePath)
+      });
+
+      // Set proper CORS headers
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD');
+      res.setHeader('Access-Control-Allow-Headers', 'Range');
+      
+      // Set content type and caching headers
+      res.setHeader('Content-Type', getImageMimeType(filename));
+      res.setHeader('Content-Length', stat.size);
+      res.setHeader('Cache-Control', 'public, max-age=31536000');
+
+      // Stream the image file
+      const stream = fs.createReadStream(filePath);
+      stream.pipe(res);
+
+    } catch (error: any) {
+      console.error('Error serving image:', { 
+        error, 
+        message: error.message,
+        stack: error.stack 
+      });
+      res.status(500).json({ error: 'Failed to serve image file' });
     }
   });
 
@@ -298,7 +358,6 @@ export function registerRoutes(app: Express) {
     }
   });
 
-
   app.post("/api/stories/:id/continue", async (req, res) => {
     try {
       const { id } = req.params;
@@ -362,7 +421,6 @@ export function registerRoutes(app: Express) {
           },
         },
         orderBy: [desc(stories.createdAt)],
-        //take: 10 as number, // Explicitly cast to avoid type mismatch
       });
 
       console.log('Stories fetched:', allStories.length);
