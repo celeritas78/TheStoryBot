@@ -18,10 +18,10 @@ export default function HomePage() {
         <div className="grid md:grid-cols-2 gap-8 mb-12">
           <Card className="overflow-hidden">
             <img
-              //src="https://images.unsplash.com/photo-1485546246426-74dc88dec4d9"
               src="/images/image01.png"
-              alt="Child reading"
+              alt="Child reading a story"
               className="w-full h-48 object-cover"
+              loading="eager"
             />
             <CardContent className="p-6">
               <h2 className="text-2xl font-semibold mb-2">
@@ -36,10 +36,10 @@ export default function HomePage() {
 
           <Card className="overflow-hidden">
             <img
-              //src="https://images.unsplash.com/photo-1514539079130-25950c84af65"
               src="/images/image02.png"
-              alt="Fairy tale background"
+              alt="Imaginative story scene"
               className="w-full h-48 object-cover"
+              loading="eager"
             />
             <CardContent className="p-6">
               <h2 className="text-2xl font-semibold mb-2">
