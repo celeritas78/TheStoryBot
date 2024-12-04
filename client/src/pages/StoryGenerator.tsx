@@ -2,6 +2,7 @@ import { useState } from "react";
 import StoryForm from "../components/StoryForm";
 import StoryViewer from "../components/StoryViewer";
 import { Button } from "@/components/ui/button";
+import { Title } from "@/components/ui/title";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { generateStory, type Story, type StoryFormData } from "../lib/api";
@@ -101,9 +102,9 @@ export default function StoryGenerator() {
                   Home
                 </Button>
               </Link>
-              <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 text-transparent bg-clip-text">
+              <Title>
                 {story ? (story.title || `${story.childName}'s Story`) : 'Create Your Story'}
-              </h1>
+              </Title>
             </div>
           </header>
           {mutation.isPending && (

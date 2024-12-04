@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
+import { Title } from "@/components/ui/title";
 import { getAllStories } from "../lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -76,9 +77,9 @@ export default function LibraryPage() {
       <div className="min-h-screen bg-gradient-to-b from-purple-50 to-purple-100 p-8">
         <div className="container mx-auto">
           <header className="flex items-center justify-between mb-8">
-            <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 text-transparent bg-clip-text">
+            <Title>
               My Story Library
-            </h1>
+            </Title>
             <Link href="/create">
               <Button>Create New Story</Button>
             </Link>

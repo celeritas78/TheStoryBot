@@ -1,15 +1,16 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "wouter";
+import { Title } from "@/components/ui/title";
 
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-purple-50 to-purple-100">
       <div className="container mx-auto px-4 py-8">
         <header className="text-center mb-12">
-          <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 text-transparent bg-clip-text mb-4">
+          <Title className="mb-4">
             The Story Bot
-          </h1>
+          </Title>
           <p className="text-lg text-gray-600">
             Create personalized AI stories for your little ones
           </p>

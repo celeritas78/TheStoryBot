@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useRoute } from "wouter";
 import StoryViewer from "../components/StoryViewer";
 import { Button } from "@/components/ui/button";
+import { Title } from "@/components/ui/title";
 import { Link } from "wouter";
 import { Loader2 } from "lucide-react";
 import { ErrorBoundary } from "react-error-boundary";
@@ -75,7 +76,7 @@ export default function StoryPage() {
     return (
       <div className="min-h-screen bg-gradient-to-b from-purple-50 to-purple-100 p-4">
         <div className="container mx-auto max-w-4xl text-center">
-          <h2 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 text-transparent bg-clip-text mb-4">Story not found</h2>
+          <Title className="mb-4">Story not found</Title>
           <Link href="/library">
             <Button variant="outline">Back to Library</Button>
           </Link>
@@ -109,9 +110,9 @@ export default function StoryPage() {
                   Home
                 </Button>
               </Link>
-              <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 text-transparent bg-clip-text">
+              <Title>
                 {story.title || `${story.childName}'s Story`}
-              </h1>
+              </Title>
             </div>
           </header>
           <StoryViewer story={story} showHomeIcon={false} />
