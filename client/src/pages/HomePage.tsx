@@ -22,6 +22,11 @@ export default function HomePage() {
               alt="Child reading a story"
               className="w-full h-48 object-cover"
               loading="eager"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.onerror = null; // Prevent infinite fallback loop
+                target.src = "/assets/fallback-story-image.png";
+              }}
             />
             <CardContent className="p-6">
               <h2 className="text-2xl font-semibold mb-2">
@@ -40,6 +45,11 @@ export default function HomePage() {
               alt="Imaginative story scene"
               className="w-full h-48 object-cover"
               loading="eager"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.onerror = null; // Prevent infinite fallback loop
+                target.src = "/assets/fallback-story-image.png";
+              }}
             />
             <CardContent className="p-6">
               <h2 className="text-2xl font-semibold mb-2">
