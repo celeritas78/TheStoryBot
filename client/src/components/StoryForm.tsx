@@ -149,23 +149,6 @@ export default function StoryForm({ onSubmit, isLoading }: StoryFormProps) {
 
             <FormField
               control={form.control}
-              name="mainCharacter"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Main Characters</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      placeholder="e.g., Dragon, Princess, Wizard"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
               name="theme"
               render={({ field }) => (
                 <FormItem>
@@ -220,6 +203,23 @@ export default function StoryForm({ onSubmit, isLoading }: StoryFormProps) {
                       ))}
                     </SelectContent>
                   </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="mainCharacter"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Main Characters, Objects, Events</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      placeholder="e.g., Princess Aurora, Ember the Dragon, Golden Key, The Hidden Passage..  "
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
