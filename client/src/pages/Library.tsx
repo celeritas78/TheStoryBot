@@ -64,6 +64,11 @@ export default function LibraryPage() {
   const { data: stories, isLoading, error } = useQuery<Story[]>({
     queryKey: ["stories"],
     queryFn: getAllStories,
+    retry: (failureCount, error: any) => {
+      // Don't retry on 401 unauthorized errors
+      if (error?.message?.includes('401')) return false;
+      return failureCount < 3;
+    },
   });
 
   if (isLoading) {

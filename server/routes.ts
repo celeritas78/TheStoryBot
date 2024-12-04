@@ -413,8 +413,16 @@ export function setupRoutes(app: express.Application) {
 
   app.get("/api/stories", async (req, res) => {
     try {
-      console.log('Fetching all stories');
-      const allStories = await db.query.stories.findMany({
+      // Check if user is authenticated
+      if (!req.isAuthenticated || !req.isAuthenticated()) {
+        return res.status(401).json({ error: "Not logged in" });
+      }
+
+      const userId = req.user?.id;
+      console.log('Fetching stories for user:', userId);
+
+      const userStories = await db.query.stories.findMany({
+        where: eq(stories.userId, userId),
         with: {
           segments: {
             where: eq(storySegments.sequence, 1),
@@ -423,8 +431,8 @@ export function setupRoutes(app: express.Application) {
         orderBy: [desc(stories.createdAt)],
       });
 
-      console.log('Stories fetched:', allStories.length);
-      res.json(allStories);
+      console.log('Stories fetched:', userStories.length);
+      res.json(userStories);
     } catch (error) {
       console.error("Error fetching stories:", error);
       res.status(500).json({ error: "Failed to fetch stories" });

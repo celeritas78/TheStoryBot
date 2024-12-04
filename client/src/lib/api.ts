@@ -104,7 +104,7 @@ export async function generateStory(formData: StoryFormData): Promise<Story> {
 }
 
 export async function getAllStories() {
-  console.log('Fetching all stories...');
+  console.log('Fetching user stories...');
   let lastError: Error | null = null;
   
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
@@ -113,6 +113,7 @@ export async function getAllStories() {
         headers: {
           "Accept": "application/json",
         },
+        credentials: 'include', // Include credentials for authentication
       });
 
       if (!response.ok) {
