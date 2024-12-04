@@ -441,6 +441,12 @@ export function setupRoutes(app: express.Application) {
 
   app.get("/api/stories/:id", async (req, res) => {
     try {
+      // Check if user is authenticated
+      if (!req.isAuthenticated || !req.isAuthenticated()) {
+        return res.status(401).json({ error: "Not logged in" });
+      }
+
+      const userId = req.user?.id;
       const story = await db.query.stories.findFirst({
         where: eq(stories.id, parseInt(req.params.id)),
         with: {
@@ -450,6 +456,11 @@ export function setupRoutes(app: express.Application) {
       
       if (!story) {
         return res.status(404).json({ error: "Story not found" });
+      }
+
+      // Check if the story belongs to the requesting user
+      if (story.userId !== userId) {
+        return res.status(403).json({ error: "You don't have permission to access this story" });
       }
       
       res.json(story);
