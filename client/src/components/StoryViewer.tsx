@@ -114,7 +114,7 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
               }
             }}
           >
-            <CarouselContent>
+            <CarouselContent className="relative">
               {story.segments.map((segment: StorySegment, index: number) => (
                 <CarouselItem key={index} data-index={index}>
                   <div className="space-y-8">
@@ -130,33 +130,30 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
                         />
                       </div>
                     )}
-                    <div className="w-full max-w-xl mx-auto relative flex items-center">
-                      {/* Back button on the left */}
-                      <div className="absolute left-0 transform -translate-x-16 top-1/2 -translate-y-1/2">
+                    <div className="w-full max-w-xl mx-auto relative">
+                      {/* Buttons Container */}
+                      <div className="relative flex items-center justify-between w-full">
+                        {/* Back Button */}
                         <CarouselPrevious
                           onClick={() => setCurrentSegment(currentSegment - 1)}
                           disabled={currentSegment === 0}
-                          className="h-14 w-14 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:opacity-90 transition-opacity shadow-lg"
+                          className="absolute left-0 h-12 w-12 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:opacity-90 transition-opacity shadow-lg"
                         />
-                      </div>
-
-                      {/* Audio container */}
-                      <div className="flex-1">
-                        {segment.audioUrl ? (
-                          <AudioPlayer audioUrl={segment.audioUrl} />
-                        ) : (
-                          <div className="flex items-center justify-center h-full min-h-[80px] bg-gray-50 rounded-lg">
-                            <span className="text-gray-500 text-sm">Audio not available</span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Next button on the right */}
-                      <div className="absolute right-0 transform translate-x-16 top-1/2 -translate-y-1/2">
+                        {/* Audio Player */}
+                        <div className="flex-1 mx-16">
+                          {segment.audioUrl ? (
+                            <AudioPlayer audioUrl={segment.audioUrl} />
+                          ) : (
+                            <div className="flex items-center justify-center h-full min-h-[80px] bg-gray-50 rounded-lg">
+                              <span className="text-gray-500 text-sm">Audio not available</span>
+                            </div>
+                          )}
+                        </div>
+                        {/* Next Button */}
                         <CarouselNext
                           onClick={() => setCurrentSegment(currentSegment + 1)}
                           disabled={currentSegment === story.segments.length - 1}
-                          className="h-14 w-14 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:opacity-90 transition-opacity shadow-lg"
+                          className="absolute right-0 h-12 w-12 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:opacity-90 transition-opacity shadow-lg"
                         />
                       </div>
                     </div>
