@@ -18,7 +18,7 @@ export default function HomePage() {
         <div className="grid md:grid-cols-2 gap-8 mb-12">
           <Card className="overflow-hidden">
             <img
-              src="/images/image01.png"
+              src="/assets/image01.png"
               alt="Child reading a story"
               className="w-full h-48 object-cover"
               loading="eager"
@@ -41,7 +41,7 @@ export default function HomePage() {
 
           <Card className="overflow-hidden">
             <img
-              src="/images/image02.png"
+              src="/assets/image02.png"
               alt="Imaginative story scene"
               className="w-full h-48 object-cover"
               loading="eager"
