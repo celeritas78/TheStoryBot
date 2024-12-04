@@ -9,6 +9,16 @@ interface AudioPlayerProps {
   audioUrl: string;
 }
 
+interface AudioState {
+  isPlaying: boolean;
+  isMuted: boolean;
+  volume: number;
+  progress: number;
+  isLoading: boolean;
+  error: string | null;
+  duration: number;
+}
+
 function FallbackComponent({ error }: { error: Error }) {
   return (
     <Alert variant="destructive">
@@ -21,148 +31,303 @@ function FallbackComponent({ error }: { error: Error }) {
 }
 
 function AudioPlayerContent({ audioUrl }: AudioPlayerProps) {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // Single audio instance reference
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const loadTimeoutRef = useRef<NodeJS.Timeout>();
+  const currentUrlRef = useRef<string>("");
+  
+  // Centralized state management
+  const [audioState, setAudioState] = useState<AudioState>({
+    isPlaying: false,
+    isMuted: false,
+    volume: 1,
+    progress: 0,
+    isLoading: true,
+    error: null,
+    duration: 0
+  });
 
+  // Validate and normalize URL
+  const getNormalizedUrl = (url: string): string | null => {
+    try {
+      return new URL(url, window.location.origin).toString();
+    } catch (error) {
+      console.error("Invalid URL:", error);
+      return null;
+    }
+  };
+
+  // Cleanup function for audio instance
+  const cleanupAudio = () => {
+    if (audioRef.current) {
+      const audio = audioRef.current;
+      
+      // Stop playback
+      if (!audio.paused) {
+        audio.pause();
+      }
+      
+      // Reset state
+      audio.currentTime = 0;
+      audio.src = "";
+      
+      // Clean up resources
+      audio.load();
+      
+      // Clear timeout if exists
+      if (loadTimeoutRef.current) {
+        clearTimeout(loadTimeoutRef.current);
+      }
+    }
+  };
+
+  // Initialize or update audio element
   useEffect(() => {
+    console.log("Initializing audio player with URL:", {
+      original: audioUrl,
+      normalized: audioUrl ? getNormalizedUrl(audioUrl) : null
+    });
+
     if (!audioUrl) {
-      console.warn("Audio URL is missing");
+      setAudioState(prev => ({ 
+        ...prev, 
+        error: "Audio URL is missing", 
+        isLoading: false 
+      }));
       return;
     }
 
-    const normalizedUrl = new URL(audioUrl, window.location.origin).toString();
-    console.log("Initializing audio player with URL:", { original: audioUrl, normalized: normalizedUrl });
+    const normalizedUrl = getNormalizedUrl(audioUrl);
+    if (!normalizedUrl) {
+      setAudioState(prev => ({ 
+        ...prev, 
+        error: "Invalid audio URL", 
+        isLoading: false 
+      }));
+      return;
+    }
 
-    fetch(normalizedUrl)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(`Audio file not found (${response.status})`);
-        }
+    // Prevent redundant initialization
+    if (normalizedUrl === currentUrlRef.current && audioRef.current?.src) {
+      console.log("Skipping redundant audio initialization");
+      return;
+    }
 
-        const audio = new Audio(normalizedUrl);
-        audioRef.current = audio;
-        console.log("Audio element created:", audio);
+    // Always cleanup previous instance before creating a new one
+    cleanupAudio();
 
-        const handleLoadStart = () => {
-          console.log("Audio load started");
-          setIsLoading(true);
-          setError(null);
-        };
+    try {
+      // Always create a fresh audio instance
+      audioRef.current = new Audio();
+      const audio = audioRef.current;
+      currentUrlRef.current = normalizedUrl;
 
-        const handleCanPlay = () => {
-          console.log("Audio is ready to play");
-          setIsLoading(false);
-          setError(null);
-        };
+      console.log("Audio element created:", audio);
 
-        const handleError = () => {
-          const errorMessage = audioRef.current?.error
-            ? getAudioErrorMessage(audioRef.current.error)
-            : "Unknown audio error";
-          console.error("Audio error detected:", errorMessage);
-          setError(errorMessage);
-          setIsLoading(false);
-        };
+      // Reset state for new audio
+      setAudioState(prev => ({
+        ...prev,
+        isPlaying: false,
+        progress: 0,
+        error: null,
+        isLoading: true,
+        duration: 0
+      }));
 
-
-        const handleTimeUpdate = () => {
-          if (audioRef.current) {
-            const progress = (audioRef.current.currentTime / audioRef.current.duration) * 100;
-            setProgress(progress);
+      // Setup event listeners
+      const eventListeners = {
+        loadstart: () => setAudioState(prev => ({ 
+          ...prev, 
+          isLoading: true, 
+          error: null 
+        })),
+        
+        loadedmetadata: () => {
+          if (loadTimeoutRef.current) {
+            clearTimeout(loadTimeoutRef.current);
           }
-        };
+          setAudioState(prev => ({
+            ...prev,
+            isLoading: false,
+            duration: audio.duration,
+            error: null
+          }));
+        },
 
-        const handleEnded = () => {
-          console.log("Audio playback ended");
-          setIsPlaying(false);
-        };
+        canplaythrough: () => {
+          if (loadTimeoutRef.current) {
+            clearTimeout(loadTimeoutRef.current);
+          }
+        },
 
-        audio.addEventListener("loadstart", handleLoadStart);
-        audio.addEventListener("canplay", handleCanPlay);
-        audio.addEventListener("error", handleError);
-        audio.addEventListener("timeupdate", handleTimeUpdate);
-        audio.addEventListener("ended", handleEnded);
+        error: () => {
+          let errorMessage = "Unknown audio error";
+          let shouldCleanup = false;
 
-        return () => {
-          console.log("Cleaning up audio player");
-          audio.removeEventListener("loadstart", handleLoadStart);
-          audio.removeEventListener("canplay", handleCanPlay);
-          audio.removeEventListener("error", handleError);
-          audio.removeEventListener("timeupdate", handleTimeUpdate);
-          audio.removeEventListener("ended", handleEnded);
-          audio.pause();
-          audio.src = "";
-        };
-      })
-      .catch((err) => {
-        console.error("Failed to load audio:", err);
-        setError(err.message);
-        setIsLoading(false);
+          if (audio.error) {
+            errorMessage = getAudioErrorMessage(audio.error);
+            // Permanent errors that require cleanup
+            shouldCleanup = [
+              MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED,
+              MediaError.MEDIA_ERR_DECODE
+            ].includes(audio.error.code);
+          } else if (!navigator.onLine) {
+            errorMessage = "Network connection lost. Please check your internet connection.";
+          } else if (audio.networkState === HTMLMediaElement.NETWORK_NO_SOURCE) {
+            errorMessage = "Audio source not found or format not supported";
+            shouldCleanup = true;
+          }
+
+          console.log("Audio error detected:", errorMessage);
+
+          setAudioState(prev => ({
+            ...prev,
+            error: errorMessage,
+            isLoading: false,
+            isPlaying: false
+          }));
+
+          if (shouldCleanup) {
+            cleanupAudio();
+          }
+        },
+
+        timeupdate: () => {
+          const progress = (audio.currentTime / audio.duration) * 100;
+          setAudioState(prev => ({
+            ...prev,
+            progress: isNaN(progress) ? 0 : progress
+          }));
+        },
+
+        ended: () => {
+          setAudioState(prev => ({ 
+            ...prev, 
+            isPlaying: false, 
+            progress: 0 
+          }));
+          audio.currentTime = 0;
+        },
+
+        stalled: () => {
+          setAudioState(prev => ({
+            ...prev,
+            isLoading: true,
+            error: "Audio playback stalled. Please check your connection."
+          }));
+        }
+      };
+
+      // Attach event listeners
+      Object.entries(eventListeners).forEach(([event, handler]) => {
+        audio.addEventListener(event, handler);
       });
 
-    return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.src = "";
-        audioRef.current = null;
-      }
-    };
+      // Set audio properties
+      audio.src = normalizedUrl;
+      audio.preload = "metadata";
+      audio.volume = audioState.volume;
+      audio.muted = audioState.isMuted;
+
+      // Start loading
+      audio.load();
+
+      // Set loading timeout
+      loadTimeoutRef.current = setTimeout(() => {
+        if (audioState.isLoading && !audioState.error) {
+          setAudioState(prev => ({
+            ...prev,
+            error: "Audio loading timed out. Please try again.",
+            isLoading: false
+          }));
+          cleanupAudio();
+        }
+      }, 15000); // 15 second timeout
+
+      // Cleanup function
+      return () => {
+        // Remove event listeners
+        Object.entries(eventListeners).forEach(([event, handler]) => {
+          audio?.removeEventListener(event, handler);
+        });
+        
+        // Cleanup
+        cleanupAudio();
+      };
+    } catch (error) {
+      console.error("Error initializing audio:", error);
+      setAudioState(prev => ({
+        ...prev,
+        error: error instanceof Error ? error.message : "Failed to initialize audio",
+        isLoading: false
+      }));
+    }
   }, [audioUrl]);
 
-  const togglePlay = () => {
+  // Handle play/pause
+  const togglePlay = async () => {
     if (!audioRef.current) return;
 
-    if (isPlaying) {
-      console.log("Pausing audio");
-      audioRef.current.pause();
-    } else {
-      console.log("Attempting to play audio");
-      audioRef.current.play().catch((error) => {
-        console.error("Error playing audio:", error);
-        setError("Failed to play audio");
-      });
+    try {
+      if (audioState.isPlaying) {
+        audioRef.current.pause();
+      } else {
+        await audioRef.current.play();
+      }
+      setAudioState(prev => ({ ...prev, isPlaying: !prev.isPlaying }));
+    } catch (error) {
+      console.error("Playback error:", error);
+      setAudioState(prev => ({
+        ...prev,
+        error: "Failed to play audio. Please try again.",
+        isPlaying: false
+      }));
     }
-    setIsPlaying(!isPlaying);
   };
 
+  // Handle mute toggle
   const toggleMute = () => {
     if (!audioRef.current) return;
-    audioRef.current.muted = !isMuted;
-    console.log(`Audio muted: ${!isMuted}`);
-    setIsMuted(!isMuted);
+    
+    audioRef.current.muted = !audioState.isMuted;
+    setAudioState(prev => ({ ...prev, isMuted: !prev.isMuted }));
   };
 
-  function getAudioErrorMessage(error: MediaError | null): string {
-    if (!error) return "Unknown error occurred";
-
+  // Map error codes to messages
+  function getAudioErrorMessage(error: MediaError): string {
     switch (error.code) {
       case MediaError.MEDIA_ERR_ABORTED:
-        return "The audio loading was aborted";
+        return "Audio playback was aborted";
       case MediaError.MEDIA_ERR_NETWORK:
         return "Network error occurred while loading audio";
       case MediaError.MEDIA_ERR_DECODE:
-        return "Audio decoding failed - file may be corrupted";
+        return "Audio file is corrupted or format not supported";
       case MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED:
-        return "Audio format not supported. Please ensure you're using a supported file.";
+        return "Audio format or source is not supported";
       default:
-        return `Unknown error occurred (Code: ${error.code})`;
+        return `Unknown audio error (Code: ${error.code})`;
     }
   }
 
-  if (error) {
+  // Handle cleanup on unmount
+  useEffect(() => {
+    return () => {
+      cleanupAudio();
+    };
+  }, []);
+
+  // Show error state
+  if (audioState.error) {
     return (
       <Alert variant="destructive">
         <AlertCircle className="h-4 w-4" />
-        <AlertDescription>{error}</AlertDescription>
+        <AlertDescription>{audioState.error}</AlertDescription>
       </Alert>
     );
   }
 
-  if (isLoading) {
+  // Show loading state
+  if (audioState.isLoading) {
     return (
       <div className="flex items-center justify-center p-4 text-gray-500">
         <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -171,28 +336,46 @@ function AudioPlayerContent({ audioUrl }: AudioPlayerProps) {
     );
   }
 
+  // Render player controls
   return (
     <div className="flex items-center space-x-4 p-4 bg-white rounded-lg shadow-sm">
-      <Button size="icon" variant="ghost" onClick={togglePlay}>
-        {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+      <Button 
+        size="icon" 
+        variant="ghost" 
+        onClick={togglePlay}
+        disabled={!audioRef.current || audioState.error !== null}
+      >
+        {audioState.isPlaying ? 
+          <Pause className="h-4 w-4" /> : 
+          <Play className="h-4 w-4" />
+        }
       </Button>
 
       <Slider
-        value={[progress]}
+        value={[audioState.progress]}
         max={100}
         step={1}
         className="w-[60%]"
+        disabled={!audioRef.current || audioState.error !== null}
         onValueChange={(value) => {
-          if (audioRef.current) {
-            const time = (value[0] / 100) * audioRef.current.duration;
+          if (audioRef.current && audioState.duration > 0) {
+            const time = (value[0] / 100) * audioState.duration;
             audioRef.current.currentTime = time;
-            setProgress(value[0]);
+            setAudioState(prev => ({ ...prev, progress: value[0] }));
           }
         }}
       />
 
-      <Button size="icon" variant="ghost" onClick={toggleMute}>
-        {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+      <Button 
+        size="icon" 
+        variant="ghost" 
+        onClick={toggleMute}
+        disabled={!audioRef.current || audioState.error !== null}
+      >
+        {audioState.isMuted ? 
+          <VolumeX className="h-4 w-4" /> : 
+          <Volume2 className="h-4 w-4" />
+        }
       </Button>
     </div>
   );
