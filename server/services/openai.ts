@@ -218,7 +218,7 @@ Style guidelines:
       n: 1,
       size: "1792x1024",
       quality: "standard",
-      style: "vivid",
+      style: "natural",
     });
 
     if (!response.data?.[0]?.url) {

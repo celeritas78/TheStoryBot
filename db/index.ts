@@ -49,24 +49,24 @@ const dbLogger = {
 
   summarize() {
     if (this.lastLog.count > 1) {
-      console.log(JSON.stringify({
-        timestamp: new Date().toISOString(),
-        level: "INFO",
-        context: "database",
-        message: `${this.lastLog.message} (occurred ${this.lastLog.count} times)`,
-      }));
+      //console.log(JSON.stringify({
+        //timestamp: new Date().toISOString(),
+        //level: "INFO",
+        //context: "database",
+        //message: `${this.lastLog.message} (occurred ${this.lastLog.count} times)`,
+      //}));
     }
   },
 
   info: (message: string, data: Record<string, any> = {}) => {
     if (dbLogger.currentLevel >= dbLogger.levels.INFO && dbLogger.shouldLog(message)) {
-      console.log(JSON.stringify({
-        timestamp: new Date().toISOString(),
-        level: "INFO",
-        context: "database",
-        message,
-        ...data,
-      }));
+      //console.log(JSON.stringify({
+        //timestamp: new Date().toISOString(),
+        //level: "INFO",
+        //context: "database",
+        //message,
+        //...data,
+      //}));
     }
   },
 
