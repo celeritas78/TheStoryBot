@@ -53,20 +53,26 @@ export function setupAuth(app: Express) {
     resave: false,
     saveUninitialized: false,
     store: new MemoryStore({ 
-      checkPeriod: 86400000 // Prune expired entries every 24h
+      checkPeriod: 86400000, // Prune expired entries every 24h
+      stale: false, // Don't serve stale sessions
     }),
-    name: 'connect.sid',
+    name: 'sid', // Shorter, more generic name
+    rolling: true, // Refresh session with each request
     cookie: {
       secure: process.env.NODE_ENV === 'production',
       httpOnly: true,
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       sameSite: 'lax',
-      path: '/'
+      path: '/',
+      domain: process.env.NODE_ENV === 'production' ? process.env.DOMAIN : undefined
     }
   };
 
-  if (app.get("env") === "production") {
-    app.set("trust proxy", 1); // Trust reverse proxy for secure cookies
+  // Configure trust proxy settings
+  const isProduction = process.env.NODE_ENV === 'production';
+  if (isProduction) {
+    app.set("trust proxy", 1); // Trust first proxy
+    sessionSettings.proxy = true; // Trust proxy headers
   }
 
   app.use(session(sessionSettings));
@@ -148,17 +154,35 @@ export function setupAuth(app: Express) {
       console.log('No user object after authentication');
       return res.status(401).json({ message: "Authentication failed" });
     }
-    const user = req.user as SelectUser;
-    console.log('User authenticated successfully:', { id: user.id, email: user.email });
-    // Omit password and include all other user data
-    const { password, ...safeUser } = user;
-    const response = { 
-      message: "Login successful", 
-      user: safeUser,
-      isAuthenticated: true
-    };
-    console.log('Sending login response:', response);
-    res.json(response);
+
+    // Regenerate session for security
+    req.session.regenerate((err) => {
+      if (err) {
+        console.error('Session regeneration failed:', err);
+        return res.status(500).json({ message: "Session creation failed" });
+      }
+
+      const user = req.user as SelectUser;
+      console.log('User authenticated successfully:', { id: user.id, email: user.email });
+      
+      // Save the user session
+      req.session.save((err) => {
+        if (err) {
+          console.error('Session save failed:', err);
+          return res.status(500).json({ message: "Session save failed" });
+        }
+
+        // Omit password and include all other user data
+        const { password, ...safeUser } = user;
+        const response = { 
+          message: "Login successful", 
+          user: safeUser,
+          isAuthenticated: true
+        };
+        console.log('Sending login response:', response);
+        res.json(response);
+      });
+    });
   });
 
   // Logout route
