@@ -7,7 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LogOut } from "lucide-react";
+import { LogOut, Home, Library, User, Book } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function Header() {
@@ -30,16 +30,25 @@ export default function Header() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-6">
             <Link href="/">
-              <h1 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 text-transparent bg-clip-text">
-                Story Bot
-              </h1>
+              <div className="flex items-center gap-2">
+                <img src="/images/logo.png" alt="Story Bot Logo" className="h-8 w-8" />
+                <h1 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 text-transparent bg-clip-text">
+                  The Story Bot
+                </h1>
+              </div>
             </Link>
             <nav className="flex items-center gap-4">
               <Link href="/">
-                <Button variant="ghost">Home</Button>
+                <Button variant="ghost" className="flex items-center gap-2">
+                  <Home className="h-4 w-4" />
+                  <span>Home</span>
+                </Button>
               </Link>
               <Link href="/library">
-                <Button variant="ghost">Library</Button>
+                <Button variant="ghost" className="flex items-center gap-2">
+                  <Book className="h-4 w-4" />
+                  <span>Library</span>
+                </Button>
               </Link>
             </nav>
           </div>
