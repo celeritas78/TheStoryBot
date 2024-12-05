@@ -71,17 +71,20 @@ export function setupAuth(app: Express) {
     app.set("trust proxy", 1); // Trust reverse proxy for secure cookies
   }
 
+  // Setup CSRF protection first
+  app.use(csrf({
+    cookie: {
+      key: '_csrf',
+      secure: app.get("env") === "production",
+      sameSite: 'lax',
+      path: '/',
+      httpOnly: true
+    }
+  }));
+
   app.use(session(sessionSettings));
   app.use(passport.initialize());
   app.use(passport.session());
-  
-  // Setup CSRF protection
-  app.use(csrf({
-    cookie: false, // We're using session instead of cookie
-    value: (req) => {
-      return req.headers['csrf-token'] as string;
-    }
-  }));
   
   // Provide CSRF token to the client
   app.get('/api/csrf-token', (req, res) => {
