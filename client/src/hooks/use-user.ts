@@ -46,21 +46,30 @@ async function handleRequest<T extends Record<string, unknown>>(
 async function fetchUser(): Promise<User | null> {
   try {
     console.log('Fetching user data...');
-    const response = await fetch('/api/user', { credentials: 'include' });
+    const response = await fetch('/api/user', {
+      credentials: 'include',
+      headers: {
+        'Cache-Control': 'no-cache',
+      },
+    });
+    
     if (!response.ok) {
       if (response.status === 401) {
         console.log('User not authenticated');
         return null;
       }
-      console.error(`Error fetching user: ${response.status}: ${response.statusText}`);
       throw new Error(`Error ${response.status}: ${response.statusText}`);
     }
+
     const userData = await response.json();
     console.log('User data received:', userData);
+    if (!userData) {
+      return null;
+    }
     return userData;
   } catch (error: any) {
     console.error('Failed to fetch user:', error);
-    throw error;
+    return null;
   }
 }
 
@@ -70,30 +79,52 @@ export function useUser() {
   const { data: user, error, isLoading } = useQuery<User | null, Error>({
     queryKey: ['user'],
     queryFn: fetchUser,
-    staleTime: Infinity,
+    staleTime: 0,
+    cacheTime: 0,
     retry: false,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 
   const loginMutation = useMutation<RequestResult, Error, InsertUser>({
     mutationFn: async (userData) => {
       console.log('Attempting login with:', { email: userData.email });
-      const result = await handleRequest('/api/login', 'POST', userData);
-      console.log('Login response:', result);
-      if (result.ok && result.data?.user) {
-        console.log('Setting user data in cache:', result.data.user);
-        queryClient.setQueryData(['user'], result.data.user);
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(userData),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || 'Login failed');
       }
-      return result;
+
+      const data = await response.json();
+      console.log('Login response:', data);
+
+      // Immediately set the user data in cache and invalidate queries
+      queryClient.setQueryData(['user'], data.user);
+      await queryClient.invalidateQueries({ queryKey: ['user'] });
+      
+      return {
+        ok: true,
+        data: data
+      };
     },
     onSuccess: async (data) => {
-      console.log('Login mutation succeeded:', data);
-      if (data.ok) {
-        console.log('Invalidating user queries after successful login');
-        await queryClient.invalidateQueries({ queryKey: ['user'] });
-      }
+      // Update the cache with the user data
+      queryClient.setQueryData(['user'], data.data.user);
+      // Force immediate refetch to ensure we have the latest data
+      await queryClient.invalidateQueries({ queryKey: ['user'] });
+      await queryClient.refetchQueries({ queryKey: ['user'], exact: true });
     },
     onError: (error) => {
       console.error('Login mutation failed:', error);
+      queryClient.setQueryData(['user'], null);
     }
   });
 
