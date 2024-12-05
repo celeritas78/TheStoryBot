@@ -4,6 +4,7 @@ import { type Express } from "express";
 import session from "express-session";
 import createMemoryStore from "memorystore";
 import { randomBytes, scrypt, timingSafeEqual } from "crypto";
+import csrf from "csurf";
 import { promisify } from "util";
 import { users, type User as SelectUser } from "@db/schema";
 import { db } from "../db";
@@ -51,18 +52,51 @@ export function setupAuth(app: Express) {
     secret: process.env.SESSION_SECRET || "default-secret",
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: false },
-    store: new MemoryStore({ checkPeriod: 86400000 }), // Prune expired entries every 24h
+    store: new MemoryStore({ 
+      checkPeriod: 86400000, // Prune expired entries every 24h
+      ttl: 86400000, // Session TTL (24 hours)
+    }),
+    name: 'sid', // Don't use default connect.sid
+    cookie: {
+      secure: app.get("env") === "production",
+      httpOnly: true,
+      maxAge: 86400000, // 24 hours
+      sameSite: 'lax',
+      path: '/',
+      domain: process.env.NODE_ENV === 'production' ? '.yourdomain.com' : 'localhost'
+    }
   };
 
   if (app.get("env") === "production") {
     app.set("trust proxy", 1); // Trust reverse proxy for secure cookies
-    sessionSettings.cookie = { secure: true };
   }
 
   app.use(session(sessionSettings));
   app.use(passport.initialize());
   app.use(passport.session());
+  
+  // Setup CSRF protection
+  app.use(csrf({
+    cookie: false, // We're using session instead of cookie
+    value: (req) => {
+      return req.headers['csrf-token'] as string;
+    }
+  }));
+  
+  // Provide CSRF token to the client
+  app.get('/api/csrf-token', (req, res) => {
+    res.json({ csrfToken: req.csrfToken() });
+  });
+  
+  // Handle CSRF errors
+  app.use((err: any, req: any, res: any, next: any) => {
+    if (err.code === 'EBADCSRFTOKEN') {
+      return res.status(403).json({
+        error: 'Invalid CSRF token'
+      });
+    }
+    next(err);
+  });
 
   // Configure Passport Local Strategy
   passport.use(
@@ -131,7 +165,14 @@ export function setupAuth(app: Express) {
 
   // Login route
   app.post("/api/login", passport.authenticate("local"), (req, res) => {
-    res.json({ message: "Login successful", user: req.user });
+    // We know user exists and has password because of passport.authenticate
+    const user = req.user as SelectUser;
+    // Omit password from the response
+    const { password, ...safeUser } = user;
+    res.json({ 
+      message: "Login successful", 
+      user: safeUser
+    });
   });
 
   // Logout route
@@ -144,9 +185,20 @@ export function setupAuth(app: Express) {
 
   // Fetch current user route
   app.get("/api/user", (req, res) => {
-    if (req.isAuthenticated && req.isAuthenticated()) {
-      return res.json(req.user);
+    if (!req.isAuthenticated || !req.isAuthenticated()) {
+      return res.status(401).json({ error: "Not logged in" });
     }
-    res.status(401).json({ error: "Not logged in" });
+    
+    if (!req.user) {
+      return res.status(401).json({ error: "User session invalid" });
+    }
+
+    return res.json({
+      id: req.user.id,
+      email: req.user.email,
+      displayName: req.user.displayName,
+      avatarUrl: req.user.avatarUrl,
+      bio: req.user.bio
+    });
   });
 }
