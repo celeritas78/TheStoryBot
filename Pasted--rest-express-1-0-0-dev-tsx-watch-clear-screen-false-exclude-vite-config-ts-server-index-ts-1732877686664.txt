@@ -1,0 +1,90 @@
+> rest-express@1.0.0 dev
+> tsx watch --clear-screen=false --exclude vite.config.ts.* server/index.ts
+
+Audio directory configuration: {
+  AUDIO_DIR: '/home/runner/CustomBedtimeStories/public/audio',
+  exists: true,
+  files: [
+    '03f2d354-d3b3-4f72-9277-7d925dd8ebcb.mp3',
+    '04161941-2978-4321-924a-9993dcba8a57.mp3',
+    '063f5f91-f338-4836-b4e2-3f63872c5086.mp3',
+    '0db6594d-4aad-4d77-91be-a10917c8fdc0.mp3',
+    '0df30651-ce14-4024-922f-da7824503de4.mp3',
+    '0fa2567e-f31a-472e-951b-5d4b4fa960ab.mp3',
+    '15daf35f-c551-4868-a551-84ee0abd51b6.mp3',
+    '16ddc5ef-17f7-4095-8d27-294740520137.mp3',
+    '1734c5be-fc3c-4444-a4d3-d9c89b8262ad.mp3',
+    '181ac572-a50d-445f-82ed-7947ac1ec1bc.mp3',
+    '1ae0d5fd-a151-4049-b94a-fed6b267db7b.mp3',
+    '1d2b55ec-f019-45dc-bd56-e4a6e076b13b.mp3',
+    '2bcee5d7-5a4e-4257-bea3-978fb0fa91f9.mp3',
+    '2cda5cea-540c-4c93-8dcc-fe306af7a7d5.mp3',
+    '2d876df3-2983-4ffd-a426-d2508ae83d88.mp3',
+    '2f22b9cc-74a9-412d-bbfb-a9dad3ae7d5e.mp3',
+    '3a0842ec-a5ad-4667-b8de-0b462cfbeb8a.mp3',
+    '3a6f0355-fe61-4f0c-80d1-212afdc30d22.mp3',
+    '3bb7227b-4de5-435b-9f0e-d26cc1399d04.mp3',
+    '4acb849a-24fc-4f4d-895c-4086893d7cc7.mp3',
+    '4b58530f-bae2-428e-ba9c-3a651f371ec9.mp3',
+    '50403158-fb3d-4904-be33-9f68ca4d35a7.mp3',
+    '5346d617-e5cd-433e-8e6b-fb408ab9740c.mp3',
+    '5449fb03-182d-48da-9291-bb53ab8deaa3.mp3',
+    '68e4863d-a2f7-42b4-a823-8967ebd7b582.mp3',
+    '6a954773-c74c-4b62-ae60-5e8a4a9e3391.mp3',
+    '72ab0a6c-0517-43e1-95ab-d30fefe034d9.mp3',
+    '7673c191-10a5-40e9-856a-1536e85bd2df.mp3',
+    '7826ce6d-dc06-4256-80e3-f42a8a1f3448.mp3',
+    '7c14913a-b318-47be-a56b-9b8f06bbb980.mp3',
+    '7e13e4b6-cc68-4827-b872-d8a9cd40dbcd.mp3',
+    '88edb482-9f5f-4e46-a5ad-0d1c5ee24d41.mp3',
+    '8a55cf39-e54e-426d-8cfd-9d7663991679.mp3',
+    '9869b999-54e1-4a03-a4d0-d9409887dcc2.mp3',
+    '99da1f2f-446e-42fe-8c80-db0f77f5bbd0.mp3',
+    '9a2af990-17cd-4a29-b65d-76e15dca2ec5.mp3',
+    'a3183b85-d932-4c49-9357-22170388018d.mp3',
+    'a7385a9f-760c-4413-b466-51eb0964c7f6.mp3',
+    'a751ae54-5449-49ec-b66f-c56fa854915c.mp3',
+    'a902d476-d582-4cbf-ba58-8316a5fac9d2.mp3',
+    'ab09f791-047f-46da-b22b-0c09670e5ff7.mp3',
+    'adbac08f-189c-4808-a137-e985801c004c.mp3',
+    'b8021c22-5241-47cd-aa59-4c071bbc91e5.mp3',
+    'bb6cbd0b-a6d8-4a0f-ad0d-61b0a6feb667.mp3',
+    'bffff357-c21c-4341-913b-03acbb240ae6.mp3',
+    'c0989167-5576-4d75-b176-edfba2430b44.mp3',
+    'c7431b1c-c4b3-4b74-a3a9-258b915fe7fd.mp3',
+    'cc1f1f3b-b882-42c3-af64-dc01742932dc.mp3',
+    'd98f64d7-bea3-4cfd-b094-102475dc3194.mp3',
+    'e584598b-46c8-43bb-92c5-69350735fcc7.mp3',
+    'ea297a20-0e50-445b-93b8-95bda5d8b747.mp3',
+    'f46fe7f1-c062-4268-a61a-93e8b2b675dd.mp3',
+    'ff3c2036-55a5-4ec1-a67f-5d9d1ee1bb70.mp3'
+  ]
+}
+10:52:45 AM [express] serving on port 5000
+
+[TypeScript] Found 0 errors. Watching for file changes.
+Fetching all stories...
+Stories fetched: 20
+10:53:14 AM [express] GET /api/stories 304 in 1474ms :: [{"id":20,"title":"Sandy's Nature Adventure",…
+10:53:17 AM [express] GET /api/stories/19 304 in 241ms :: {"id":19,"title":"greg's Adventure Adventur…
+Audio request received: { filename: '2d4025de-fe9d-4a45-8843-59fae2edd743.mp3' }
+Resolved file path: {
+  filePath: '/home/runner/CustomBedtimeStories/public/audio/2d4025de-fe9d-4a45-8843-59fae2edd743.mp3'
+}
+Audio file not found: {
+  filePath: '/home/runner/CustomBedtimeStories/public/audio/2d4025de-fe9d-4a45-8843-59fae2edd743.mp3'
+}
+Audio request received: { filename: '7ab5851e-fa8f-47d3-a20f-6604290c3d26.mp3' }
+Resolved file path: {
+  filePath: '/home/runner/CustomBedtimeStories/public/audio/7ab5851e-fa8f-47d3-a20f-6604290c3d26.mp3'
+}
+Audio file not found: {
+  filePath: '/home/runner/CustomBedtimeStories/public/audio/7ab5851e-fa8f-47d3-a20f-6604290c3d26.mp3'
+}
+Audio request received: { filename: '7ccf1166-5fc2-4387-a30a-71f539c01a9e.mp3' }
+Resolved file path: {
+  filePath: '/home/runner/CustomBedtimeStories/public/audio/7ccf1166-5fc2-4387-a30a-71f539c01a9e.mp3'
+}
+Audio file not found: {
+  filePath: '/home/runner/CustomBedtimeStories/public/audio/7ccf1166-5fc2-4387-a30a-71f539c01a9e.mp3'
+}

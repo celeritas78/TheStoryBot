@@ -1,0 +1,193 @@
+rest-express@1.0.0 dev
+> tsx watch --clear-screen=false --exclude vite.config.ts.* server/index.ts
+
+12:06:32 PM [express] serving on port 5000
+
+ ERROR(TypeScript)  Binding element 'audioUrl' implicitly has an 'any' type.
+ FILE  /home/runner/CustomBedtimeStories/client/src/components/AudioPlayer.tsx:6:39
+
+    4 | import { Play, Pause, Volume2, VolumeX } from "lucide-react";
+    5 |
+  > 6 | export default function AudioPlayer({ audioUrl }) {
+      |                                       ^^^^^^^^
+    7 |   const [isPlaying, setIsPlaying] = useState(false);
+    8 |   const [isMuted, setIsMuted] = useState(false);
+    9 |   const [progress, setProgress] = useState(0);
+
+ ERROR(TypeScript)  Property 'pause' does not exist on type 'never'.
+ FILE  /home/runner/CustomBedtimeStories/client/src/components/AudioPlayer.tsx:14:25
+
+    12 |   const togglePlay = () => {
+    13 |     if (isPlaying) {
+  > 14 |       audioRef.current?.pause();
+       |                         ^^^^^
+    15 |     } else {
+    16 |       audioRef.current?.play();
+    17 |     }
+
+ ERROR(TypeScript)  Property 'play' does not exist on type 'never'.
+ FILE  /home/runner/CustomBedtimeStories/client/src/components/AudioPlayer.tsx:16:25
+
+    14 |       audioRef.current?.pause();
+    15 |     } else {
+  > 16 |       audioRef.current?.play();
+       |                         ^^^^
+    17 |     }
+    18 |     setIsPlaying(!isPlaying);
+    19 |   };
+
+ ERROR(TypeScript)  Property 'muted' does not exist on type 'never'.
+ FILE  /home/runner/CustomBedtimeStories/client/src/components/AudioPlayer.tsx:23:24
+
+    21 |   const toggleMute = () => {
+    22 |     if (audioRef.current) {
+  > 23 |       audioRef.current.muted = !isMuted;
+       |                        ^^^^^
+    24 |       setIsMuted(!isMuted);
+    25 |     }
+    26 |   };
+
+ ERROR(TypeScript)  Property 'currentTime' does not exist on type 'never'.
+ FILE  /home/runner/CustomBedtimeStories/client/src/components/AudioPlayer.tsx:30:42
+
+    28 |   const handleTimeUpdate = () => {
+    29 |     if (audioRef.current) {
+  > 30 |       const progress = (audioRef.current.currentTime / audioRef.current.duration) * 100;
+       |                                          ^^^^^^^^^^^
+    31 |       setProgress(progress);
+    32 |     }
+    33 |   };
+
+ ERROR(TypeScript)  Property 'duration' does not exist on type 'never'.
+ FILE  /home/runner/CustomBedtimeStories/client/src/components/AudioPlayer.tsx:30:73
+
+    28 |   const handleTimeUpdate = () => {
+    29 |     if (audioRef.current) {
+  > 30 |       const progress = (audioRef.current.currentTime / audioRef.current.duration) * 100;
+       |                                                                         ^^^^^^^^
+    31 |       setProgress(progress);
+    32 |     }
+    33 |   };
+
+ ERROR(TypeScript)  Property 'duration' does not exist on type 'never'.
+ FILE  /home/runner/CustomBedtimeStories/client/src/components/AudioPlayer.tsx:59:62
+
+    57 |         onValueChange={(value) => {
+    58 |           if (audioRef.current) {
+  > 59 |             const time = (value[0] / 100) * audioRef.current.duration;
+       |                                                              ^^^^^^^^
+    60 |             audioRef.current.currentTime = time;
+    61 |             setProgress(value[0]);
+    62 |           }
+
+ ERROR(TypeScript)  Property 'currentTime' does not exist on type 'never'.
+ FILE  /home/runner/CustomBedtimeStories/client/src/components/AudioPlayer.tsx:60:30
+
+    58 |           if (audioRef.current) {
+    59 |             const time = (value[0] / 100) * audioRef.current.duration;
+  > 60 |             audioRef.current.currentTime = time;
+       |                              ^^^^^^^^^^^
+    61 |             setProgress(value[0]);
+    62 |           }
+    63 |         }}
+
+ ERROR(TypeScript)  Binding element 'onSubmit' implicitly has an 'any' type.
+ FILE  /home/runner/CustomBedtimeStories/client/src/components/StoryForm.tsx:31:37
+
+    29 | });
+    30 |
+  > 31 | export default function StoryForm({ onSubmit, isLoading }) {
+       |                                     ^^^^^^^^
+    32 |   const form = useForm({
+    33 |     resolver: zodResolver(formSchema),
+    34 |     defaultValues: {
+
+ ERROR(TypeScript)  Binding element 'isLoading' implicitly has an 'any' type.
+ FILE  /home/runner/CustomBedtimeStories/client/src/components/StoryForm.tsx:31:47
+
+    29 | });
+    30 |
+  > 31 | export default function StoryForm({ onSubmit, isLoading }) {
+       |                                               ^^^^^^^^^
+    32 |   const form = useForm({
+    33 |     resolver: zodResolver(formSchema),
+    34 |     defaultValues: {
+
+ ERROR(TypeScript)  Binding element 'story' implicitly has an 'any' type.
+ FILE  /home/runner/CustomBedtimeStories/client/src/components/StoryViewer.tsx:17:39
+
+    15 | } from "@/components/ui/carousel";
+    16 |
+  > 17 | export default function StoryViewer({ story, isFavorited = false }) {
+       |                                       ^^^^^
+    18 |   const [currentSegment, setCurrentSegment] = useState(0);
+    19 |   const [isLiked, setIsLiked] = useState(isFavorited);
+    20 |   const { toast } = useToast();
+
+ ERROR(TypeScript)  Parameter 'segment' implicitly has an 'any' type.
+ FILE  /home/runner/CustomBedtimeStories/client/src/components/StoryViewer.tsx:60:34
+
+    58 |         <Carousel className="w-full max-w-xl mx-auto">
+    59 |           <CarouselContent>
+  > 60 |             {story.segments.map((segment, index) => (
+       |                                  ^^^^^^^
+    61 |               <CarouselItem key={index}>
+    62 |                 <div className="space-y-4">
+    63 |                   <img
+
+ ERROR(TypeScript)  Parameter 'index' implicitly has an 'any' type.
+ FILE  /home/runner/CustomBedtimeStories/client/src/components/StoryViewer.tsx:60:43
+
+    58 |         <Carousel className="w-full max-w-xl mx-auto">
+    59 |           <CarouselContent>
+  > 60 |             {story.segments.map((segment, index) => (
+       |                                           ^^^^^
+    61 |               <CarouselItem key={index}>
+    62 |                 <div className="space-y-4">
+    63 |                   <img
+
+ ERROR(TypeScript)  Parameter 'story' implicitly has an 'any' type.
+ FILE  /home/runner/CustomBedtimeStories/client/src/pages/Library.tsx:51:30
+
+    49 |         ) : (
+    50 |           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+  > 51 |             {favorites?.map((story) => (
+       |                              ^^^^^
+    52 |               <Card key={story.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+    53 |                 <img
+    54 |                   src={story.firstSegment.imageUrl}
+
+ ERROR(TypeScript)  Cannot find name 'Story'. Did you mean 'History'?
+ FILE  /home/runner/CustomBedtimeStories/client/src/pages/StoryGenerator.tsx:30:38
+
+    28 |
+    29 | export default function StoryGenerator() {
+  > 30 |   const [story, setStory] = useState<Story | null>(null);
+       |                                      ^^^^^
+    31 |   const { toast } = useToast();
+    32 |
+    33 |   const mutation = useMutation({
+
+ ERROR(TypeScript)  Cannot find name 'StoryFormData'.
+ FILE  /home/runner/CustomBedtimeStories/client/src/pages/StoryGenerator.tsx:34:34
+
+    32 |
+    33 |   const mutation = useMutation({
+  > 34 |     mutationFn: async (formData: StoryFormData) => {
+       |                                  ^^^^^^^^^^^^^
+    35 |       console.log('Submitting form data:', formData);
+    36 |       return generateStory(formData);
+    37 |     },
+
+ ERROR(TypeScript)  Cannot find name 'Story'. Did you mean 'History'?
+ FILE  /home/runner/CustomBedtimeStories/client/src/pages/StoryGenerator.tsx:38:23
+
+    36 |       return generateStory(formData);
+    37 |     },
+  > 38 |     onSuccess: (data: Story) => {
+       |                       ^^^^^
+    39 |       console.log('Story generated successfully:', data);
+    40 |       setStory(data);
+    41 |       toast({
+
+[TypeScript] Found 17 errors. Watching for file changes.

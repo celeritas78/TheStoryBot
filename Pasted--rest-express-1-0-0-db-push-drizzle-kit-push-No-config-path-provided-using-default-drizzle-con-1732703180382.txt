@@ -1,0 +1,134 @@
+> rest-express@1.0.0 db:push
+> drizzle-kit push
+
+No config path provided, using default 'drizzle.config.ts'
+Reading config file '/home/runner/CustomBedtimeStories/drizzle.config.ts'
+Using 'pg' driver for database querying
+[✓] Pulling schema from database...
+error: type "serial" does not exist
+    at /home/runner/CustomBedtimeStories/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async Object.query (/home/runner/CustomBedtimeStories/node_modules/drizzle-kit/bin.cjs:76384:26)
+    at async pgPush (/home/runner/CustomBedtimeStories/node_modules/drizzle-kit/bin.cjs:79407:13)
+    at async Object.handler (/home/runner/CustomBedtimeStories/node_modules/drizzle-kit/bin.cjs:88704:9)
+    at async run (/home/runner/CustomBedtimeStories/node_modules/drizzle-kit/bin.cjs:87030:7) {
+  length: 89,
+  severity: 'ERROR',
+  code: '42704',
+  detail: undefined,
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'parse_type.c',
+  line: '270',
+  routine: 'typenameType'
+}
+
+> rest-express@1.0.0 dev
+> tsx watch --clear-screen=false --exclude vite.config.ts.* server/index.ts
+
+10:24:11 AM [express] serving on port 5000
+
+ ERROR(TypeScript)  'audioRef.current.readyState' is possibly 'undefined'.
+ FILE  /home/runner/CustomBedtimeStories/client/src/components/AudioPlayer.tsx:148:52
+
+    146 |   }
+    147 |
+  > 148 |   if (isLoading || (!audioRef.current?.duration && audioRef.current?.readyState < 4)) {
+        |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    149 |     return (
+    150 |       <div className="flex items-center justify-center p-4 text-gray-500">
+    151 |         <Loader2 className="h-4 w-4 animate-spin mr-2" />
+
+[TypeScript] Found 1 error. Watching for file changes.
+Story generation request: {
+  childName: 'bittu',
+  childAge: 4,
+  mainCharacter: 'spectacle, horse, mountain trail, tiger',
+  theme: 'adventure',
+  timestamp: '2024-11-27T10:24:58.675Z'
+}
+Starting story generation process with params: {
+  childName: 'bittu',
+  childAge: 4,
+  mainCharacter: 'spectacle, horse, mountain trail, tiger',
+  theme: 'adventure'
+}
+Generating story content with params: {
+  childName: 'bittu',
+  childAge: 4,
+  mainCharacter: 'spectacle, horse, mountain trail, tiger',
+  theme: 'adventure',
+  hasPreviousContent: false
+}
+Successfully generated story content: {
+  textLength: 1044,
+  sceneDescriptionLength: 286,
+  preview: '[Story Text]\n' +
+    '\n' +
+    'Once upon a time, there was a little, lively boy named Bittu. Bittu had a best friend,...'
+}
+Successfully generated story content: { contentLength: 1044, sceneDescriptionLength: 286 }
+Generating image with sanitized prompt: {
+  originalLength: 286,
+  sanitizedLength: 284,
+  promptPreview: 'Create a cheerful, child-friendly storybook illustration with the following scene: Bittu, a small bo...'
+}
+Generated image URL: https://oaidalleapiprodscus.blob.core.windows.net/private/org-8hqUrMQvREaIO7bDZXZNpDR1/user-RcpYfzRbtZ5ra2JTLyVdShGs/img-OIRJY4DMP9felzCgHrYsH8WU.png?st=2024-11-27T09%3A25%3A30Z&se=2024-11-27T11%3A25%3A30Z&sp=r&sv=2024-08-04&sr=b&rscd=inline&rsct=image/png&skoid=d505667d-d6c1-4a0a-bac7-5c84a87759f8&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2024-11-27T00%3A14%3A11Z&ske=2024-11-28T00%3A14%3A11Z&sks=b&skv=2024-08-04&sig=duTy7LSoXjv1Rr0MENhYi7YoIqZ2Rc1zx8xIQgsC2pc%3D
+Generating speech for text: [Story Text]
+
+Once upon a time, there was a little, lively boy named Bittu. Bittu had a best friend,...
+Successfully saved audio file: /audio/3bb7227b-4de5-435b-9f0e-d26cc1399d04.mp3
+Generated audio URL: /audio/3bb7227b-4de5-435b-9f0e-d26cc1399d04.mp3
+Inserting story record: {
+  childName: 'bittu',
+  childAge: 4,
+  theme: 'adventure',
+  timestamp: '2024-11-27T10:25:40.921Z'
+}
+Database operation failed: {
+  error: error: null value in column "id" of relation "stories" violates not-null constraint
+      at file:///home/runner/CustomBedtimeStories/node_modules/@neondatabase/serverless/index.mjs:1345:74
+      at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+      at NeonPreparedQuery.execute (/home/runner/CustomBedtimeStories/node_modules/src/neon-serverless/session.ts:102:18)
+      at <anonymous> (/home/runner/CustomBedtimeStories/server/routes.ts:173:24) {
+    length: 449,
+    severity: 'ERROR',
+    code: '23502',
+    detail: 'Failing row contains (null, bittu, 4, "{\\"mainCharacter\\":\\"spectacle, horse, mountain trail, tiger\\"}..., adventure, [Story Text]\n' +
+      '\n' +
+      'Once upon a time, there was a little, lively boy n..., "[\\"https://oaidalleapiprodscus.blob.core.windows.net/private/or..., f, 2024-11-27 10:25:41.744762).',
+    hint: undefined,
+    position: undefined,
+    internalPosition: undefined,
+    internalQuery: undefined,
+    where: undefined,
+    schema: 'public',
+    table: 'stories',
+    column: 'id',
+    dataType: undefined,
+    constraint: undefined,
+    file: 'execMain.c',
+    line: '2011',
+    routine: 'ExecConstraints'
+  },
+  message: 'null value in column "id" of relation "stories" violates not-null constraint'
+}
+Story generation failed: {
+  error: Error: Failed to save story to database
+      at <anonymous> (/home/runner/CustomBedtimeStories/server/routes.ts:201:15)
+      at process.processTicksAndRejections (node:internal/process/task_queues:95:5),
+  message: 'Failed to save story to database',
+  stack: 'Error: Failed to save story to database\n' +
+    '    at <anonymous> (/home/runner/CustomBedtimeStories/server/routes.ts:201:15)\n' +
+    '    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)',
+  timestamp: '2024-11-27T10:25:41.873Z'
+}
+10:25:41 AM [express] POST /api/stories 500 in 43200ms :: {"error":"Failed to generate story","detail…

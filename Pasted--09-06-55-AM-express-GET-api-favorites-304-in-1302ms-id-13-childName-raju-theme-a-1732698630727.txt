@@ -1,0 +1,77 @@
+
+]
+09:06:55 AM [express] GET /api/favorites 304 in 1302ms :: [{"id":13,"childName":"raju","theme":"adven…
+09:07:04 AM [express] GET /api/stories/13 200 in 238ms :: {"id":13,"childName":"raju","childAge":4,"c…
+09:07:24 AM [express] GET /api/stories/12 200 in 934ms :: {"id":12,"childName":"chikka","childAge":5,…
+09:07:42 AM [express] GET /api/stories/4 200 in 969ms :: {"id":4,"childName":"sameer","childAge":4,"c…
+Received story generation request: {
+  childName: 'hrishi',
+  childAge: 4,
+  mainCharacter: 'spectacle, horse, mountain trail, tiger',
+  theme: 'fantasy',
+  timestamp: '2024-11-27T09:08:41.239Z'
+}
+Starting story generation process with params: {
+  childName: 'hrishi',
+  childAge: 4,
+  mainCharacter: 'spectacle, horse, mountain trail, tiger',
+  theme: 'fantasy'
+}
+Generating story content with params: {
+  childName: 'hrishi',
+  childAge: 4,
+  mainCharacter: 'spectacle, horse, mountain trail, tiger',
+  theme: 'fantasy',
+  hasPreviousContent: false
+}
+Successfully generated story content: {
+  textLength: 1119,
+  sceneDescriptionLength: 306,
+  preview: '[Story Text]\n' +
+    '\n' +
+    'Once upon a time, there was a little boy named Hrishi. He had some magical friends: a ...'
+}
+Successfully generated story content: { contentLength: 1119, sceneDescriptionLength: 306 }
+Generating image with sanitized prompt: {
+  originalLength: 306,
+  sanitizedLength: 304,
+  promptPreview: 'Create a cheerful, child-friendly storybook illustration with the following scene: Hrishi and Specta...'
+}
+Generated image URL: https://oaidalleapiprodscus.blob.core.windows.net/private/org-8hqUrMQvREaIO7bDZXZNpDR1/user-RcpYfzRbtZ5ra2JTLyVdShGs/img-xJfF2eWbWG3gWFglabCyCJXm.png?st=2024-11-27T08%3A09%3A12Z&se=2024-11-27T10%3A09%3A12Z&sp=r&sv=2024-08-04&sr=b&rscd=inline&rsct=image/png&skoid=d505667d-d6c1-4a0a-bac7-5c84a87759f8&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2024-11-27T00%3A24%3A00Z&ske=2024-11-28T00%3A24%3A00Z&sks=b&skv=2024-08-04&sig=A9b07aO1Zmp7ekKj6iyP/RlmNaFSulAbsrgW4ky0km0%3D
+Generating speech for text: [Story Text]
+
+Once upon a time, there was a little boy named Hrishi. He had some magical friends: a ...
+Successfully saved audio file: /audio/0df30651-ce14-4024-922f-da7824503de4.mp3
+Generated audio URL: /audio/0df30651-ce14-4024-922f-da7824503de4.mp3
+Database operation failed: {
+  error: error: null value in column "id" of relation "stories" violates not-null constraint
+      at file:///home/runner/CustomBedtimeStories/node_modules/@neondatabase/serverless/index.mjs:1345:74
+      at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+      at NeonPreparedQuery.execute (/home/runner/CustomBedtimeStories/node_modules/src/neon-serverless/session.ts:102:18)
+      at <anonymous> (/home/runner/CustomBedtimeStories/server/routes.ts:161:26) {
+    length: 448,
+    severity: 'ERROR',
+    code: '23502',
+    detail: 'Failing row contains (null, hrishi, 4, "{\\"mainCharacter\\":\\"spectacle, horse, mountain trail, tiger\\"}..., fantasy, [Story Text]\n' +
+      '\n' +
+      'Once upon a time, there was a little boy named Hri..., "[\\"https://oaidalleapiprodscus.blob.core.windows.net/private/or..., f, 2024-11-27 09:09:23.665638).',
+    hint: undefined,
+    position: undefined,
+    internalPosition: undefined,
+    internalQuery: undefined,
+    where: undefined,
+    schema: 'public',
+    table: 'stories',
+    column: 'id',
+    dataType: undefined,
+    constraint: undefined,
+    file: 'execMain.c',
+    line: '2011',
+    routine: 'ExecConstraints'
+  },
+  message: 'null value in column "id" of relation "stories" violates not-null constraint'
+}
+Error generating story: Error: Failed to save story to database
+    at <anonymous> (/home/runner/CustomBedtimeStories/server/routes.ts:181:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+09:09:23 AM [express] POST /api/stories 500 in 42585ms :: {"error":"Failed to generate story"}

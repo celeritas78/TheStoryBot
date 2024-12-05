@@ -1,0 +1,47 @@
+> rest-express@1.0.0 dev
+> tsx watch --clear-screen=false --exclude vite.config.ts.* server/index.ts
+
+Audio directory configuration: {
+  AUDIO_DIR: '/home/runner/CustomBedtimeStories/public/audio',
+  exists: true,
+  files: []
+}
+08:54:59 AM [express] serving on port 5000
+{"timestamp":"2024-12-03T08:55:02.487Z","level":"INFO","context":"database","message":"New client connected to the pool"}
+{"timestamp":"2024-12-03T08:55:02.487Z","level":"INFO","context":"database","message":"Client acquired from pool"}
+{"timestamp":"2024-12-03T08:55:02.488Z","level":"INFO","context":"database","message":"Successfully connected to database","attempt":1,"status":"success"}
+
+ ERROR(TypeScript)  Type 'unknown' is not assignable to type 'Error | null'.
+ FILE  /home/runner/CustomBedtimeStories/server/auth.ts:318:13
+
+    316 |           } catch (txError) {
+    317 |             // Log transaction error and ensure rollback
+  > 318 |             transactionError = txError;
+        |             ^^^^^^^^^^^^^^^^
+    319 |             authLogger.error('Transaction error occurred', txError, {
+    320 |               email,
+    321 |               ip: req.ip,
+
+ ERROR(TypeScript)  The left-hand side of an 'instanceof' expression must be of type 'any', an object type or a type parameter.
+ FILE  /home/runner/CustomBedtimeStories/server/auth.ts:372:31
+
+    370 |             errorDetail: (dbError as any).detail,
+    371 |             transactionState: 'rolled_back',
+  > 372 |             transactionError: transactionError instanceof Error ? transactionError.message : String(transactionError)
+        |                               ^^^^^^^^^^^^^^^^
+    373 |           }, 'registration_transaction');
+    374 |
+    375 |           // Return appropriate error response
+
+ ERROR(TypeScript)  Property 'message' does not exist on type 'never'.
+ FILE  /home/runner/CustomBedtimeStories/server/auth.ts:372:84
+
+    370 |             errorDetail: (dbError as any).detail,
+    371 |             transactionState: 'rolled_back',
+  > 372 |             transactionError: transactionError instanceof Error ? transactionError.message : String(transactionError)
+        |                                                                                    ^^^^^^^
+    373 |           }, 'registration_transaction');
+    374 |
+    375 |           // Return appropriate error response
+
+[TypeScript] Found 3 errors. Watching for file changes.

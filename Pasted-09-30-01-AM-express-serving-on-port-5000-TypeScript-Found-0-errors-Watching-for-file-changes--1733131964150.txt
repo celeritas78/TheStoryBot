@@ -1,0 +1,102 @@
+09:30:01 AM [express] serving on port 5000
+
+[TypeScript] Found 0 errors. Watching for file changes.
+Fetching all stories...
+Stories fetched: 31
+09:30:30 AM [express] GET /api/stories 304 in 1636ms :: [{"id":31,"title":"Riya's Magical Sleepover A…
+09:30:33 AM [express] GET /api/stories/31 304 in 230ms :: {"id":31,"title":"Riya's Magical Sleepover …
+Audio request received: { filename: 'dc864fbf-e33f-4f0c-bd0a-600a480b3e7b.mp3' }
+Audio request received: { filename: '211fd8a8-43ef-4c25-bb0d-a317725c688d.mp3' }
+Resolved file path: {
+  filePath: '/home/runner/CustomBedtimeStories/public/audio/dc864fbf-e33f-4f0c-bd0a-600a480b3e7b.mp3'
+}
+Audio file stats: {
+  size: 856800,
+  path: '/home/runner/CustomBedtimeStories/public/audio/dc864fbf-e33f-4f0c-bd0a-600a480b3e7b.mp3',
+  exists: true
+}
+Resolved file path: {
+  filePath: '/home/runner/CustomBedtimeStories/public/audio/211fd8a8-43ef-4c25-bb0d-a317725c688d.mp3'
+}
+Audio file stats: {
+  size: 979200,
+  path: '/home/runner/CustomBedtimeStories/public/audio/211fd8a8-43ef-4c25-bb0d-a317725c688d.mp3',
+  exists: true
+}
+Story generation request: {
+  childName: 'Emma',
+  childAge: 5,
+  mainCharacter: 'dragon prince castle',
+  theme: 'adventure',
+  timestamp: '2024-12-02T09:31:13.857Z'
+}
+Generating story content with params: {
+  childName: 'Emma',
+  childAge: 5,
+  mainCharacter: 'dragon prince castle',
+  theme: 'adventure',
+  hasPreviousContent: false
+}
+AI Response Content: {
+  "title": "Emma and the Dragon Prince's Adventure",
+  "characters": [
+    {
+      "name": "Emma",
+      "description": "A curious and brave 5-year-old girl with bright blue eyes and curly brown hair. She wears a pink dress with white polka dots and always carries a sparkly backpack filled with adventure essentials. Emma is full of energy, loves exploring, and is best friends with the dragon prince."
+    },
+    {
+      "name": "Dragon Prince",
+      "description": "A friendly young dragon with shimmering emerald scales and big, golden eyes. He has tiny horns on his head and a long, pointy tail. He wears a small, shiny crown made of jewels and a cape that flutters as he flies. The Dragon Prince is kind-hearted, loves to help others, and has a playful spirit."
+    }
+  ],
+  "settings": [
+    {
+      "name": "Enchanted Forest",
+      "description": "A magical forest filled with towering trees that sparkle under the sunlight. Colorful flowers grow all around, and gentle streams sing as they flow. The bright, warm atmosphere gives everyone who enters a sense of wonder and excitement."
+    },
+    {
+      "name": "Dragon Prince’s Castle",
+      "description": "A magnificent castle atop a cloud-covered mountain, made of glowing crystals. The castle shines brightly in the sky with stunning rainbows arching around it. Inside, there are grand halls, large windows that let in the sunshine, and rooms filled with treasures from adventures past."
+    },
+    {
+      "name": "Mystical Valley",
+      "description": "A beautiful valley filled with vibrant colors, butterflies fluttering, and soft green grass. There are hills where children can roll and play, and a hidden cave that glimmers with secret treasures. The atmosphere is cheerful, inspiring feelings of happiness and exploration."
+    }
+  ],
+  "scenes": [
+    {
+      "text": "One sunny morning, Emma packed her sparkly backpack with snacks and her favorite storybook. She was ready for an adventure! 'Today, I’m going to visit my best friend, the Dragon Prince!' she exclaimed joyfully. As she walked through the Enchanted Forest, Emma marveled at the tall, shimmering trees and the flowers dancing in the breeze. Suddenly, she heard a playful roar above her. 'Emma! Over here!' called the Dragon Prince, flapping his big wings and soaring down to the ground. 'I’m so excited for our adventure!' he said with a smile. 'What should we do today?' Emma thought for a moment and exclaimed, 'Let’s find the hidden treasures in Mystical Valley!'"
+    },
+    {
+      "text": "They took off together, flying high above the forest and feeling the soft wind on their faces. Emma laughed, 'Look at how tiny the trees look from up here!' The Dragon Prince chuckled, 'And look at the sparkling river! It looks like a ribbon!' When they landed in the Mystical Valley, their eyes sparkled with joy. They explored the hills, rolled down the grassy slopes, and followed fluttering butterflies. Suddenly, they spotted a glittering cave. 'What do you think is inside?' asked Emma, her eyes wide with excitement. 'Let’s find out!' said the Dragon Prince, his heart racing with adventure. As they tiptoed inside the cave, the walls shimmered like stars, revealing piles of glimmering gemstones and ancient treasures!"
+    },
+    {
+      "text": "Emma gasped in amazement, 'Wow! Look at all this treasure!' But then, they heard a soft whimpering. Following the sound, they found a little unicorn stuck under some rocks, looking sad. 'Oh no! We need to help her!' said Emma, her heart full of compassion. The Dragon Prince nodded, 'Together, we can lift the rocks!' With all their might, they pushed and lifted, and soon the unicorn was free! 'Thank you, friends!' she said with a grateful smile. The dragon and Emma felt proud. 'We did it!' Emma cheered. The unicorn decided to join their adventure, and together they returned to the castle, joyfully sharing stories of their bravery. 'Every adventure is better with friends!' the Dragon Prince said happily, as they all gazed towards the sunset, ready for more wonderful adventures to come."
+    }
+  ]
+}
+Scene 3 text length (134 words) is outside the desired range.
+Error in story content generation: {
+  error: TypeError: Cannot read properties of undefined (reading 'substring')
+      at generateStoryContent (/home/runner/CustomBedtimeStories/server/services/openai.ts:170:55)
+      at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+      at <anonymous> (/home/runner/CustomBedtimeStories/server/routes.ts:155:28),
+  message: "Cannot read properties of undefined (reading 'substring')",
+  stack: "TypeError: Cannot read properties of undefined (reading 'substring')\n" +
+    '    at generateStoryContent (/home/runner/CustomBedtimeStories/server/services/openai.ts:170:55)\n' +
+    '    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n' +
+    '    at <anonymous> (/home/runner/CustomBedtimeStories/server/routes.ts:155:28)'
+}
+Story generation failed: {
+  error: Error: Failed to generate story content: Cannot read properties of undefined (reading 'substring')
+      at generateStoryContent (/home/runner/CustomBedtimeStories/server/services/openai.ts:180:11)
+      at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+      at <anonymous> (/home/runner/CustomBedtimeStories/server/routes.ts:155:28),
+  message: "Failed to generate story content: Cannot read properties of undefined (reading 'substring')",
+  stack: "Error: Failed to generate story content: Cannot read properties of undefined (reading 'substring')\n" +
+    '    at generateStoryContent (/home/runner/CustomBedtimeStories/server/services/openai.ts:180:11)\n' +
+    '    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n' +
+    '    at <anonymous> (/home/runner/CustomBedtimeStories/server/routes.ts:155:28)',
+  timestamp: '2024-12-02T09:31:41.171Z'
+}
+09:31:41 AM [express] POST /api/stories 500 in 27318ms :: {"error":"Failed to generate story","detail…
