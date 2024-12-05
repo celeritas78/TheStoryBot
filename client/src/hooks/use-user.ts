@@ -2,10 +2,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { User, InsertUser } from "@db/schema";
 
 type RequestResult = {
-  ok: boolean;
-  message?: string;
+  ok: true;
   data?: any;
-} & ({ ok: true } | { ok: false; message: string });
+} | {
+  ok: false;
+  message: string;
+};
 
 async function handleRequest<T extends Record<string, unknown>>(
   url: string,
