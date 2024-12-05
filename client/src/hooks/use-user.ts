@@ -2,18 +2,16 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { User, InsertUser } from "@db/schema";
 
 type RequestResult = {
-  ok: true;
+  ok: boolean;
+  message?: string;
   data?: any;
-} | {
-  ok: false;
-  message: string;
 };
 
 async function handleRequest<T extends Record<string, unknown>>(
   url: string,
   method: 'GET' | 'POST' | 'PUT' | 'DELETE',
   body?: T
-): Promise<{ ok: boolean; message?: string; data?: any }> {
+): Promise<RequestResult> {
   try {
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
