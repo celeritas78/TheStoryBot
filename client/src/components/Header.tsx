@@ -51,17 +51,19 @@ export default function Header() {
               <Link href="/create">
                 <Button 
                   variant="ghost" 
-                  className={`${isActive("/create") ? "bg-purple-100 text-purple-800" : ""}`}
+                  className={`flex items-center gap-2 ${isActive("/create") ? "bg-purple-100 text-purple-800" : ""}`}
                 >
-                  Create Story
+                  <PenSquare className="h-4 w-4" />
+                  <span>Create Story</span>
                 </Button>
               </Link>
               <Link href="/library">
                 <Button 
                   variant="ghost" 
-                  className={`${isActive("/library") ? "bg-purple-100 text-purple-800" : ""}`}
+                  className={`flex items-center gap-2 ${isActive("/library") ? "bg-purple-100 text-purple-800" : ""}`}
                 >
-                  Library
+                  <Book className="h-4 w-4" />
+                  <span>Library</span>
                 </Button>
               </Link>
             </nav>
