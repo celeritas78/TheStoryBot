@@ -1,5 +1,4 @@
-import { Link } from "wouter";
-import type { ReactNode } from "react";
+import { Link, useLocation } from "wouter";
 import { useUser } from "@/hooks/use-user";
 import { Button } from "@/components/ui/button";
 import {
@@ -8,32 +7,23 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LogOut, Home, Library, PenSquare, Settings, Book } from "lucide-react";
+import { LogOut, Home, PenSquare, Settings, Book } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-
-type LinkChildrenProps = {
-  isActive: boolean;
-  children?: ReactNode;
-};
-
-type LinkProps = {
-  href: string;
-  children: (props: LinkChildrenProps) => ReactNode;
-};
 
 export default function Header() {
   const { user, logout } = useUser();
+  const [location] = useLocation();
 
   const handleLogout = async () => {
     try {
-      console.log("Attempting to log out user:", user);
       await logout();
-      console.log("User logged out successfully");
       window.location.href = "/";
     } catch (error) {
       console.error("Failed to log out:", error);
     }
   };
+
+  const isActive = (path: string) => location === path;
 
   return (
     <header className="border-b bg-white">
@@ -55,37 +45,31 @@ export default function Header() {
             </Link>
             <nav className="flex items-center gap-4">
               <Link href="/">
-                {({ isActive }: LinkChildrenProps) => (
-                  <Button 
-                    variant="ghost" 
-                    className={`flex items-center gap-2 ${isActive ? 'bg-purple-100 text-purple-800' : ''}`}
-                  >
-                    <Home className="h-4 w-4" />
-                    <span>Home</span>
-                  </Button>
-                )}
+                <Button 
+                  variant="ghost" 
+                  className={`flex items-center gap-2 ${isActive("/") ? "bg-purple-100 text-purple-800" : ""}`}
+                >
+                  <Home className="h-4 w-4" />
+                  <span>Home</span>
+                </Button>
               </Link>
               <Link href="/create">
-                {({ isActive }: LinkChildrenProps) => (
-                  <Button 
-                    variant="ghost" 
-                    className={`flex items-center gap-2 ${isActive ? 'bg-purple-100 text-purple-800' : ''}`}
-                  >
-                    <PenSquare className="h-4 w-4" />
-                    <span>Create Story</span>
-                  </Button>
-                )}
+                <Button 
+                  variant="ghost" 
+                  className={`flex items-center gap-2 ${isActive("/create") ? "bg-purple-100 text-purple-800" : ""}`}
+                >
+                  <PenSquare className="h-4 w-4" />
+                  <span>Create Story</span>
+                </Button>
               </Link>
               <Link href="/library">
-                {({ isActive }: LinkChildrenProps) => (
-                  <Button 
-                    variant="ghost" 
-                    className={`flex items-center gap-2 ${isActive ? 'bg-purple-100 text-purple-800' : ''}`}
-                  >
-                    <Book className="h-4 w-4" />
-                    <span>Library</span>
-                  </Button>
-                )}
+                <Button 
+                  variant="ghost" 
+                  className={`flex items-center gap-2 ${isActive("/library") ? "bg-purple-100 text-purple-800" : ""}`}
+                >
+                  <Book className="h-4 w-4" />
+                  <span>Library</span>
+                </Button>
               </Link>
             </nav>
           </div>

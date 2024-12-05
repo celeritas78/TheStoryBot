@@ -1,0 +1,86 @@
+> rest-express@1.0.0 dev
+12:56:54 PM [express] Server is running on port 5000ig.ts.* server/index.ts
+{"timestamp":"2024-12-05T12:56:59.620Z","level":"ERROR","context":"database","message":"Database connection attempt 1 failed","error":{"message":"Connection terminated due to connection timeout","stack":"Error: Connection terminated due to connection timeout\n    at /home/runner/CustomBedtimeStories/node_modules/pg-pool/index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at testConnection (/home/runner/CustomBedtimeStories/db/index.ts:107:22)"}}
+
+ ERROR(TypeScript)  Type '({ isActive }: LinkChildrenProps) => React.JSX.Element' is not assignable to type 'ReactNode | ReactElement<any, string | JSXElementConstructor<any>>'.
+ FILE  /home/runner/CustomBedtimeStories/client/src/components/Header.tsx:58:18
+
+    56 |             <nav className="flex items-center gap-4">
+    57 |               <Link href="/">
+  > 58 |                 {({ isActive }: LinkChildrenProps) => (
+       |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 59 |                   <Button 
+       | ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 60 |                     variant="ghost" 
+       | ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 61 |                     className={`flex items-center gap-2 ${isActive ? 'bg-purple-100 text-purple-800' : ''}`}
+       | ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 62 |                   >
+       | ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 63 |                     <Home className="h-4 w-4" />
+       | ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 64 |                     <span>Home</span>
+       | ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 65 |                   </Button>
+       | ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 66 |                 )}
+       | ^^^^^^^^^^^^^^^^^^
+    67 |               </Link>
+    68 |               <Link href="/create">
+    69 |                 {({ isActive }: LinkChildrenProps) => (
+
+ ERROR(TypeScript)  Type '({ isActive }: LinkChildrenProps) => React.JSX.Element' is not assignable to type 'ReactNode | ReactElement<any, string | JSXElementConstructor<any>>'.
+ FILE  /home/runner/CustomBedtimeStories/client/src/components/Header.tsx:69:18
+
+    67 |               </Link>
+    68 |               <Link href="/create">
+  > 69 |                 {({ isActive }: LinkChildrenProps) => (
+       |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 70 |                   <Button 
+       | ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 71 |                     variant="ghost" 
+       | ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 72 |                     className={`flex items-center gap-2 ${isActive ? 'bg-purple-100 text-purple-800' : ''}`}
+       | ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 73 |                   >
+       | ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 74 |                     <PenSquare className="h-4 w-4" />
+       | ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 75 |                     <span>Create Story</span>
+       | ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 76 |                   </Button>
+       | ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 77 |                 )}
+       | ^^^^^^^^^^^^^^^^^^
+    78 |               </Link>
+    79 |               <Link href="/library">
+    80 |                 {({ isActive }: LinkChildrenProps) => (
+
+ ERROR(TypeScript)  Type '({ isActive }: LinkChildrenProps) => React.JSX.Element' is not assignable to type 'ReactNode | ReactElement<any, string | JSXElementConstructor<any>>'.
+ FILE  /home/runner/CustomBedtimeStories/client/src/components/Header.tsx:80:18
+
+    78 |               </Link>
+    79 |               <Link href="/library">
+  > 80 |                 {({ isActive }: LinkChildrenProps) => (
+       |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 81 |                   <Button 
+       | ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 82 |                     variant="ghost" 
+       | ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 83 |                     className={`flex items-center gap-2 ${isActive ? 'bg-purple-100 text-purple-800' : ''}`}
+       | ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 84 |                   >
+       | ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 85 |                     <Book className="h-4 w-4" />
+       | ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 86 |                     <span>Library</span>
+       | ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 87 |                   </Button>
+       | ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 88 |                 )}
+       | ^^^^^^^^^^^^^^^^^^
+    89 |               </Link>
+    90 |             </nav>
+    91 |           </div>
+
+[TypeScript] Found 3 errors. Watching for file changes.
