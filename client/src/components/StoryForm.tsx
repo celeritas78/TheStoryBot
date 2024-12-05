@@ -104,9 +104,6 @@ export default function StoryForm({ onSubmit, isLoading }: StoryFormProps) {
 
   return (
     <Card className="w-full">
-      <CardHeader>
-        <CardTitle>Create a Story</CardTitle>
-      </CardHeader>
       <CardContent className="pt-6">
         <Form {...form}>
           <form
@@ -118,7 +115,7 @@ export default function StoryForm({ onSubmit, isLoading }: StoryFormProps) {
               name="childName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Child's Name</FormLabel>
+                  <FormLabel>Child's Name (Main Character)</FormLabel>
                   <FormControl>
                     <Input {...field} placeholder="Enter name" />
                   </FormControl>
@@ -213,7 +210,7 @@ export default function StoryForm({ onSubmit, isLoading }: StoryFormProps) {
               name="mainCharacter"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Main Characters, Objects, Events</FormLabel>
+                  <FormLabel>Story Characters, Objects, Events</FormLabel>
                   <FormControl>
                     <Input
                       {...field}

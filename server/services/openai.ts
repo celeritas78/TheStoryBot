@@ -53,15 +53,23 @@ export async function generateStoryContent({
     {
       "name": "Character name",
       "description": "Detailed description of the character including appearance, attire, personality traits, relationships"
+    },
+    {
+      "name": "Object name",
+      "description": "Detailed description of the object including appearance, type,  traits, fearures"
     }
-    // Add more characters as needed
+    // Add more characters and objects as needed
   ],
   "settings": [
     {
       "name": "Setting name",
       "description": "Detailed description of the setting including environment, atmosphere, visual elements"
+    },
+    {
+      "name": "Event name",
+      "description": "Detailed description of the event including location, time, circumstances, and outcome
     }
-    // Add more settings as needed
+    // Add more settings and events as needed
   ],
   "scenes": [
     {
@@ -87,13 +95,14 @@ Ensure that:
 
     const prompt = previousContent
       ? `Continue the following children's story about ${childName} and ${mainCharacter}, maintaining the same style and theme. Previous content: ${previousContent}`
-      : `Create an engaging children's story about ${childName} (age ${childAge}) and following main characters and things ${mainCharacter}. 
+      : `Create an engaging children's story about ${childName} (age ${childAge}) and following main characters, objects, and events ${mainCharacter}. 
          The story should have following main theme. 
          Theme: ${theme}
          Requirements:
          - Divide the story into 3 distinct scenes
          - Each scene's text should be long enough to last around 30 seconds to 1 minute when read aloud
          - Include dialogue and character interactions
+         - Include the objects and events if specified
          - Add emotional cues for narration
          - Create vivid, illustration-friendly scenes
          - Keep each scene engaging
@@ -204,7 +213,8 @@ Style guidelines:
 - Avoid any scary or adult themes
 - Focus on cute, cartoon-style characters
 - Include soft lighting and friendly expressions
-- Make it suitable for ages 2-12`;
+- Make it suitable for ages 2-12
+- Use only the characters, objects, events, and settings specified in the scene description`;
 
     console.log('Generating image with sanitized prompt:', {
       originalLength: sceneDescription.length,

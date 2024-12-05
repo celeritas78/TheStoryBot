@@ -31,11 +31,10 @@ export default function HomePage() {
             />
             <CardContent className="p-6">
               <h2 className="text-2xl font-semibold mb-2">
-                Personalized Stories
+                Personalized Adventures
               </h2>
               <p className="text-gray-600">
-                Create unique AI stories featuring your child's favorite characters
-                and settings.
+                Craft unique AI-generated stories starring your child with their favorite characters, settings, and themes for a truly personal experience.
               </p>
             </CardContent>
           </Card>
@@ -54,11 +53,10 @@ export default function HomePage() {
             />
             <CardContent className="p-6">
               <h2 className="text-2xl font-semibold mb-2">
-                Imaginative Theme
+                Imagination Meets Learning
               </h2>
               <p className="text-gray-600">
-                Let your child's imagination soar with AI-generated illustrations
-                and narration.
+                Inspire creativity and foster learning with engaging stories that teach valuable lessons while sparking your child’s imagination.
               </p>
             </CardContent>
           </Card>
