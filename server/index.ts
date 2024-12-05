@@ -1,8 +1,9 @@
-import express, { type Request, Response, NextFunction } from "express";
+import express, { Request, Response, NextFunction } from "express";
 import { setupRoutes } from "./routes";
 import { setupVite, serveStatic } from "./vite";
 import { createServer } from "http";
 import { setupAuth } from "./auth";
+import csrf from "csurf";
 
 function log(message: string) {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
@@ -20,68 +21,44 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 // Serve static files from client/public directory
-app.use(express.static('client/public'));
+app.use(express.static("client/public"));
 
 // Call setupAuth before routes
 setupAuth(app);
 
-// Middleware to debug req.isAuthenticated
-app.use((req, res, next) => {
-  //console.log("Middleware stack check: ", req.isAuthenticated ? req.isAuthenticated() : "Undefined");
-  next();
+// CSRF Token Endpoint
+app.get("/api/csrf-token", (req: Request, res: Response) => {
+  try {
+    const csrfToken = req.csrfToken();
+    console.log("CSRF Token generated:", csrfToken);
+    res.json({ csrfToken });
+  } catch (error) {
+    console.error("Error generating CSRF token:", error);
+    res.status(500).json({ error: "Failed to generate CSRF token" });
+  }
 });
 
+// Register API routes
+setupRoutes(app);
 
-// Logging middleware for API routes
-app.use((req, res, next) => {
-  const start = Date.now();
-  const path = req.path;
-  let capturedJsonResponse: Record<string, any> | undefined = undefined;
-
-  const originalResJson = res.json;
-  res.json = function (bodyJson, ...args) {
-    capturedJsonResponse = bodyJson;
-    return originalResJson.apply(res, [bodyJson, ...args]);
-  };
-
-  res.on("finish", () => {
-    const duration = Date.now() - start;
-    if (path.startsWith("/api")) {
-      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      if (capturedJsonResponse) {
-        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
-      }
-
-      if (logLine.length > 80) {
-        logLine = logLine.slice(0, 79) + "…";
-      }
-
-      log(logLine);
-    }
-  });
-
-  next();
+// Global Error Handler
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+  if (err.code === "EBADCSRFTOKEN") {
+    console.error("Invalid CSRF token:", err);
+    return res
+      .status(403)
+      .json({ error: "Invalid CSRF token. Please refresh and try again." });
+  }
+  console.error("Global error handler:", { error: err, stack: err.stack });
+  res.status(err.status || 500).json({ error: err.message || "Internal server error" });
 });
 
 (async () => {
-  // Register API routes before Vite middleware or static serving
-  setupRoutes(app);
-
-  // Error-handling middleware
-  app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || 500;
-    const message = err.message || "Internal Server Error";
-    console.error(`${req.method} ${req.url} - Error:`, { status, message, stack: err.stack });
-    res.status(status).json({ message });
-  });
-
   const server = createServer(app);
 
   if (app.get("env") === "development") {
-    // Vite middleware in development
     await setupVite(app, server);
   } else {
-    // Serve static files in production
     serveStatic(app);
   }
 
