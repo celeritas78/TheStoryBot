@@ -1,4 +1,5 @@
 import { Link } from "wouter";
+import type { ReactNode } from "react";
 import { useUser } from "@/hooks/use-user";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,6 +10,16 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { LogOut, Home, Library, PenSquare, Settings, Book } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+
+type LinkChildrenProps = {
+  isActive: boolean;
+  children?: ReactNode;
+};
+
+type LinkProps = {
+  href: string;
+  children: (props: LinkChildrenProps) => ReactNode;
+};
 
 export default function Header() {
   const { user, logout } = useUser();
@@ -38,13 +49,13 @@ export default function Header() {
                   </h1>
                 </div>
                 <p className="text-xs text-gray-600 mt-1">
-                  # Create personalized AI stories for your little ones #
+                  Create personalized AI stories for your little ones
                 </p>
               </div>
             </Link>
             <nav className="flex items-center gap-4">
               <Link href="/">
-                {({ isActive }) => (
+                {({ isActive }: LinkChildrenProps) => (
                   <Button 
                     variant="ghost" 
                     className={`flex items-center gap-2 ${isActive ? 'bg-purple-100 text-purple-800' : ''}`}
@@ -55,7 +66,7 @@ export default function Header() {
                 )}
               </Link>
               <Link href="/create">
-                {({ isActive }) => (
+                {({ isActive }: LinkChildrenProps) => (
                   <Button 
                     variant="ghost" 
                     className={`flex items-center gap-2 ${isActive ? 'bg-purple-100 text-purple-800' : ''}`}
@@ -66,7 +77,7 @@ export default function Header() {
                 )}
               </Link>
               <Link href="/library">
-                {({ isActive }) => (
+                {({ isActive }: LinkChildrenProps) => (
                   <Button 
                     variant="ghost" 
                     className={`flex items-center gap-2 ${isActive ? 'bg-purple-100 text-purple-800' : ''}`}
