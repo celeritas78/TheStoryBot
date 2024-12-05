@@ -170,6 +170,36 @@ export function setupAuth(app: Express) {
   });
 
   // Fetch current user route
+  // Update profile route
+  app.put("/api/profile", (req, res) => {
+    if (!req.isAuthenticated() || !req.user) {
+      return res.status(401).json({ message: "Not logged in" });
+    }
+
+    const { displayName, bio, avatarUrl } = req.body;
+    
+    db.update(users)
+      .set({
+        displayName,
+        bio,
+        avatarUrl,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, req.user.id))
+      .returning()
+      .then(([updatedUser]) => {
+        if (!updatedUser) {
+          return res.status(404).json({ message: "User not found" });
+        }
+        const { password, ...userData } = updatedUser;
+        res.json(userData);
+      })
+      .catch((error) => {
+        console.error('Failed to update profile:', error);
+        res.status(500).json({ message: "Failed to update profile" });
+      });
+  });
+
   app.get("/api/user", (req, res) => {
     if (!req.isAuthenticated || !req.isAuthenticated()) {
       return res.status(401).json({ message: "Not logged in" });

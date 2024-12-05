@@ -5,7 +5,7 @@ type RequestResult = {
   ok: boolean;
   message?: string;
   data?: any;
-};
+} & ({ ok: true } | { ok: false; message: string });
 
 async function handleRequest<T extends Record<string, unknown>>(
   url: string,
