@@ -12,7 +12,7 @@ async function handleRequest<T extends Record<string, unknown>>(
   url: string,
   method: 'GET' | 'POST' | 'PUT' | 'DELETE',
   body?: T
-): Promise<RequestResult> {
+): Promise<{ ok: boolean; message?: string; data?: any }> {
   try {
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
@@ -25,14 +25,20 @@ async function handleRequest<T extends Record<string, unknown>>(
       credentials: "include",
     });
 
+    const data = await response.json().catch(() => null);
+
     if (!response.ok) {
-      const message = response.status >= 500
-        ? response.statusText
-        : await response.text();
-      return { ok: false, message };
+      return { 
+        ok: false, 
+        message: data?.message || response.statusText,
+        data: data 
+      };
     }
 
-    return { ok: true };
+    return { 
+      ok: true, 
+      data: data 
+    };
   } catch (error: any) {
     return { ok: false, message: error.message || 'Unexpected error occurred' };
   }
@@ -62,12 +68,19 @@ export function useUser() {
     retry: false,
   });
 
-  const loginMutation = useMutation<RequestResult, Error, InsertUser>({
-    mutationFn: (userData) => handleRequest('/api/login', 'POST', userData),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['user'] });
-      await queryClient.refetchQueries({ queryKey: ['user'] });
-
+  const loginMutation = useMutation<{ ok: boolean; message?: string; data?: any }, Error, InsertUser>({
+    mutationFn: async (userData) => {
+      const result = await handleRequest('/api/login', 'POST', userData);
+      if (result.ok && result.data?.user) {
+        // Immediately update the user data in the cache
+        queryClient.setQueryData(['user'], result.data.user);
+      }
+      return result;
+    },
+    onSuccess: async (data) => {
+      if (data.ok) {
+        await queryClient.invalidateQueries({ queryKey: ['user'] });
+      }
     },
   });
 

@@ -50,16 +50,16 @@ export function setupAuth(app: Express) {
   const MemoryStore = createMemoryStore(session);
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || "default-secret",
-    resave: true,
-    saveUninitialized: true,
+    resave: false,
+    saveUninitialized: false,
     store: new MemoryStore({ 
-      checkPeriod: 86400000, // Prune expired entries every 24h
+      checkPeriod: 86400000 // Prune expired entries every 24h
     }),
-    name: 'sid',
+    name: 'connect.sid',
     cookie: {
-      secure: false, // Set to true in production
+      secure: process.env.NODE_ENV === 'production',
       httpOnly: true,
-      maxAge: 86400000, // 24 hours
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       sameSite: 'lax',
       path: '/'
     }
@@ -143,13 +143,16 @@ export function setupAuth(app: Express) {
 
   // Login route
   app.post("/api/login", passport.authenticate("local"), (req, res) => {
-    // We know user exists and has password because of passport.authenticate
+    if (!req.user) {
+      return res.status(401).json({ message: "Authentication failed" });
+    }
     const user = req.user as SelectUser;
-    // Omit password from the response
+    // Omit password and include all other user data
     const { password, ...safeUser } = user;
     res.json({ 
       message: "Login successful", 
-      user: safeUser
+      user: safeUser,
+      isAuthenticated: true
     });
   });
 
@@ -164,19 +167,15 @@ export function setupAuth(app: Express) {
   // Fetch current user route
   app.get("/api/user", (req, res) => {
     if (!req.isAuthenticated || !req.isAuthenticated()) {
-      return res.status(401).json({ error: "Not logged in" });
+      return res.status(401).json({ message: "Not logged in" });
     }
     
     if (!req.user) {
-      return res.status(401).json({ error: "User session invalid" });
+      return res.status(401).json({ message: "User session invalid" });
     }
 
-    return res.json({
-      id: req.user.id,
-      email: req.user.email,
-      displayName: req.user.displayName,
-      avatarUrl: req.user.avatarUrl,
-      bio: req.user.bio
-    });
+    // Send all user data except password
+    const { password, ...userData } = req.user;
+    return res.json(userData);
   });
 }
