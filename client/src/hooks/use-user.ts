@@ -14,9 +14,13 @@ async function handleRequest<T extends Record<string, unknown>>(
   body?: T
 ): Promise<RequestResult> {
   try {
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+
     const response = await fetch(url, {
       method,
-      headers: body ? { "Content-Type": "application/json" } : undefined,
+      headers,
       body: body ? JSON.stringify(body) : undefined,
       credentials: "include",
     });
