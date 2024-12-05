@@ -14,6 +14,7 @@ import ProfilePage from "./pages/ProfilePage";
 import { useUser } from "./hooks/use-user";
 import { Loader2 } from "lucide-react";
 import { ErrorBoundary } from "./components/ErrorBoundary";
+import Header from "./components/Header";
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
   const { user, isLoading } = useUser();
@@ -44,23 +45,26 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
 function AppRoutes() {
   return (
     <ErrorBoundary>
-      <Switch>
-        <Route path="/" component={HomePage} />
-        <Route path="/auth" component={AuthPage} />
-        <Route path="/create">
-          <ProtectedRoute component={StoryGenerator} />
-        </Route>
-        <Route path="/library">
-          <ProtectedRoute component={LibraryPage} />
-        </Route>
-        <Route path="/story/:id">
-          <ProtectedRoute component={StoryPage} />
-        </Route>
-        <Route path="/profile">
-          <ProtectedRoute component={ProfilePage} />
-        </Route>
-        <Route>404 - Page Not Found</Route>
-      </Switch>
+      <>
+        <Header />
+        <Switch>
+          <Route path="/" component={HomePage} />
+          <Route path="/auth" component={AuthPage} />
+          <Route path="/create">
+            <ProtectedRoute component={StoryGenerator} />
+          </Route>
+          <Route path="/library">
+            <ProtectedRoute component={LibraryPage} />
+          </Route>
+          <Route path="/story/:id">
+            <ProtectedRoute component={StoryPage} />
+          </Route>
+          <Route path="/profile">
+            <ProtectedRoute component={ProfilePage} />
+          </Route>
+          <Route>404 - Page Not Found</Route>
+        </Switch>
+      </>
     </ErrorBoundary>
   );
 }
