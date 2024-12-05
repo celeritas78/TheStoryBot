@@ -7,7 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LogOut, Home, Library, User, Book } from "lucide-react";
+import { LogOut, Home, Library, PenSquare, Settings, Book } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function Header() {
@@ -44,6 +44,12 @@ export default function Header() {
                   <span>Home</span>
                 </Button>
               </Link>
+              <Link href="/create">
+                <Button variant="ghost" className="flex items-center gap-2">
+                  <PenSquare className="h-4 w-4" />
+                  <span>Create Story</span>
+                </Button>
+              </Link>
               <Link href="/library">
                 <Button variant="ghost" className="flex items-center gap-2">
                   <Book className="h-4 w-4" />
@@ -68,6 +74,7 @@ export default function Header() {
                 <DropdownMenuContent align="end">
                   <Link href="/profile">
                     <DropdownMenuItem className="cursor-pointer">
+                      <Settings className="h-4 w-4 mr-2" />
                       Profile Settings
                     </DropdownMenuItem>
                   </Link>
