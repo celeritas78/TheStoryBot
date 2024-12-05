@@ -31,16 +31,11 @@ export default function Header() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-6">
             <Link href="/">
-              <div className="flex flex-col">
-                <div className="flex items-center gap-2">
-                  <img src="/images/logo.png" alt="Story Bot Logo" className="h-8 w-8" />
-                  <h1 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 text-transparent bg-clip-text">
-                    The Story Bot
-                  </h1>
-                </div>
-                <p className="text-xs text-gray-600 mt-1">
-                  Create personalized AI stories for your little ones
-                </p>
+              <div className="flex items-center gap-2">
+                <img src="/images/logo.png" alt="Story Bot Logo" className="h-8 w-8" />
+                <h1 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 text-transparent bg-clip-text">
+                  The Story Bot
+                </h1>
               </div>
             </Link>
             <nav className="flex items-center gap-4">
@@ -56,19 +51,17 @@ export default function Header() {
               <Link href="/create">
                 <Button 
                   variant="ghost" 
-                  className={`flex items-center gap-2 ${isActive("/create") ? "bg-purple-100 text-purple-800" : ""}`}
+                  className={`${isActive("/create") ? "bg-purple-100 text-purple-800" : ""}`}
                 >
-                  <PenSquare className="h-4 w-4" />
-                  <span>Create Story</span>
+                  Create Story
                 </Button>
               </Link>
               <Link href="/library">
                 <Button 
                   variant="ghost" 
-                  className={`flex items-center gap-2 ${isActive("/library") ? "bg-purple-100 text-purple-800" : ""}`}
+                  className={`${isActive("/library") ? "bg-purple-100 text-purple-800" : ""}`}
                 >
-                  <Book className="h-4 w-4" />
-                  <span>Library</span>
+                  Library
                 </Button>
               </Link>
             </nav>
