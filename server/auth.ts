@@ -143,17 +143,22 @@ export function setupAuth(app: Express) {
 
   // Login route
   app.post("/api/login", passport.authenticate("local"), (req, res) => {
+    console.log('Login endpoint hit, authenticated user:', req.isAuthenticated());
     if (!req.user) {
+      console.log('No user object after authentication');
       return res.status(401).json({ message: "Authentication failed" });
     }
     const user = req.user as SelectUser;
+    console.log('User authenticated successfully:', { id: user.id, email: user.email });
     // Omit password and include all other user data
     const { password, ...safeUser } = user;
-    res.json({ 
+    const response = { 
       message: "Login successful", 
       user: safeUser,
       isAuthenticated: true
-    });
+    };
+    console.log('Sending login response:', response);
+    res.json(response);
   });
 
   // Logout route

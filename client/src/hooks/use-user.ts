@@ -2,10 +2,9 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { User, InsertUser } from "@db/schema";
 
 type RequestResult = {
-  ok: true;
-} | {
-  ok: false;
-  message: string;
+  ok: boolean;
+  message?: string;
+  data?: any;
 };
 
 async function handleRequest<T extends Record<string, unknown>>(
@@ -46,12 +45,19 @@ async function handleRequest<T extends Record<string, unknown>>(
 
 async function fetchUser(): Promise<User | null> {
   try {
+    console.log('Fetching user data...');
     const response = await fetch('/api/user', { credentials: 'include' });
     if (!response.ok) {
-      if (response.status === 401) return null;
+      if (response.status === 401) {
+        console.log('User not authenticated');
+        return null;
+      }
+      console.error(`Error fetching user: ${response.status}: ${response.statusText}`);
       throw new Error(`Error ${response.status}: ${response.statusText}`);
     }
-    return await response.json();
+    const userData = await response.json();
+    console.log('User data received:', userData);
+    return userData;
   } catch (error: any) {
     console.error('Failed to fetch user:', error);
     throw error;
@@ -68,20 +74,27 @@ export function useUser() {
     retry: false,
   });
 
-  const loginMutation = useMutation<{ ok: boolean; message?: string; data?: any }, Error, InsertUser>({
+  const loginMutation = useMutation<RequestResult, Error, InsertUser>({
     mutationFn: async (userData) => {
+      console.log('Attempting login with:', { email: userData.email });
       const result = await handleRequest('/api/login', 'POST', userData);
+      console.log('Login response:', result);
       if (result.ok && result.data?.user) {
-        // Immediately update the user data in the cache
+        console.log('Setting user data in cache:', result.data.user);
         queryClient.setQueryData(['user'], result.data.user);
       }
       return result;
     },
     onSuccess: async (data) => {
+      console.log('Login mutation succeeded:', data);
       if (data.ok) {
+        console.log('Invalidating user queries after successful login');
         await queryClient.invalidateQueries({ queryKey: ['user'] });
       }
     },
+    onError: (error) => {
+      console.error('Login mutation failed:', error);
+    }
   });
 
   const logoutMutation = useMutation<RequestResult, Error>({
