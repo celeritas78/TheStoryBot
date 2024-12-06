@@ -34,9 +34,7 @@ const registrationSchema = z.object({
   displayName: z.string().min(2, "Display name too short").max(255, "Display name too long"),
 });
 
-// Using imported sendErrorResponse from utils/error
-
-  export function setupRoutes(app: express.Application) {
+export function setupRoutes(app: express.Application) {
   // Configure multer for handling file uploads
   const upload = multer({
     limits: {
@@ -53,7 +51,7 @@ const registrationSchema = z.object({
   });
 
   // Custom error handling for multer
-  const handleMulterError = (err: any, req: any, res: any, next: any) => {
+  const handleMulterError = (err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
     if (err instanceof multer.MulterError) {
       if (err.code === 'LIMIT_FILE_SIZE') {
         return res.status(400).json({
@@ -66,7 +64,7 @@ const registrationSchema = z.object({
   };
 
   // Handle child photo upload
-  app.post('/api/profile/child-photo', upload.single('photo'), handleMulterError, async (req, res) => {
+  app.post('/api/profile/child-photo', upload.single('photo'), handleMulterError, async (req: express.Request, res: express.Response) => {
     try {
       if (!req.isAuthenticated || !req.isAuthenticated()) {
         return res.status(401).json({ error: "Not logged in" });
@@ -111,66 +109,157 @@ const registrationSchema = z.object({
       res.status(500).json({ error: 'Failed to upload photo' });
     }
   });
-  // Global error middleware (from original code)
-  app.use((err: any, req: any, res: any, next: any) => {
-    console.error('Global error handler:', {
-      error: err,
-      stack: err.stack,
-      timestamp: new Date().toISOString()
-    });
-    
-    // Ensure response hasn't been sent yet
-    if (res.headersSent) {
-      return next(err);
-    }
 
-    // Set JSON content type
-    res.setHeader('Content-Type', 'application/json');
-    
-    // Handle different types of errors
-    if (err.type === 'entity.parse.failed') {
-      return sendErrorResponse(res, 400, 'Invalid JSON payload', err.message);
-    }
-    
-    return sendErrorResponse(res, err.status || 500, err.message || 'Internal server error', 
-      process.env.NODE_ENV === 'development' ? err.stack : undefined);
-  });
-
-  app.post("/api/register", async (req, res) => { //from original code
+  // Serve image files with proper CORS and caching headers
+  app.get("/images/:filename", async (req: express.Request, res: express.Response) => {
     try {
-      const result = registrationSchema.safeParse(req.body);
-      if (!result.success) {
-        return res.status(400).json({ error: "Validation failed", details: result.error.errors });
+      const { filename } = req.params;
+      const requestId = Math.random().toString(36).substring(7);
+      
+      console.log('Image request received:', { 
+        requestId,
+        filename,
+        timestamp: new Date().toISOString(),
+        headers: req.headers
+      });
+
+      // Validate filename format and check supported formats
+      if (!filename.match(/^[a-zA-Z0-9-]+\.(png|jpg|jpeg|webp)$/)) {
+        console.error('Invalid filename format:', { requestId, filename });
+        return res.status(400).json({ error: "Invalid image filename format" });
       }
 
-      const { email, password, displayName } = result.data;
-
-      // Check if the user already exists
-      const [existingUser] = await db
-        .select()
-        .from(users)
-        .where(eq(users.email, email))
-        .limit(1);
-      if (existingUser) {
-        return res.status(409).json({ error: "Email already registered" });
+      if (!isImageFormatSupported(filename)) {
+        console.error('Unsupported image format:', { requestId, filename });
+        return res.status(400).json({ error: "Unsupported image format" });
       }
 
-      // Hash password and insert the user
-      const hashedPassword = await bcrypt.hash(password, 10);
-      const [newUser] = await db.insert(users).values({
-        email,
-        password: hashedPassword,
-        displayName, // Added displayName
-        createdAt: new Date(),
-      }).returning();
+      // Check if the client already has a cached version
+      const ifNoneMatch = req.headers['if-none-match'];
 
-      res.status(201).json({ message: "Registration successful", user: { id: newUser.id, email: newUser.email, displayName: newUser.displayName } });
-    } catch (err) {
-      console.error("Error registering user:", err);
-      res.status(500).json({ error: "Internal server error" });
+      // Check image existence in database
+      const imagePath = `/images/${filename}`;
+      const [segment, user] = await Promise.all([
+        db.query.storySegments.findFirst({
+          where: eq(storySegments.imageUrl, imagePath)
+        }),
+        db.query.users.findFirst({
+          where: eq(users.childPhotoUrl, imagePath)
+        })
+      ]);
+
+      console.log('Image lookup result:', {
+        filename,
+        foundInStorySegments: !!segment,
+        foundInUserProfile: !!user,
+        timestamp: new Date().toISOString()
+      });
+
+      if (!segment && !user) {
+        console.error('Image not found in database:', { 
+          filename,
+          timestamp: new Date().toISOString()
+        });
+        return res.status(404).json({ error: "Image not found" });
+      }
+
+      const filePath = getImageFilePath(filename);
+      
+      if (!fs.existsSync(filePath)) {
+        console.error('Image file not found on disk:', { 
+          requestId,
+          filePath,
+          timestamp: new Date().toISOString()
+        });
+        return res.status(404).json({ error: "Image file not found" });
+      }
+
+      // Get file stats for headers and caching
+      const stat = fs.statSync(filePath);
+      const etag = `"${stat.size}-${stat.mtime.getTime()}"`;
+
+      // If client has a cached version and it matches, return 304
+      if (ifNoneMatch && ifNoneMatch === etag) {
+        console.log('Client has current version:', { requestId, etag });
+        return res.status(304).end();
+      }
+
+      console.log('Image file stats:', { 
+        requestId,
+        size: stat.size,
+        path: filePath,
+        etag,
+        exists: true,
+        timestamp: new Date().toISOString()
+      });
+
+      // Set cache control headers
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      res.setHeader('ETag', etag);
+      res.setHeader('Last-Modified', stat.mtime.toUTCString());
+
+      // Handle range requests for large images
+      const range = req.headers.range;
+      if (range) {
+        const parts = range.replace(/bytes=/, "").split("-");
+        const start = parseInt(parts[0], 10);
+        const end = parts[1] ? parseInt(parts[1], 10) : stat.size - 1;
+        const chunksize = (end - start) + 1;
+        const stream = fs.createReadStream(filePath, { start, end });
+
+        res.writeHead(206, {
+          'Content-Range': `bytes ${start}-${end}/${stat.size}`,
+          'Accept-Ranges': 'bytes',
+          'Content-Length': chunksize,
+          'Content-Type': getImageMimeType(filename),
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, HEAD',
+          'Access-Control-Allow-Headers': 'Range',
+          'Cache-Control': 'public, max-age=31536000, immutable',
+          'Etag': `"${stat.size}-${stat.mtime.getTime()}"`,
+          'Last-Modified': stat.mtime.toUTCString()
+        });
+
+        stream.pipe(res);
+      } else {
+        // Set proper CORS and caching headers
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD');
+        res.setHeader('Access-Control-Allow-Headers', 'Range');
+        res.setHeader('Content-Type', getImageMimeType(filename));
+        res.setHeader('Content-Length', stat.size);
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+        res.setHeader('Accept-Ranges', 'bytes');
+        res.setHeader('Etag', `"${stat.size}-${stat.mtime.getTime()}"`);
+        res.setHeader('Last-Modified', stat.mtime.toUTCString());
+
+        // Stream the image file with error handling
+        const stream = fs.createReadStream(filePath);
+        stream.on('error', (error) => {
+          console.error('Stream error:', {
+            error,
+            filename,
+            timestamp: new Date().toISOString()
+          });
+          if (!res.headersSent) {
+            res.status(500).json({ error: 'Failed to stream image file' });
+          }
+        });
+
+        stream.pipe(res);
+      }
+    } catch (error: any) {
+      console.error('Error serving image:', { 
+        error, 
+        message: error.message,
+        stack: error.stack,
+        timestamp: new Date().toISOString()
+      });
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'Failed to serve image file' });
+      }
     }
   });
-
 
   // Serve audio files with proper CORS and caching headers
   app.get("/audio/:filename", async (req, res) => {
@@ -250,145 +339,63 @@ const registrationSchema = z.object({
     }
   });
 
-  // Serve image files with proper CORS and caching headers
-  app.get("/images/:filename", async (req, res) => {
+  // Global error middleware (from original code)
+  app.use((err: any, req: any, res: any, next: any) => {
+    console.error('Global error handler:', {
+      error: err,
+      stack: err.stack,
+      timestamp: new Date().toISOString()
+    });
+    
+    // Ensure response hasn't been sent yet
+    if (res.headersSent) {
+      return next(err);
+    }
+
+    // Set JSON content type
+    res.setHeader('Content-Type', 'application/json');
+    
+    // Handle different types of errors
+    if (err.type === 'entity.parse.failed') {
+      return sendErrorResponse(res, 400, 'Invalid JSON payload', err.message);
+    }
+    
+    return sendErrorResponse(res, err.status || 500, err.message || 'Internal server error', 
+      process.env.NODE_ENV === 'development' ? err.stack : undefined);
+  });
+
+  app.post("/api/register", async (req, res) => { 
     try {
-      const { filename } = req.params;
-      console.log('Image request received:', { 
-        filename,
-        timestamp: new Date().toISOString(),
-        headers: req.headers
-      });
-
-      // Validate filename format
-      if (!filename.match(/^[a-zA-Z0-9-]+\.(png|jpg|jpeg|webp)$/)) {
-        console.error('Invalid filename format:', { filename });
-        return res.status(400).json({ error: "Invalid image filename format" });
+      const result = registrationSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ error: "Validation failed", details: result.error.errors });
       }
 
-      console.log('Checking image in database:', {
-        filename,
-        timestamp: new Date().toISOString()
-      });
+      const { email, password, displayName } = result.data;
 
-      // Check if this image file is referenced in the database
-      const segment = await db.query.storySegments.findFirst({
-        where: eq(storySegments.imageUrl, `/images/${filename}`)
-      });
-
-      // If not found in story segments, check if it's a profile photo
-      if (!segment) {
-        const user = await db.query.users.findFirst({
-          where: eq(users.childPhotoUrl, `/images/${filename}`)
-        });
-
-        console.log('Image lookup result:', {
-          filename,
-          foundInStorySegments: !!segment,
-          foundInUserProfile: !!user,
-          timestamp: new Date().toISOString()
-        });
-
-        if (!user) {
-          console.error('Image file not found in database:', { 
-            filename,
-            timestamp: new Date().toISOString()
-          });
-          return res.status(404).json({ error: "Image file not found" });
-        }
+      // Check if the user already exists
+      const [existingUser] = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, email))
+        .limit(1);
+      if (existingUser) {
+        return res.status(409).json({ error: "Email already registered" });
       }
 
-      const filePath = getImageFilePath(filename);
-      console.log('Resolved file path:', { 
-        filePath,
-        timestamp: new Date().toISOString()
-      });
+      // Hash password and insert the user
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const [newUser] = await db.insert(users).values({
+        email,
+        password: hashedPassword,
+        displayName, 
+        createdAt: new Date(),
+      }).returning();
 
-      if (!fs.existsSync(filePath)) {
-        console.error('Image file not found on disk:', { 
-          filePath,
-          timestamp: new Date().toISOString()
-        });
-        return res.status(404).json({ error: "Image file not found" });
-      }
-
-      if (!isImageFormatSupported(filename)) {
-        console.error('Unsupported image format:', { 
-          filename,
-          timestamp: new Date().toISOString()
-        });
-        return res.status(400).json({ error: "Unsupported image format" });
-      }
-
-      // Log file stats
-      const stat = fs.statSync(filePath);
-      console.log('Image file stats:', { 
-        size: stat.size,
-        path: filePath,
-        exists: fs.existsSync(filePath),
-        timestamp: new Date().toISOString()
-      });
-
-      // Handle range requests for large images
-      const range = req.headers.range;
-      if (range) {
-        const parts = range.replace(/bytes=/, "").split("-");
-        const start = parseInt(parts[0], 10);
-        const end = parts[1] ? parseInt(parts[1], 10) : stat.size - 1;
-        const chunksize = (end - start) + 1;
-        const stream = fs.createReadStream(filePath, { start, end });
-
-        res.writeHead(206, {
-          'Content-Range': `bytes ${start}-${end}/${stat.size}`,
-          'Accept-Ranges': 'bytes',
-          'Content-Length': chunksize,
-          'Content-Type': getImageMimeType(filename),
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'GET, HEAD',
-          'Access-Control-Allow-Headers': 'Range',
-          'Cache-Control': 'public, max-age=31536000, immutable',
-          'Etag': `"${stat.size}-${stat.mtime.getTime()}"`,
-          'Last-Modified': stat.mtime.toUTCString()
-        });
-
-        stream.pipe(res);
-      } else {
-        // Set enhanced headers for better caching and performance
-        res.setHeader('Access-Control-Allow-Origin', '*');
-        res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD');
-        res.setHeader('Access-Control-Allow-Headers', 'Range');
-        res.setHeader('Content-Type', getImageMimeType(filename));
-        res.setHeader('Content-Length', stat.size);
-        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-        res.setHeader('Accept-Ranges', 'bytes');
-        res.setHeader('Etag', `"${stat.size}-${stat.mtime.getTime()}"`);
-        res.setHeader('Last-Modified', stat.mtime.toUTCString());
-
-        // Stream the image file
-        const stream = fs.createReadStream(filePath);
-        stream.on('error', (error) => {
-          console.error('Stream error:', {
-            error,
-            filename,
-            timestamp: new Date().toISOString()
-          });
-          if (!res.headersSent) {
-            res.status(500).json({ error: 'Failed to stream image file' });
-          }
-        });
-
-        stream.pipe(res);
-      }
-    } catch (error: any) {
-      console.error('Error serving image:', { 
-        error, 
-        message: error.message,
-        stack: error.stack,
-        timestamp: new Date().toISOString()
-      });
-      if (!res.headersSent) {
-        res.status(500).json({ error: 'Failed to serve image file' });
-      }
+      res.status(201).json({ message: "Registration successful", user: { id: newUser.id, email: newUser.email, displayName: newUser.displayName } });
+    } catch (err) {
+      console.error("Error registering user:", err);
+      res.status(500).json({ error: "Internal server error" });
     }
   });
 
@@ -400,7 +407,7 @@ const registrationSchema = z.object({
       }
 
       const { childName, childAge, mainCharacter, theme } = req.body;
-      const userId = req.user?.id; // Retrieve the authenticated user's ID
+      const userId = req.user?.id; 
 
       console.log('Story generation request:', {
         userId,
@@ -451,7 +458,7 @@ const registrationSchema = z.object({
           const audioUrl = await generateSpeech(scene.text);
 
           return {
-            content: scene.text, // Store only the narrative text
+            content: scene.text, 
             imageUrl,
             audioUrl,
             sequence: index + 1
@@ -465,7 +472,7 @@ const registrationSchema = z.object({
       // Save story to the database, including the userId
       const [story] = await db.insert(stories)
         .values({
-          userId, // Attach the user ID to the story
+          userId, 
           title: storyContent.title,
           childName,
           childAge: parsedAge,
@@ -501,7 +508,7 @@ const registrationSchema = z.object({
 
       res.json({
         id: story.id,
-        userId, // Include userId in the response
+        userId, 
         childName: story.childName,
         theme: story.theme,
         segments: insertedSegments,
