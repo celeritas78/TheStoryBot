@@ -253,17 +253,24 @@ const registrationSchema = z.object({
         return res.status(400).json({ error: "Invalid image filename format" });
       }
 
-      // First check if this image file is referenced in the database
+      // Check if this image file is referenced in the database
       const segment = await db.query.storySegments.findFirst({
         where: eq(storySegments.imageUrl, `/images/${filename}`)
       });
 
+      // If not found in story segments, check if it's a profile photo
       if (!segment) {
-        console.error('Image file not found in database:', { 
-          filename,
-          timestamp: new Date().toISOString()
+        const user = await db.query.users.findFirst({
+          where: eq(users.childPhotoUrl, `/images/${filename}`)
         });
-        return res.status(404).json({ error: "Image file not found" });
+
+        if (!user) {
+          console.error('Image file not found in database:', { 
+            filename,
+            timestamp: new Date().toISOString()
+          });
+          return res.status(404).json({ error: "Image file not found" });
+        }
       }
 
       const filePath = getImageFilePath(filename);

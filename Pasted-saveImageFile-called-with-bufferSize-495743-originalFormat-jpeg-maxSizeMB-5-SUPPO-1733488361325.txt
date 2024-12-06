@@ -1,0 +1,89 @@
+saveImageFile called with: {
+  bufferSize: 495743,
+  originalFormat: 'jpeg',
+  maxSizeMB: 5,
+  SUPPORTED_IMAGE_FORMATS: {
+    png: 'image/png',
+    jpg: 'image/jpeg',
+    jpeg: 'image/jpeg',
+    webp: 'image/webp'
+  }
+}
+Saving image file: {
+  fileName: '6ad9eb1f-cea5-4a81-8de7-76f5c6257187.jpeg',
+  filePath: '/home/runner/CustomBedtimeStories/public/images/6ad9eb1f-cea5-4a81-8de7-76f5c6257187.jpeg',
+  exists: true,
+  timestamp: '2024-12-06T12:31:33.319Z'
+}
+Image file saved successfully: {
+  fileName: '6ad9eb1f-cea5-4a81-8de7-76f5c6257187.jpeg',
+  size: 495743,
+  timestamp: '2024-12-06T12:31:33.321Z'
+}
+12:31:33 PM [express] POST /api/profile/child-photo 200 in 279ms :: {"childPhotoUrl":"/images/6ad9eb1…
+Image request received: {
+  filename: '6ad9eb1f-cea5-4a81-8de7-76f5c6257187.jpeg',
+  timestamp: '2024-12-06T12:31:34.841Z',
+  headers: {
+    host: '2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev',
+    'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+    accept: 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+    'accept-encoding': 'gzip, deflate, br, zstd',
+    'accept-language': 'en-US,en;q=0.9',
+    cookie: 'sid=s%3ADkgeP97bKbw4OJlVTggY_szgjjkexEMv.H%2FHckUCrwzGw0vv9AXCAXIF%2FWWrIKOCx5WpSP9Wobvo',
+    dnt: '1',
+    referer: 'https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/profile',
+    'sec-ch-ua': '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
+    'sec-ch-ua-mobile': '?0',
+    'sec-ch-ua-platform': '"macOS"',
+    'sec-fetch-dest': 'image',
+    'sec-fetch-mode': 'no-cors',
+    'sec-fetch-site': 'same-origin',
+    'x-forwarded-for': '103.197.74.154, 10.84.6.47',
+    'x-forwarded-proto': 'https',
+    'x-replit-user-bio': '',
+    'x-replit-user-id': '',
+    'x-replit-user-name': '',
+    'x-replit-user-profile-image': '',
+    'x-replit-user-roles': '',
+    'x-replit-user-teams': '',
+    'x-replit-user-url': ''
+  }
+}
+Image file not found in database: {
+  filename: '6ad9eb1f-cea5-4a81-8de7-76f5c6257187.jpeg',
+  timestamp: '2024-12-06T12:31:35.112Z'
+}
+Image request received: {
+  filename: '6ad9eb1f-cea5-4a81-8de7-76f5c6257187.jpeg',
+  timestamp: '2024-12-06T12:31:49.565Z',
+  headers: {
+    host: '2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev',
+    'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+    accept: 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+    'accept-encoding': 'gzip, deflate, br, zstd',
+    'accept-language': 'en-US,en;q=0.9',
+    cookie: 'sid=s%3ADkgeP97bKbw4OJlVTggY_szgjjkexEMv.H%2FHckUCrwzGw0vv9AXCAXIF%2FWWrIKOCx5WpSP9Wobvo',
+    dnt: '1',
+    referer: 'https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/profile',
+    'sec-ch-ua': '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
+    'sec-ch-ua-mobile': '?0',
+    'sec-ch-ua-platform': '"macOS"',
+    'sec-fetch-dest': 'image',
+    'sec-fetch-mode': 'no-cors',
+    'sec-fetch-site': 'same-origin',
+    'x-forwarded-for': '103.197.74.154, 10.84.6.47',
+    'x-forwarded-proto': 'https',
+    'x-replit-user-bio': '',
+    'x-replit-user-id': '',
+    'x-replit-user-name': '',
+    'x-replit-user-profile-image': '',
+    'x-replit-user-roles': '',
+    'x-replit-user-teams': '',
+    'x-replit-user-url': ''
+  }
+}
+Image file not found in database: {
+  filename: '6ad9eb1f-cea5-4a81-8de7-76f5c6257187.jpeg',
+  timestamp: '2024-12-06T12:31:49.848Z'
+}
