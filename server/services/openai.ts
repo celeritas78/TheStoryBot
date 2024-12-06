@@ -363,9 +363,16 @@ export async function generateStoryContent({
   }
 }
 
-export async function generateImage(scenePrompt: string): Promise<string> {
+export async function generateImage(scenePrompt: string, childPhotoUrl?: string): Promise<string> {
   try {
-    const finalPrompt = `${scenePrompt}\n\nStyle guidelines:\n- Children's storybook illustration\n- Bright, warm colors\n- Cartoon-style characters, friendly expressions\n- Soft lighting, whimsical atmosphere\n- Suitable for ages 2-12\n- No scary or adult themes`;
+    let enhancedPrompt = scenePrompt;
+    
+    if (childPhotoUrl) {
+      // If we have a child photo reference, add reference prompt
+      enhancedPrompt = `This scene should feature a child that looks like the reference photo. Match the child's key facial features, skin tone, and overall appearance while maintaining a friendly, animated style.\n\n${scenePrompt}`;
+    }
+
+    const finalPrompt = `${enhancedPrompt}\n\nStyle guidelines:\n- Children's storybook illustration\n- Bright, warm colors\n- Cartoon-style characters, friendly expressions\n- Soft lighting, whimsical atmosphere\n- Suitable for ages 2-12\n- No scary or adult themes`;
 
     console.log('Generating image with prompt:', finalPrompt.substring(0, 500));
 

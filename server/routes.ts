@@ -477,12 +477,25 @@ export function setupRoutes(app: express.Application) {
       const settingDescriptions = storyContent.settings.map(s => `${s.name}: ${s.description}`).join('\n');
 
       // Generate media for each scene
+      // Get user's child photo URL if available
+      const [currentUser] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1);
+
+      console.log('Story generation request with child photo:', {
+        userId,
+        hasChildPhoto: !!currentUser?.childPhotoUrl,
+        timestamp: new Date().toISOString()
+      });
+
       const segments = await Promise.all(storyContent.scenes.map(async (scene, index) => {
         try {
           const fullSceneDescription = `${scene.description}\nCharacters and Objects from the Story:\n${characterDescriptions}\nSettings and Events from the Story:\n${settingDescriptions}`;
 
-          // Generate image from scene description
-          const imageUrl = await generateImage(fullSceneDescription);
+          // Generate image from scene description, passing child photo URL if available
+          const imageUrl = await generateImage(fullSceneDescription, currentUser?.childPhotoUrl);
           // Generate audio only from the narrative text
           const audioUrl = await generateSpeech(scene.text);
 
@@ -575,6 +588,19 @@ export function setupRoutes(app: express.Application) {
         orderBy: (storySegments, { desc }) => [desc(storySegments.sequence)],
       });
 
+      const [currentUser] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, story.userId))
+        .limit(1);
+
+      console.log('Story continuation request with child photo:', {
+        storyId: story.id,
+        userId: story.userId,
+        hasChildPhoto: !!currentUser?.childPhotoUrl,
+        timestamp: new Date().toISOString()
+      });
+
       const continuation = await generateStoryContent({
         previousContent: story.content,
         childName: story.childName,
@@ -584,7 +610,7 @@ export function setupRoutes(app: express.Application) {
       });
 
       const newSegments = await Promise.all(continuation.scenes.map(async (scene, index) => {
-        const imageUrl = await generateImage(scene.description);
+        const imageUrl = await generateImage(scene.description, currentUser?.childPhotoUrl);
         const audioUrl = await generateSpeech(scene.text);
         
         return {
