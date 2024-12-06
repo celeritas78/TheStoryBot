@@ -1,0 +1,62 @@
+> rest-express@1.0.0 dev
+> tsx watch --clear-screen=false --exclude vite.config.ts.* server/index.ts
+
+12:26:35 PM [express] Server is running on port 5000
+
+ ERROR(TypeScript)  Property 'childPhotoUrl' is missing in type '{ id: any; email: any; password: any; provider: any; providerId: any; displayName: any; avatarUrl: any; bio: any; emailVerified: any; verificationToken: any; verificationTokenExpiry: Date | null; ... 5 more ...; updatedAt: Date; }' but required in type '{ id: number; email: string; password: string; provider: string; providerId: string | null; displayName: string | null; avatarUrl: string | null; childPhotoUrl: string | null; bio: string | null; ... 8 more ...; updatedAt: Date; }'.
+ FILE  /home/runner/CustomBedtimeStories/client/src/hooks/use-user.ts:71:11
+
+    69 |     
+    70 |     // Ensure the response matches our User type
+  > 71 |     const user: User = {
+       |           ^^^^
+    72 |       id: userData.id,
+    73 |       email: userData.email,
+    74 |       password: userData.password,
+
+[TypeScript] Found 1 error. Watching for file changes.
+Login endpoint hit, authenticated user: true
+User authenticated successfully: { id: 7, email: 'sandeep@findemy.com' }
+Session saved successfully
+Global error handler: {
+  error: MulterError: File too large
+      at abortWithCode (/home/runner/CustomBedtimeStories/node_modules/multer/lib/make-middleware.js:71:22)
+      at FileStream.<anonymous> (/home/runner/CustomBedtimeStories/node_modules/multer/lib/make-middleware.js:134:11)
+      at FileStream.emit (node:events:519:28)
+      at SBMH.ssCb [as _cb] (/home/runner/CustomBedtimeStories/node_modules/busboy/lib/types/multipart.js:479:32)
+      at feed (/home/runner/CustomBedtimeStories/node_modules/streamsearch/lib/sbmh.js:248:10)
+      at SBMH.push (/home/runner/CustomBedtimeStories/node_modules/streamsearch/lib/sbmh.js:104:16)
+      at Multipart._write (/home/runner/CustomBedtimeStories/node_modules/busboy/lib/types/multipart.js:567:19)
+      at writeOrBuffer (node:internal/streams/writable:570:12)
+      at _write (node:internal/streams/writable:499:10)
+      at Writable.write (node:internal/streams/writable:508:10)
+      at IncomingMessage.ondata (node:internal/streams/readable:1007:22)
+      at IncomingMessage.emit (node:events:519:28)
+      at addChunk (node:internal/streams/readable:559:12)
+      at readableAddChunkPushByteMode (node:internal/streams/readable:510:3)
+      at Readable.push (node:internal/streams/readable:390:5)
+      at HTTPParser.parserOnBody (node:_http_common:131:24) {
+    code: 'LIMIT_FILE_SIZE',
+    field: 'photo',
+    storageErrors: []
+  },
+  stack: 'MulterError: File too large\n' +
+    '    at abortWithCode (/home/runner/CustomBedtimeStories/node_modules/multer/lib/make-middleware.js:71:22)\n' +
+    '    at FileStream.<anonymous> (/home/runner/CustomBedtimeStories/node_modules/multer/lib/make-middleware.js:134:11)\n' +
+    '    at FileStream.emit (node:events:519:28)\n' +
+    '    at SBMH.ssCb [as _cb] (/home/runner/CustomBedtimeStories/node_modules/busboy/lib/types/multipart.js:479:32)\n' +
+    '    at feed (/home/runner/CustomBedtimeStories/node_modules/streamsearch/lib/sbmh.js:248:10)\n' +
+    '    at SBMH.push (/home/runner/CustomBedtimeStories/node_modules/streamsearch/lib/sbmh.js:104:16)\n' +
+    '    at Multipart._write (/home/runner/CustomBedtimeStories/node_modules/busboy/lib/types/multipart.js:567:19)\n' +
+    '    at writeOrBuffer (node:internal/streams/writable:570:12)\n' +
+    '    at _write (node:internal/streams/writable:499:10)\n' +
+    '    at Writable.write (node:internal/streams/writable:508:10)\n' +
+    '    at IncomingMessage.ondata (node:internal/streams/readable:1007:22)\n' +
+    '    at IncomingMessage.emit (node:events:519:28)\n' +
+    '    at addChunk (node:internal/streams/readable:559:12)\n' +
+    '    at readableAddChunkPushByteMode (node:internal/streams/readable:510:3)\n' +
+    '    at Readable.push (node:internal/streams/readable:390:5)\n' +
+    '    at HTTPParser.parserOnBody (node:_http_common:131:24)',
+  timestamp: '2024-12-06T12:29:06.872Z'
+}
+12:29:06 PM [express] POST /api/profile/child-photo 500 in 433ms :: {"error":"File too large","detail…

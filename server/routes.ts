@@ -40,12 +40,33 @@ const registrationSchema = z.object({
   // Configure multer for handling file uploads
   const upload = multer({
     limits: {
-      fileSize: 5 * 1024 * 1024, // 5MB limit
+      fileSize: 10 * 1024 * 1024, // 10MB limit
     },
+    fileFilter: (req, file, cb) => {
+      // Accept only images
+      if (file.mimetype.startsWith('image/')) {
+        cb(null, true);
+      } else {
+        cb(new Error('Only image files are allowed'));
+      }
+    }
   });
 
+  // Custom error handling for multer
+  const handleMulterError = (err: any, req: any, res: any, next: any) => {
+    if (err instanceof multer.MulterError) {
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(400).json({
+          error: 'File too large',
+          details: 'Maximum file size is 10MB'
+        });
+      }
+    }
+    next(err);
+  };
+
   // Handle child photo upload
-  app.post('/api/profile/child-photo', upload.single('photo'), async (req, res) => {
+  app.post('/api/profile/child-photo', upload.single('photo'), handleMulterError, async (req, res) => {
     try {
       if (!req.isAuthenticated || !req.isAuthenticated()) {
         return res.status(401).json({ error: "Not logged in" });

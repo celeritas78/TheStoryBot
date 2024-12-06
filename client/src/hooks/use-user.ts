@@ -76,6 +76,7 @@ async function fetchUser(): Promise<User | null> {
       providerId: userData.providerId,
       displayName: userData.displayName,
       avatarUrl: userData.avatarUrl,
+      childPhotoUrl: userData.childPhotoUrl,
       bio: userData.bio,
       emailVerified: userData.emailVerified,
       verificationToken: userData.verificationToken,
