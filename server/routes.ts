@@ -178,7 +178,17 @@ export function setupRoutes(app: express.Application) {
   app.get("/images/:filename", async (req, res) => {
     try {
       const { filename } = req.params;
-      console.log('Image request received:', { filename });
+      console.log('Image request received:', { 
+        filename,
+        timestamp: new Date().toISOString(),
+        headers: req.headers
+      });
+
+      // Validate filename format
+      if (!filename.match(/^[a-zA-Z0-9-]+\.(png|jpg|jpeg|webp)$/)) {
+        console.error('Invalid filename format:', { filename });
+        return res.status(400).json({ error: "Invalid image filename format" });
+      }
 
       // First check if this image file is referenced in the database
       const segment = await db.query.storySegments.findFirst({
@@ -186,16 +196,33 @@ export function setupRoutes(app: express.Application) {
       });
 
       if (!segment) {
-        console.error('Image file not found in database:', { filename });
+        console.error('Image file not found in database:', { 
+          filename,
+          timestamp: new Date().toISOString()
+        });
         return res.status(404).json({ error: "Image file not found" });
       }
 
       const filePath = getImageFilePath(filename);
-      console.log('Resolved file path:', { filePath });
+      console.log('Resolved file path:', { 
+        filePath,
+        timestamp: new Date().toISOString()
+      });
 
       if (!fs.existsSync(filePath)) {
-        console.error('Image file not found on disk:', { filePath });
+        console.error('Image file not found on disk:', { 
+          filePath,
+          timestamp: new Date().toISOString()
+        });
         return res.status(404).json({ error: "Image file not found" });
+      }
+
+      if (!isImageFormatSupported(filename)) {
+        console.error('Unsupported image format:', { 
+          filename,
+          timestamp: new Date().toISOString()
+        });
+        return res.status(400).json({ error: "Unsupported image format" });
       }
 
       // Log file stats
@@ -203,30 +230,70 @@ export function setupRoutes(app: express.Application) {
       console.log('Image file stats:', { 
         size: stat.size,
         path: filePath,
-        exists: fs.existsSync(filePath)
+        exists: fs.existsSync(filePath),
+        timestamp: new Date().toISOString()
       });
 
-      // Set proper CORS headers
-      res.setHeader('Access-Control-Allow-Origin', '*');
-      res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD');
-      res.setHeader('Access-Control-Allow-Headers', 'Range');
-      
-      // Set content type and caching headers
-      res.setHeader('Content-Type', getImageMimeType(filename));
-      res.setHeader('Content-Length', stat.size);
-      res.setHeader('Cache-Control', 'public, max-age=31536000');
+      // Handle range requests for large images
+      const range = req.headers.range;
+      if (range) {
+        const parts = range.replace(/bytes=/, "").split("-");
+        const start = parseInt(parts[0], 10);
+        const end = parts[1] ? parseInt(parts[1], 10) : stat.size - 1;
+        const chunksize = (end - start) + 1;
+        const stream = fs.createReadStream(filePath, { start, end });
 
-      // Stream the image file
-      const stream = fs.createReadStream(filePath);
-      stream.pipe(res);
+        res.writeHead(206, {
+          'Content-Range': `bytes ${start}-${end}/${stat.size}`,
+          'Accept-Ranges': 'bytes',
+          'Content-Length': chunksize,
+          'Content-Type': getImageMimeType(filename),
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, HEAD',
+          'Access-Control-Allow-Headers': 'Range',
+          'Cache-Control': 'public, max-age=31536000, immutable',
+          'Etag': `"${stat.size}-${stat.mtime.getTime()}"`,
+          'Last-Modified': stat.mtime.toUTCString()
+        });
 
+        stream.pipe(res);
+      } else {
+        // Set enhanced headers for better caching and performance
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD');
+        res.setHeader('Access-Control-Allow-Headers', 'Range');
+        res.setHeader('Content-Type', getImageMimeType(filename));
+        res.setHeader('Content-Length', stat.size);
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+        res.setHeader('Accept-Ranges', 'bytes');
+        res.setHeader('Etag', `"${stat.size}-${stat.mtime.getTime()}"`);
+        res.setHeader('Last-Modified', stat.mtime.toUTCString());
+
+        // Stream the image file
+        const stream = fs.createReadStream(filePath);
+        stream.on('error', (error) => {
+          console.error('Stream error:', {
+            error,
+            filename,
+            timestamp: new Date().toISOString()
+          });
+          if (!res.headersSent) {
+            res.status(500).json({ error: 'Failed to stream image file' });
+          }
+        });
+
+        stream.pipe(res);
+      }
     } catch (error: any) {
       console.error('Error serving image:', { 
         error, 
         message: error.message,
-        stack: error.stack 
+        stack: error.stack,
+        timestamp: new Date().toISOString()
       });
-      res.status(500).json({ error: 'Failed to serve image file' });
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'Failed to serve image file' });
+      }
     }
   });
 
