@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useUser } from "@/hooks/use-user";
 import { Button } from "@/components/ui/button";
@@ -6,13 +6,56 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Loader2 } from "lucide-react";
+import { Loader2, Upload } from "lucide-react";
+import { OptimizedImage } from "@/components/OptimizedImage";
 
 export default function ProfilePage() {
   const { user, isLoading, updateProfile, deleteAccount } = useUser();
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const { toast } = useToast();
+
+  const handleChildPhotoUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    const formData = new FormData();
+    formData.append('photo', file);
+
+    try {
+      const response = await fetch('/api/profile/child-photo', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to upload photo');
+      }
+
+      const { childPhotoUrl } = await response.json();
+      
+      // Update profile with new photo URL
+      const updateResult = await updateProfile({ childPhotoUrl });
+      if (!updateResult.ok) {
+        throw new Error(updateResult.message);
+      }
+
+      toast({
+        title: "Photo uploaded",
+        description: "Your child's photo has been uploaded successfully.",
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to upload photo",
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  }, [toast, updateProfile]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -96,6 +139,50 @@ export default function ProfilePage() {
                 placeholder="Tell us about yourself"
                 disabled={isSaving}
               />
+            </div>
+            <div className="space-y-2">
+              <Label>Child's Photo</Label>
+              <div className="flex flex-col items-center gap-4 p-4 border-2 border-dashed rounded-lg">
+                {user.childPhotoUrl ? (
+                  <div className="relative w-32 h-32 rounded-full overflow-hidden">
+                    <OptimizedImage
+                      src={user.childPhotoUrl}
+                      alt="Child's photo"
+                      className="object-cover w-full h-full"
+                    />
+                  </div>
+                ) : (
+                  <div className="w-32 h-32 bg-gray-100 rounded-full flex items-center justify-center">
+                    <Upload className="w-8 h-8 text-gray-400" />
+                  </div>
+                )}
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleChildPhotoUpload}
+                    disabled={isUploading}
+                    className="hidden"
+                    id="child-photo-upload"
+                  />
+                  <Label
+                    htmlFor="child-photo-upload"
+                    className="cursor-pointer inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
+                  >
+                    {isUploading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Uploading...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="mr-2 h-4 w-4" />
+                        {user.childPhotoUrl ? "Change Photo" : "Upload Photo"}
+                      </>
+                    )}
+                  </Label>
+                </div>
+              </div>
             </div>
             <Button type="submit" disabled={isSaving}>
               {isSaving ? (

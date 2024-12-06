@@ -1,15 +1,12 @@
 import OpenAI from "openai";
-import fetch from "node-fetch";
 import { saveAudioFile } from './audio-storage';
-import { saveImageFile } from './image-storage';
 
-// the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 interface StoryGenerationParams {
   childName: string;
   childAge: number;
-  mainCharacter: string;
+  mainCharacter: string; 
   theme: string;
   previousContent?: string;
 }
@@ -37,40 +34,236 @@ interface StoryContent {
   error?: string;
 }
 
-// Global variables to store character and setting info for image generation consistency.
-// In practice, you may want to handle this differently (e.g. passing as function params)
-// or integrate into your overall application state management.
-let globalCharacters: Character[] = [];
-let globalSettings: Setting[] = [];
+interface OutlineScene {
+  scene_number: number;
+  key_events: string[];
+  setting: string;
+  characters_involved: string[];
+  emotional_tone: string;
+}
+
+interface OutlineJSON {
+  scenes: OutlineScene[];
+}
+
+async function callChatCompletion(messages: {role: 'system'|'user', content: string}[], model="gpt-4o-mini") {
+  const response = await openai.chat.completions.create({
+    model,
+    messages
+  });
+  const msg = response.choices[0]?.message?.content;
+  if (!msg) throw new Error("No response from LLM");
+  return msg;
+}
+
+/**
+ * Utility function to clean the response of any markdown fences before parsing JSON.
+ */
+function cleanJSONResponse(response: string): string {
+  let cleaned = response.trim();
+  // Remove triple backticks and possible language hints like ```json
+  cleaned = cleaned.replace(/^```(\w+)?/gm, '').replace(/```$/gm, '');
+  return cleaned.trim();
+}
 
 async function generateOutline({
   childName,
   childAge,
   mainCharacter,
   theme
-}: StoryGenerationParams): Promise<string> {
-  const outlineSystemPrompt = `You are a skilled children's story writer. You will first produce an OUTLINE ONLY for a story. Do not write the full story yet. The outline will be used to guide the final story generation.`;
-
-  const outlineUserPrompt = `
-I need a children's story outline for a ${childAge}-year-old child named ${childName}. The main character(s)/element(s) is(are) ${mainCharacter}. 
+}: StoryGenerationParams): Promise<OutlineJSON> {
+  const systemPrompt = `You are a skilled children's story planner. Do not use Markdown code blocks in your response. Output ONLY raw JSON.`;
+  const userPrompt = `
+I need a children's story outline for a ${childAge}-year-old child named ${childName}. The main character(s)/element(s) is(are) ${mainCharacter}.
 Theme: ${theme}
 
 Requirements for the outline:
-- The story should have a simple narrative arc: beginning, middle, end.
-- Exactly 3 scenes. Each scene should be distinct and visually rich.
-- Each scene should have a key event, setting, and emotional tone.
-- Include short bullet points (2-4) per scene describing what happens.
-- Include any relevant character actions, objects, or events that must appear.
+- Exactly 3 scenes: beginning, middle, end
+- Each scene distinct and visually rich
+- Each scene has key_events, setting, characters_involved, and emotional_tone
+- Output ONLY raw JSON, no Markdown or code blocks.
 
-Output format (JSON):
+Format:
 {
   "scenes": [
     {
       "scene_number": 1,
       "key_events": ["..."],
-      "setting": "short description of setting",
-      "characters_involved": ["list of character names"],
-      "emotional_tone": "e.g. excited, curious"
+      "setting": "short description",
+      "characters_involved": ["..."],
+      "emotional_tone": "..."
+    },
+    {
+      "scene_number": 2,
+      ...
+    },
+    {
+      "scene_number": 3,
+      ...
+    }
+  ]
+}
+  `;
+
+  const outlineMsg = await callChatCompletion([
+    {role: "system", content: systemPrompt},
+    {role: "user", content: userPrompt}
+  ]);
+
+  const outlineContent = cleanJSONResponse(outlineMsg);
+  const outlineJSON: OutlineJSON = JSON.parse(outlineContent);
+  return outlineJSON;
+}
+
+async function defineEntities({
+  outline,
+  childName,
+  childAge,
+  mainCharacter,
+  theme
+}: {outline: OutlineJSON} & StoryGenerationParams) {
+  const systemPrompt = `You are a skilled children's story writer. Define all entities in detail. Do not use Markdown code blocks. Output ONLY raw JSON.`;
+
+  const userPrompt = `
+Given the outline below, define in detail all characters, objects, and settings that appear in the story. Include appearance, personality traits, relationships.
+
+Outline:
+${JSON.stringify(outline, null, 2)}
+
+Requirements:
+- Include all characters mentioned in the outline and mainCharacter(s) if separate.
+- Include objects/events if applicable.
+- Include settings in detail.
+- Output ONLY raw JSON, no code fences.
+
+Format:
+{
+  "characters": [
+    {
+      "name": "...",
+      "description": "..."
+    }
+    ...
+  ],
+  "objects": [
+    {
+      "name": "...",
+      "description": "..."
+    }
+    ...
+  ],
+  "settings": [
+    {
+      "name": "...",
+      "description": "..."
+    }
+    ...
+  ]
+}`;
+
+  const entitiesMsg = await callChatCompletion([
+    {role: "system", content: systemPrompt},
+    {role: "user", content: userPrompt}
+  ]);
+
+  const entitiesContent = cleanJSONResponse(entitiesMsg);
+  const entities = JSON.parse(entitiesContent);
+  return entities;
+}
+
+async function generateFullStory({
+  outline,
+  entities,
+  childName,
+  childAge,
+  mainCharacter,
+  theme
+}: {outline: OutlineJSON, entities: any} & StoryGenerationParams): Promise<StoryContent> {
+  const systemPrompt = `You are a skilled children's story writer. Create a full 3-scene story. Do not use Markdown code blocks. Output ONLY raw JSON.`;
+
+  const userPrompt = `
+Using the outline and entities defined below, create a full children's story in 3 scenes.
+
+Outline:
+${JSON.stringify(outline, null, 2)}
+
+Entities:
+${JSON.stringify(entities, null, 2)}
+
+Requirements:
+- Age-appropriate language
+- Integrate all characters, objects, and settings
+- 3 scenes, each 30-60 seconds read time
+- Include dialogue, emotions, actions
+- Output ONLY raw JSON, no code fences.
+
+Format:
+{
+  "title": "...",
+  "characters": [...],
+  "settings": [...],
+  "scenes": [
+    {
+      "text": "...",
+      "description": "..."
+    },
+    {
+      "text": "...",
+      "description": "..."
+    },
+    {
+      "text": "...",
+      "description": "..."
+    }
+  ]
+}
+Use the previously defined characters and settings for consistency.
+`;
+
+  const storyMsg = await callChatCompletion([
+    {role: "system", content: systemPrompt},
+    {role: "user", content: userPrompt}
+  ]);
+
+  const storyContent = cleanJSONResponse(storyMsg);
+  const story: StoryContent = JSON.parse(storyContent);
+
+  // Merge objects into characters if needed
+  const mergedCharacters = [...story.characters];
+  if (entities.objects && Array.isArray(entities.objects)) {
+    for (const obj of entities.objects) {
+      mergedCharacters.push(obj);
+    }
+  }
+
+  const mergedSettings = entities.settings || story.settings || [];
+
+  story.characters = mergedCharacters;
+  story.settings = mergedSettings;
+
+  return story;
+}
+
+async function extractNarrationScripts(story: StoryContent) {
+  // Scenes' text are already narration.
+  return story.scenes.map(scene => scene.text);
+}
+
+async function extractKeyElementsFromScenes(story: StoryContent) {
+  const systemPrompt = `You are an assistant who extracts key visual elements from scenes. Do not use Markdown code blocks. Output ONLY raw JSON.`;
+  const userPrompt = `
+Given the following story scenes, list the key visual elements in each scene for illustration.
+
+Story Scenes:
+${JSON.stringify(story.scenes, null, 2)}
+
+Output ONLY raw JSON:
+
+{
+  "scenes": [
+    {
+      "scene_number": 1,
+      "key_elements": ["..."]
     },
     {
       "scene_number": 2,
@@ -83,139 +276,46 @@ Output format (JSON):
   ]
 }`;
 
-  const outlineResponse = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
-    messages: [
-      { role: "system", content: outlineSystemPrompt },
-      { role: "user", content: outlineUserPrompt }
-    ]
-  });
+  const elementsMsg = await callChatCompletion([
+    {role: "system", content: systemPrompt},
+    {role: "user", content: userPrompt}
+  ]);
 
-  const outlineMessage = outlineResponse.choices[0]?.message?.content;
-  if (!outlineMessage) {
-    throw new Error('Failed to generate outline from the model.');
-  }
-
-  return outlineMessage;
+  const elementsContent = cleanJSONResponse(elementsMsg);
+  const elements = JSON.parse(elementsContent);
+  return elements;
 }
 
-async function generateFullStory({
-  childName,
-  childAge,
-  mainCharacter,
-  theme,
-  outlineJSON,
-  previousContent
-}: StoryGenerationParams & { outlineJSON: string }): Promise<StoryContent> {
-  const systemPrompt = `You are a skilled children's story writer. Create engaging, age-appropriate content in JSON format with the following structure. Do not add extra characters or delimiters like ** or ## in the output.
+async function createImagePromptForScene(sceneDescription: string, characters: Character[], settings: Setting[], keyElements: string[]): Promise<string> {
+  const systemPrompt = `You format illustration prompts. Output ONLY raw text. No code blocks.`;
 
-{
-  "title": "Your title here",
-  "characters": [
-    {
-      "name": "Character name",
-      "description": "Detailed description of the character including appearance, attire, personality traits, relationships"
-    },
-    {
-      "name": "Object name",
-      "description": "Detailed description of the object including appearance, type, features"
-    }
-    // Add more as needed
-  ],
-  "settings": [
-    {
-      "name": "Setting name",
-      "description": "Detailed description of the setting including environment, atmosphere, visual elements"
-    },
-    {
-      "name": "Event name",
-      "description": "Detailed description of the event including location, time, circumstances, and outcome"
-    }
-    // Add more as needed
-  ],
-  "scenes": [
-    {
-      "text": "Scene 1 text (30-60 seconds read time)",
-      "description": "Scene 1 illustration description focusing on characters, setting, and key visuals"
-    },
-    {
-      "text": "Scene 2 text (30-60 seconds read time)",
-      "description": "Scene 2 illustration description focusing on characters, setting, and key visuals"
-    },
-    {
-      "text": "Scene 3 text (30-60 seconds read time)",
-      "description": "Scene 3 illustration description focusing on characters, setting, and key visuals"
-    }
-  ]
-}
+  const userPrompt = `
+Scene Description:
+${sceneDescription}
 
-Ensure:
-- The story is guided by the provided outline.
-- Each scene text is sufficiently long, including dialogue, emotions, and actions.
-- Age-appropriate language and content.
-- Maintain consistency in characters and theme.
-- Make the scenes easy to visualize for illustrations.
-- Output is valid JSON without extra commentary.`;
+Characters:
+${JSON.stringify(characters, null, 2)}
 
-  const prompt = previousContent
-    ? `Continue the story with the same style and theme. Previous content: ${previousContent}`
-    : `Create the full children's story about ${childName} (age ${childAge}) with the main character(s)/elements ${mainCharacter} as per the given outline. 
-       Theme: ${theme}
-       Outline to follow:
-       ${outlineJSON}`;
+Settings:
+${JSON.stringify(settings, null, 2)}
 
-  const response = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
-    messages: [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: prompt }
-    ],
-  });
+Key Elements:
+${JSON.stringify(keyElements, null, 2)}
 
-  const message = response.choices[0]?.message;
-  if (!message || !message.content) {
-    console.error('Invalid response structure from OpenAI:', response);
-    throw new Error("OpenAI response missing story content");
-  }
+Requirements:
+- Produce a single descriptive prompt capturing all details, suitable for a children's storybook illustration.
+- Include character appearances, setting atmosphere, objects, and key elements.
+- Bright, warm, child-friendly style.
+- No Markdown, no code blocks, just the prompt text.
+`;
 
-  const content = message.content;
-  let parsedContent: StoryContent;
-  try {
-    parsedContent = JSON.parse(content);
-  } catch (parseError) {
-    console.error('Failed to parse JSON from AI response:', parseError);
-    throw new Error('Story generation failed: Invalid JSON format');
-  }
+  const promptMsg = await callChatCompletion([
+    {role: "system", content: systemPrompt},
+    {role: "user", content: userPrompt}
+  ]);
 
-  if (
-    !parsedContent.title ||
-    !parsedContent.characters ||
-    !parsedContent.settings ||
-    !parsedContent.scenes ||
-    parsedContent.scenes.length !== 3
-  ) {
-    console.error('Invalid story content structure:', parsedContent);
-    throw new Error('Story generation failed: Missing or invalid story elements');
-  }
-
-  // Validate scene length
-  const wordsPerMinute = 130; // Approx average
-  const minWords = (30 / 60) * wordsPerMinute; 
-  const maxWords = (60 / 60) * wordsPerMinute; 
-
-  for (let i = 0; i < parsedContent.scenes.length; i++) {
-    const scene = parsedContent.scenes[i];
-    const wordCount = scene.text.split(/\s+/).length;
-    if (wordCount < minWords || wordCount > maxWords) {
-      console.warn(`Scene ${i + 1} word count (${wordCount}) is outside the desired range (approx 65-130 words).`);
-    }
-  }
-
-  // Store the characters and settings globally for image generation
-  globalCharacters = parsedContent.characters || [];
-  globalSettings = parsedContent.settings || [];
-
-  return parsedContent;
+  // No JSON expected here, just raw text prompt
+  return promptMsg.trim();
 }
 
 export async function generateStoryContent({
@@ -225,93 +325,49 @@ export async function generateStoryContent({
   theme,
   previousContent = "",
 }: StoryGenerationParams): Promise<StoryContent> {
-  console.log('Generating story content with params:', { childName, childAge, mainCharacter, theme, hasPreviousContent: !!previousContent });
+  console.log('Generating story with improved flow:', { childName, childAge, mainCharacter, theme });
+
   try {
     // Step 1: Generate outline
-    const outline = await generateOutline({ childName, childAge, mainCharacter, theme, previousContent });
+    const outline = await generateOutline({ childName, childAge, mainCharacter, theme });
 
-    // Step 2: Generate full story using outline
-    const fullStory = await generateFullStory({ childName, childAge, mainCharacter, theme, previousContent, outlineJSON: outline });
+    // Step 2: Define entities (characters, objects, settings)
+    const entities = await defineEntities({ outline, childName, childAge, mainCharacter, theme });
 
-    console.log('Successfully generated story content:', { 
-      title: fullStory.title,
-      numberOfScenes: fullStory.scenes.length,
-      preview: fullStory.scenes[0]?.text ? 
-        (fullStory.scenes[0].text) : 
-        'No preview available',
-      firstSceneDescription: fullStory.scenes[0]?.description ? 
-        (fullStory.scenes[0].description) : 
-        'No description available'
-    });
+    // Step 3: Generate full story
+    const story = await generateFullStory({ outline, entities, childName, childAge, mainCharacter, theme });
 
-    return fullStory;
+    // Step 4: Extract narration scripts (optional)
+    const scripts = await extractNarrationScripts(story);
+    console.log('Extracted narration scripts:', scripts.map(s => s.substring(0, 50) + '...'));
+
+    // Step 5: Extract key elements for each scene
+    const elements = await extractKeyElementsFromScenes(story);
+    console.log('Key scene elements:', elements);
+
+    // Step 6: For each scene, create a final image prompt
+    for (let i = 0; i < story.scenes.length; i++) {
+      const scene = story.scenes[i];
+      const sceneElements = elements.scenes.find((s: any) => s.scene_number === i+1)?.key_elements || [];
+      const imagePrompt = await createImagePromptForScene(scene.description, story.characters, story.settings, sceneElements);
+      // Replace scene description with the final image prompt to ensure it’s ready for image generation
+      scene.description = imagePrompt;
+    }
+
+    console.log('Successfully generated story content with enriched prompts.');
+
+    return story;
   } catch (error) {
-    console.error('Error in story content generation:', {
-      error,
-      message: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined
-    });
-    throw new Error('Failed to generate story content: ' + (error instanceof Error ? error.message : 'Unknown error'));
+    console.error('Error in improved story generation flow:', error);
+    throw error;
   }
 }
 
-export async function generateImage(sceneDescription: string): Promise<string> {
+export async function generateImage(scenePrompt: string): Promise<string> {
   try {
-    // Build a consistent character description string
-    let characterDescriptions = '';
-    for (const char of globalCharacters) {
-      characterDescriptions += `${char.name}: ${char.description}\n`;
-    }
+    const finalPrompt = `${scenePrompt}\n\nStyle guidelines:\n- Children's storybook illustration\n- Bright, warm colors\n- Cartoon-style characters, friendly expressions\n- Soft lighting, whimsical atmosphere\n- Suitable for ages 2-12\n- No scary or adult themes`;
 
-    // Similarly, if you want to ensure settings are incorporated, you can do so:
-    let settingDescriptions = '';
-    for (const set of globalSettings) {
-      settingDescriptions += `${set.name}: ${set.description}\n`;
-    }
-
-    const integratedDescription = `
-Scene description:
-${sceneDescription}
-
-Characters and objects (for consistency across scenes):
-${characterDescriptions}
-
-Settings:
-${settingDescriptions}
-    `.trim();
-
-    const validationPrompt = `
-Given the following integrated description of the scene, characters, and settings:
-${integratedDescription}
-
-We need an image prompt that:
-- Clearly describes the visual elements of this scene for a children's storybook illustration.
-- Incorporates the key characters and their described appearances.
-- Incorporates any important objects or settings details.
-- Maintains a warm, bright, child-friendly illustration style.
-- Emphasizes the characters' consistent appearances and the specified setting.
-- Use a whimsical, age-appropriate style.
-
-Output a single concise prompt (no JSON) that can be used for image generation.
-    `;
-
-    const validationResponse = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        { role: "system", content: "You are an assistant that reformats scene descriptions into a single illustrative image prompt for a children's storybook." },
-        { role: "user", content: validationPrompt }
-      ]
-    });
-
-    const refinedPrompt = validationResponse.choices[0]?.message?.content;
-    if (!refinedPrompt) {
-      console.warn("No refined prompt from validation step, falling back to sceneDescription + characterDescriptions");
-      return '/assets/fallback-story-image.png';
-    }
-
-    const finalPrompt = `${refinedPrompt}\n\nStyle guidelines:\n- Children's storybook illustration\n- Bright, warm colors\n- Cartoon-style characters, friendly expressions\n- Soft lighting, whimsical atmosphere\n- Age-appropriate for 2-12\n- No scary or adult themes\n- Use only mentioned characters, objects, and settings`.trim();
-
-    console.log('Final image prompt:', finalPrompt);
+    console.log('Generating image with prompt:', finalPrompt.substring(0, 500));
 
     const response = await openai.images.generate({
       model: "dall-e-3",
@@ -327,32 +383,9 @@ Output a single concise prompt (no JSON) that can be used for image generation.
       return '/assets/fallback-story-image.png';
     }
 
-    // Download and save the image locally
-    try {
-      const imageUrl = response.data[0].url;
-      const imageResponse = await fetch(imageUrl);
-      if (!imageResponse.ok) {
-        throw new Error(`Failed to download image: ${imageResponse.statusText}`);
-      }
-      
-      const imageBuffer = Buffer.from(await imageResponse.arrayBuffer());
-      const format = 'png'; // DALL-E 3 images are PNG format
-      
-      // Save the image using our image storage service
-      const localImagePath = await saveImageFile(imageBuffer, format);
-      console.log('Successfully saved image locally:', localImagePath);
-      
-      return localImagePath;
-    } catch (downloadError) {
-      console.error('Error downloading/saving image:', downloadError);
-      return '/assets/fallback-story-image.png';
-    }
+    return response.data[0].url;
   } catch (error) {
-    console.error("OpenAI Image Generation Error:", {
-      error,
-      message: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined
-    });
+    console.error("OpenAI Image Generation Error:", error);
     return '/assets/fallback-story-image.png';
   }
 }
@@ -378,17 +411,12 @@ export async function generateSpeech(text: string): Promise<string> {
       throw new Error("Invalid audio data received");
     }
 
-    // Save the audio file and get its URL
     const audioUrl = await saveAudioFile(buffer);
     console.log('Successfully saved audio file:', audioUrl);
 
     return audioUrl;
   } catch (error) {
-    console.error("OpenAI Speech Generation Error:", {
-      error,
-      message: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined
-    });
+    console.error("OpenAI Speech Generation Error:", error);
     throw new Error('Failed to generate speech: ' + (error instanceof Error ? error.message : 'Unknown error'));
   }
 }

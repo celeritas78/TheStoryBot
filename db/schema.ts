@@ -11,6 +11,7 @@ export const users = pgTable("users", {
   providerId: varchar("provider_id", { length: 255 }),
   displayName: varchar("display_name", { length: 255 }),
   avatarUrl: varchar("avatar_url", { length: 512 }),
+  childPhotoUrl: varchar("child_photo_url", { length: 512 }),
   bio: text("bio"),
   emailVerified: boolean("email_verified").notNull().default(false),
   verificationToken: varchar("verification_token", { length: 255 }),

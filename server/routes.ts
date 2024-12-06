@@ -4,6 +4,8 @@ import { z } from 'zod';
 import { db } from '../db';
 import { stories, storySegments, users } from '../db/schema';
 import { eq, desc } from 'drizzle-orm';
+import multer from 'multer';
+import { saveImageFile } from './services/image-storage';
 import bcrypt from 'bcryptjs';
 import { 
   generateStoryContent, 
@@ -34,7 +36,47 @@ const registrationSchema = z.object({
 
 // Using imported sendErrorResponse from utils/error
 
-export function setupRoutes(app: express.Application) {
+  export function setupRoutes(app: express.Application) {
+  // Configure multer for handling file uploads
+  const upload = multer({
+    limits: {
+      fileSize: 5 * 1024 * 1024, // 5MB limit
+    },
+  });
+
+  // Handle child photo upload
+  app.post('/api/profile/child-photo', upload.single('photo'), async (req, res) => {
+    try {
+      if (!req.isAuthenticated || !req.isAuthenticated()) {
+        return res.status(401).json({ error: "Not logged in" });
+      }
+
+      if (!req.file) {
+        return res.status(400).json({ error: "No file uploaded" });
+      }
+
+      const userId = req.user?.id;
+      const fileBuffer = req.file.buffer;
+      const fileType = req.file.mimetype.split('/')[1] || 'jpeg';
+
+      // Save the image using our image storage service
+      const childPhotoUrl = await saveImageFile(fileBuffer, fileType, {
+        maxSizeMB: 5,
+        quality: 80
+      });
+
+      // Update user record with new photo URL
+      await db
+        .update(users)
+        .set({ childPhotoUrl })
+        .where(eq(users.id, userId));
+
+      res.json({ childPhotoUrl });
+    } catch (error) {
+      console.error('Failed to upload child photo:', error);
+      res.status(500).json({ error: 'Failed to upload photo' });
+    }
+  });
   // Global error middleware (from original code)
   app.use((err: any, req: any, res: any, next: any) => {
     console.error('Global error handler:', {

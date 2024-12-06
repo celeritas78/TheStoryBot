@@ -216,6 +216,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "child_photo_url": {
+          "name": "child_photo_url",
+          "type": "varchar(512)",
+          "primaryKey": false,
+          "notNull": false
+        },
         "bio": {
           "name": "bio",
           "type": "text",
