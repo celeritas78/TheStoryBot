@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useUser } from "@/hooks/use-user";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,6 +12,7 @@ import { OptimizedImage } from "@/components/OptimizedImage";
 
 export default function ProfilePage() {
   const { user, isLoading, updateProfile, deleteAccount } = useUser();
+  const queryClient = useQueryClient();
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -34,13 +36,10 @@ export default function ProfilePage() {
         throw new Error('Failed to upload photo');
       }
 
-      const { childPhotoUrl } = await response.json();
+      const { childPhotoUrl, user } = await response.json();
       
-      // Update profile with new photo URL
-      const updateResult = await updateProfile({ childPhotoUrl });
-      if (!updateResult.ok) {
-        throw new Error(updateResult.message);
-      }
+      // Update the React Query cache with the new user data
+      queryClient.setQueryData(['user'], user);
 
       toast({
         title: "Photo uploaded",

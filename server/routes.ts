@@ -86,13 +86,26 @@ const registrationSchema = z.object({
         quality: 80
       });
 
-      // Update user record with new photo URL
-      await db
+      // Update user record with new photo URL and get updated user
+      const [updatedUser] = await db
         .update(users)
-        .set({ childPhotoUrl })
-        .where(eq(users.id, userId));
+        .set({ 
+          childPhotoUrl,
+          updatedAt: new Date()
+        })
+        .where(eq(users.id, userId))
+        .returning();
 
-      res.json({ childPhotoUrl });
+      if (!updatedUser) {
+        throw new Error('Failed to update user record');
+      }
+
+      // Return the full updated user object (excluding password)
+      const { password, ...userData } = updatedUser;
+      res.json({ 
+        childPhotoUrl,
+        user: userData 
+      });
     } catch (error) {
       console.error('Failed to upload child photo:', error);
       res.status(500).json({ error: 'Failed to upload photo' });
@@ -253,6 +266,11 @@ const registrationSchema = z.object({
         return res.status(400).json({ error: "Invalid image filename format" });
       }
 
+      console.log('Checking image in database:', {
+        filename,
+        timestamp: new Date().toISOString()
+      });
+
       // Check if this image file is referenced in the database
       const segment = await db.query.storySegments.findFirst({
         where: eq(storySegments.imageUrl, `/images/${filename}`)
@@ -262,6 +280,13 @@ const registrationSchema = z.object({
       if (!segment) {
         const user = await db.query.users.findFirst({
           where: eq(users.childPhotoUrl, `/images/${filename}`)
+        });
+
+        console.log('Image lookup result:', {
+          filename,
+          foundInStorySegments: !!segment,
+          foundInUserProfile: !!user,
+          timestamp: new Date().toISOString()
         });
 
         if (!user) {
