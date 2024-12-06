@@ -25,34 +25,45 @@ export function OptimizedImage({
   const [imageSrc, setImageSrc] = useState<string>(priority ? src : '');
 
   useEffect(() => {
+    let mounted = true;
+    
     if (!priority && src) {
       // Reset states when src changes
       setIsLoading(true);
       setIsError(false);
+      setImageSrc(''); // Clear current image while loading
 
-      // Create new image object
-      const img = new Image();
-      img.src = src;
+      const loadImage = async () => {
+        try {
+          // Create new image object
+          const img = new Image();
+          
+          // Create a promise to handle image loading
+          await new Promise((resolve, reject) => {
+            img.onload = resolve;
+            img.onerror = reject;
+            img.src = src;
+          });
 
-      // Set up load handler
-      img.onload = () => {
-        setImageSrc(src);
-        setIsLoading(false);
+          if (mounted) {
+            setImageSrc(src);
+            setIsLoading(false);
+          }
+        } catch (error) {
+          console.error(`Failed to load image: ${src}`, error);
+          if (mounted) {
+            setIsError(true);
+            setIsLoading(false);
+          }
+        }
       };
 
-      // Set up error handler
-      img.onerror = () => {
-        console.error(`Failed to load image: ${src}`);
-        setIsError(true);
-        setIsLoading(false);
-      };
-
-      return () => {
-        // Clean up
-        img.onload = null;
-        img.onerror = null;
-      };
+      loadImage();
     }
+
+    return () => {
+      mounted = false;
+    };
   }, [src, priority]);
 
   const handleError = () => {

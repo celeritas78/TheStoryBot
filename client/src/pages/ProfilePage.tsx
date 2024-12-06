@@ -30,6 +30,7 @@ export default function ProfilePage() {
       const response = await fetch('/api/profile/child-photo', {
         method: 'POST',
         body: formData,
+        credentials: 'include',
       });
 
       if (!response.ok) {
@@ -38,14 +39,18 @@ export default function ProfilePage() {
 
       const { childPhotoUrl, user } = await response.json();
       
+      // Invalidate and refetch user data to ensure we have the latest
+      await queryClient.invalidateQueries({ queryKey: ['user'] });
+      
       // Update the React Query cache with the new user data
-      queryClient.setQueryData(['user'], user);
+      queryClient.setQueryData(['user'], () => user);
 
       toast({
         title: "Photo uploaded",
         description: "Your child's photo has been uploaded successfully.",
       });
     } catch (error) {
+      console.error('Photo upload error:', error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -54,7 +59,7 @@ export default function ProfilePage() {
     } finally {
       setIsUploading(false);
     }
-  }, [toast, updateProfile]);
+  }, [queryClient, toast]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -142,19 +147,21 @@ export default function ProfilePage() {
             <div className="space-y-2">
               <Label>Child's Photo</Label>
               <div className="flex flex-col items-center gap-4 p-4 border-2 border-dashed rounded-lg">
-                {user.childPhotoUrl ? (
-                  <div className="relative w-32 h-32 rounded-full overflow-hidden">
+                <div className="relative w-32 h-32 rounded-full overflow-hidden">
+                  {user.childPhotoUrl ? (
                     <OptimizedImage
                       src={user.childPhotoUrl}
                       alt="Child's photo"
                       className="object-cover w-full h-full"
+                      priority={true}
+                      fallbackSrc="/assets/avatar-placeholder.png"
                     />
-                  </div>
-                ) : (
-                  <div className="w-32 h-32 bg-gray-100 rounded-full flex items-center justify-center">
-                    <Upload className="w-8 h-8 text-gray-400" />
-                  </div>
-                )}
+                  ) : (
+                    <div className="w-full h-full bg-gray-100 rounded-full flex items-center justify-center">
+                      <Upload className="w-8 h-8 text-gray-400" />
+                    </div>
+                  )}
+                </div>
                 <div className="flex items-center gap-2">
                   <Input
                     type="file"
