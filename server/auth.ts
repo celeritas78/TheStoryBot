@@ -1,7 +1,7 @@
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import { type Express } from "express";
-import session from "express-session";
+import session, { SessionData } from "express-session";
 import createMemoryStore from "memorystore";
 import { randomBytes, scrypt, timingSafeEqual } from "crypto";
 import csrf from "csurf";
@@ -10,6 +10,13 @@ import { users, type User as SelectUser } from "@db/schema";
 import { db } from "../db";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
+
+// Extend SessionData to include our custom properties
+declare module 'express-session' {
+  interface SessionData {
+    user?: Omit<SelectUser, 'password'>;
+  }
+}
 
 // Promisify scrypt for password hashing
 const scryptAsync = promisify(scrypt);
@@ -28,12 +35,19 @@ export const crypto = {
   },
 };
 
-// Extend Express User object to match your schema
+// Extend Express Session and User types
 declare global {
   namespace Express {
     interface User extends SelectUser {}
+    
+    interface Session {
+      user?: Omit<SelectUser, 'password'>;
+    }
   }
 }
+
+// Type for the safe user data (excluding password)
+type SafeUser = Omit<SelectUser, 'password'>;
 
 // Validation schemas
 const registrationSchema = z.object({
@@ -160,12 +174,12 @@ export function setupAuth(app: Express) {
     const { password, ...safeUser } = user;
     const response = { 
       message: "Login successful", 
-      user: safeUser,
+      user: safeUser as SafeUser,
       isAuthenticated: true
     };
 
     // Save user data in session
-    req.session.user = safeUser;
+    req.session.user = safeUser as SafeUser;
     
     // Save session before sending response
     req.session.save((err) => {

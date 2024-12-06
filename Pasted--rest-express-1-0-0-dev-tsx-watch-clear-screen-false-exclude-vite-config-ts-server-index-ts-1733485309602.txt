@@ -1,0 +1,145 @@
+> rest-express@1.0.0 dev
+> tsx watch --clear-screen=false --exclude vite.config.ts.* server/index.ts
+
+11:41:24 AM [express] Server is running on port 5000
+{"timestamp":"2024-12-06T11:41:27.632Z","level":"ERROR","context":"database","message":"Database connection attempt 1 failed","error":{"message":"Connection terminated due to connection timeout","stack":"Error: Connection terminated due to connection timeout\n    at /home/runner/CustomBedtimeStories/node_modules/pg-pool/index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at testConnection (/home/runner/CustomBedtimeStories/db/index.ts:107:22)"}}
+
+ ERROR(TypeScript)  Property 'avatarUrl' does not exist on type 'NonNullable<TQueryFnData>'.
+ FILE  /home/runner/CustomBedtimeStories/client/src/components/Header.tsx:78:46
+
+    76 |                   <Button variant="ghost" className="flex items-center gap-2">
+    77 |                     <Avatar className="h-6 w-6">
+  > 78 |                       <AvatarImage src={user.avatarUrl || ''} alt={user.displayName || user.email} />
+       |                                              ^^^^^^^^^
+    79 |                       <AvatarFallback>{(user.displayName || user.email).charAt(0).toUpperCase()}</AvatarFallback>
+    80 |                     </Avatar>
+    81 |                     <span>{user.displayName || user.email}</span>
+
+ ERROR(TypeScript)  Property 'displayName' does not exist on type 'NonNullable<TQueryFnData>'.
+ FILE  /home/runner/CustomBedtimeStories/client/src/components/Header.tsx:78:73
+
+    76 |                   <Button variant="ghost" className="flex items-center gap-2">
+    77 |                     <Avatar className="h-6 w-6">
+  > 78 |                       <AvatarImage src={user.avatarUrl || ''} alt={user.displayName || user.email} />
+       |                                                                         ^^^^^^^^^^^
+    79 |                       <AvatarFallback>{(user.displayName || user.email).charAt(0).toUpperCase()}</AvatarFallback>
+    80 |                     </Avatar>
+    81 |                     <span>{user.displayName || user.email}</span>
+
+ ERROR(TypeScript)  Property 'email' does not exist on type 'NonNullable<TQueryFnData>'.
+ FILE  /home/runner/CustomBedtimeStories/client/src/components/Header.tsx:78:93
+
+    76 |                   <Button variant="ghost" className="flex items-center gap-2">
+    77 |                     <Avatar className="h-6 w-6">
+  > 78 |                       <AvatarImage src={user.avatarUrl || ''} alt={user.displayName || user.email} />
+       |                                                                                             ^^^^^
+    79 |                       <AvatarFallback>{(user.displayName || user.email).charAt(0).toUpperCase()}</AvatarFallback>
+    80 |                     </Avatar>
+    81 |                     <span>{user.displayName || user.email}</span>
+
+ ERROR(TypeScript)  Property 'displayName' does not exist on type 'NonNullable<TQueryFnData>'.
+ FILE  /home/runner/CustomBedtimeStories/client/src/components/Header.tsx:79:46
+
+    77 |                     <Avatar className="h-6 w-6">
+    78 |                       <AvatarImage src={user.avatarUrl || ''} alt={user.displayName || user.email} />
+  > 79 |                       <AvatarFallback>{(user.displayName || user.email).charAt(0).toUpperCase()}</AvatarFallback>
+       |                                              ^^^^^^^^^^^
+    80 |                     </Avatar>
+    81 |                     <span>{user.displayName || user.email}</span>
+    82 |                   </Button>
+
+ ERROR(TypeScript)  Property 'email' does not exist on type 'NonNullable<TQueryFnData>'.
+ FILE  /home/runner/CustomBedtimeStories/client/src/components/Header.tsx:79:66
+
+    77 |                     <Avatar className="h-6 w-6">
+    78 |                       <AvatarImage src={user.avatarUrl || ''} alt={user.displayName || user.email} />
+  > 79 |                       <AvatarFallback>{(user.displayName || user.email).charAt(0).toUpperCase()}</AvatarFallback>
+       |                                                                  ^^^^^
+    80 |                     </Avatar>
+    81 |                     <span>{user.displayName || user.email}</span>
+    82 |                   </Button>
+
+ ERROR(TypeScript)  Property 'displayName' does not exist on type 'NonNullable<TQueryFnData>'.
+ FILE  /home/runner/CustomBedtimeStories/client/src/components/Header.tsx:81:33
+
+    79 |                       <AvatarFallback>{(user.displayName || user.email).charAt(0).toUpperCase()}</AvatarFallback>
+    80 |                     </Avatar>
+  > 81 |                     <span>{user.displayName || user.email}</span>
+       |                                 ^^^^^^^^^^^
+    82 |                   </Button>
+    83 |                 </DropdownMenuTrigger>
+    84 |                 <DropdownMenuContent align="end">
+
+ ERROR(TypeScript)  Property 'email' does not exist on type 'NonNullable<TQueryFnData>'.
+ FILE  /home/runner/CustomBedtimeStories/client/src/components/Header.tsx:81:53
+
+    79 |                       <AvatarFallback>{(user.displayName || user.email).charAt(0).toUpperCase()}</AvatarFallback>
+    80 |                     </Avatar>
+  > 81 |                     <span>{user.displayName || user.email}</span>
+       |                                                     ^^^^^
+    82 |                   </Button>
+    83 |                 </DropdownMenuTrigger>
+    84 |                 <DropdownMenuContent align="end">
+
+ ERROR(TypeScript)  No overload matches this call.
+  Overload 1 of 3, '(options: DefinedInitialDataOptions<{ id: number; email: string; password: string; provider: string; providerId: string | null; displayName: string | null; avatarUrl: string | null; bio: string | null; emailVerified: boolean; ... 7 more ...; updatedAt: Date; } | null, Error, { ...; } | null, QueryKey>, queryClient?: QueryClient | undefined): DefinedUseQueryResult<...>', gave the following error.
+    Object literal may only specify known properties, and 'cacheTime' does not exist in type 'DefinedInitialDataOptions<{ id: number; email: string; password: string; provider: string; providerId: string | null; displayName: string | null; avatarUrl: string | null; bio: string | null; emailVerified: boolean; ... 7 more ...; updatedAt: Date; } | null, Error, { ...; } | null, QueryKey>'.
+  Overload 2 of 3, '(options: UndefinedInitialDataOptions<{ id: number; email: string; password: string; provider: string; providerId: string | null; displayName: string | null; avatarUrl: string | null; bio: string | null; emailVerified: boolean; ... 7 more ...; updatedAt: Date; } | null, Error, { ...; } | null, QueryKey>, queryClient?: QueryClient | undefined): UseQueryResult<...>', gave the following error.
+    Object literal may only specify known properties, and 'cacheTime' does not exist in type 'UndefinedInitialDataOptions<{ id: number; email: string; password: string; provider: string; providerId: string | null; displayName: string | null; avatarUrl: string | null; bio: string | null; emailVerified: boolean; ... 7 more ...; updatedAt: Date; } | null, Error, { ...; } | null, QueryKey>'.
+  Overload 3 of 3, '(options: UseQueryOptions<{ id: number; email: string; password: string; provider: string; providerId: string | null; displayName: string | null; avatarUrl: string | null; bio: string | null; emailVerified: boolean; ... 7 more ...; updatedAt: Date; } | null, Error, { ...; } | null, QueryKey>, queryClient?: QueryClient | undefined): UseQueryResult<...>', gave the following error.
+    Object literal may only specify known properties, and 'cacheTime' does not exist in type 'UseQueryOptions<{ id: number; email: string; password: string; provider: string; providerId: string | null; displayName: string | null; avatarUrl: string | null; bio: string | null; emailVerified: boolean; ... 7 more ...; updatedAt: Date; } | null, Error, { ...; } | null, QueryKey>'.
+ FILE  /home/runner/CustomBedtimeStories/client/src/hooks/use-user.ts:83:5
+
+    81 |     queryFn: fetchUser,
+    82 |     staleTime: 0,
+  > 83 |     cacheTime: 0,
+       |     ^^^^^^^^^
+    84 |     retry: false,
+    85 |     refetchOnMount: true,
+    86 |     refetchOnWindowFocus: true,
+
+ ERROR(TypeScript)  Property 'displayName' does not exist on type 'NonNullable<TQueryFnData>'.
+ FILE  /home/runner/CustomBedtimeStories/client/src/pages/ProfilePage.tsx:75:36
+
+    73 |                 id="displayName"
+    74 |                 name="displayName"
+  > 75 |                 defaultValue={user.displayName || ""}
+       |                                    ^^^^^^^^^^^
+    76 |                 placeholder="Enter your display name"
+    77 |                 disabled={isSaving}
+    78 |               />
+
+ ERROR(TypeScript)  Property 'avatarUrl' does not exist on type 'NonNullable<TQueryFnData>'.
+ FILE  /home/runner/CustomBedtimeStories/client/src/pages/ProfilePage.tsx:85:36
+
+    83 |                 id="avatarUrl"
+    84 |                 name="avatarUrl"
+  > 85 |                 defaultValue={user.avatarUrl || ""}
+       |                                    ^^^^^^^^^
+    86 |                 placeholder="Enter URL for your avatar"
+    87 |                 disabled={isSaving}
+    88 |               />
+
+ ERROR(TypeScript)  Property 'bio' does not exist on type 'NonNullable<TQueryFnData>'.
+ FILE  /home/runner/CustomBedtimeStories/client/src/pages/ProfilePage.tsx:95:36
+
+    93 |                 id="bio"
+    94 |                 name="bio"
+  > 95 |                 defaultValue={user.bio || ""}
+       |                                    ^^^
+    96 |                 placeholder="Tell us about yourself"
+    97 |                 disabled={isSaving}
+    98 |               />
+
+ ERROR(TypeScript)  Property 'user' does not exist on type 'Session & Partial<SessionData>'.
+ FILE  /home/runner/CustomBedtimeStories/server/auth.ts:168:17
+
+    166 |
+    167 |     // Save user data in session
+  > 168 |     req.session.user = safeUser;
+        |                 ^^^^
+    169 |     
+    170 |     // Save session before sending response
+    171 |     req.session.save((err) => {
+
+[TypeScript] Found 12 errors. Watching for file changes.

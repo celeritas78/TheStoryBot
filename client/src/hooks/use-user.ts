@@ -66,7 +66,28 @@ async function fetchUser(): Promise<User | null> {
     if (!userData) {
       return null;
     }
-    return userData;
+    
+    // Ensure the response matches our User type
+    const user: User = {
+      id: userData.id,
+      email: userData.email,
+      password: userData.password,
+      provider: userData.provider,
+      providerId: userData.providerId,
+      displayName: userData.displayName,
+      avatarUrl: userData.avatarUrl,
+      bio: userData.bio,
+      emailVerified: userData.emailVerified,
+      verificationToken: userData.verificationToken,
+      verificationTokenExpiry: userData.verificationTokenExpiry ? new Date(userData.verificationTokenExpiry) : null,
+      resetToken: userData.resetToken,
+      resetTokenExpiry: userData.resetTokenExpiry ? new Date(userData.resetTokenExpiry) : null,
+      lastLoginAt: userData.lastLoginAt ? new Date(userData.lastLoginAt) : null,
+      active: userData.active,
+      createdAt: new Date(userData.createdAt),
+      updatedAt: new Date(userData.updatedAt)
+    };
+    return user;
   } catch (error: any) {
     console.error('Failed to fetch user:', error);
     return null;
@@ -80,7 +101,7 @@ export function useUser() {
     queryKey: ['user'],
     queryFn: fetchUser,
     staleTime: 0,
-    cacheTime: 0,
+    gcTime: 0, // replaces deprecated cacheTime
     retry: false,
     refetchOnMount: true,
     refetchOnWindowFocus: true,
