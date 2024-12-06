@@ -93,11 +93,13 @@ if (!process.env.DATABASE_URL) {
 // Create a connection pool with improved configuration
 export const pool: Pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
-  max: 20,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 5000,
-  maxUses: 7500,
+  max: 10,
+  idleTimeoutMillis: 60000,
+  connectionTimeoutMillis: 10000,
+  maxUses: 5000,
   allowExitOnIdle: true,
+  keepAlive: true,
+  keepAliveInitialDelayMillis: 10000,
 });
 
 // Enhanced connection test with retry logic

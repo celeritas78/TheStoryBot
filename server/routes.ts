@@ -84,6 +84,12 @@ export function setupRoutes(app: express.Application) {
         quality: 80
       });
 
+      console.log('Updating user record:', {
+        userId,
+        childPhotoUrl,
+        timestamp: new Date().toISOString()
+      });
+
       // Update user record with new photo URL and get updated user
       const [updatedUser] = await db
         .update(users)
@@ -95,8 +101,19 @@ export function setupRoutes(app: express.Application) {
         .returning();
 
       if (!updatedUser) {
+        console.error('Failed to update user record:', {
+          userId,
+          childPhotoUrl,
+          timestamp: new Date().toISOString()
+        });
         throw new Error('Failed to update user record');
       }
+
+      console.log('User record updated successfully:', {
+        userId,
+        childPhotoUrl: updatedUser.childPhotoUrl,
+        timestamp: new Date().toISOString()
+      });
 
       // Return the full updated user object (excluding password)
       const { password, ...userData } = updatedUser;
@@ -165,13 +182,25 @@ export function setupRoutes(app: express.Application) {
 
       const filePath = getImageFilePath(filename);
       
-      if (!fs.existsSync(filePath)) {
-        console.error('Image file not found on disk:', { 
+      try {
+        if (!fs.existsSync(filePath)) {
+          console.error('Image file not found on disk:', { 
+            requestId,
+            filePath,
+            timestamp: new Date().toISOString()
+          });
+          return res.status(404).json({ error: "Image file not found" });
+        }
+        
+        await fs.promises.access(filePath, fs.constants.R_OK);
+      } catch (error) {
+        console.error('Error accessing image file:', { 
           requestId,
           filePath,
+          error: error instanceof Error ? error.message : 'Unknown error',
           timestamp: new Date().toISOString()
         });
-        return res.status(404).json({ error: "Image file not found" });
+        return res.status(500).json({ error: "Error accessing image file" });
       }
 
       // Get file stats for headers and caching
