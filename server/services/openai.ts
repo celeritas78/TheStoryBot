@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import { saveAudioFile } from './audio-storage';
+import { downloadImage, saveImageFile } from './image-storage';
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -383,7 +384,20 @@ export async function generateImage(scenePrompt: string): Promise<string> {
       return '/assets/fallback-story-image.png';
     }
 
-    return response.data[0].url;
+    try {
+      // Download image from OpenAI URL and save locally
+      const imageUrl = response.data[0].url;
+      console.log('Downloading image from OpenAI:', imageUrl);
+      
+      const imageBuffer = await downloadImage(imageUrl);
+      const localImagePath = await saveImageFile(imageBuffer, 'png', { maxSizeMB: 10 });
+      
+      console.log('Successfully saved image locally:', localImagePath);
+      return localImagePath;
+    } catch (downloadError) {
+      console.error('Failed to download or save image:', downloadError);
+      return '/assets/fallback-story-image.png';
+    }
   } catch (error) {
     console.error("OpenAI Image Generation Error:", error);
     return '/assets/fallback-story-image.png';

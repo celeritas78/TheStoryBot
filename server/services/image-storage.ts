@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { randomUUID } from 'crypto';
+import axios from 'axios';
 
 // Configure image storage directory
 export const IMAGE_DIR = path.join(process.cwd(), 'public', 'images');
@@ -17,6 +18,25 @@ export const SUPPORTED_IMAGE_FORMATS = {
   'jpeg': 'image/jpeg',
   'webp': 'image/webp'
 } as const;
+
+// Function to download image from URL
+export async function downloadImage(url: string): Promise<Buffer> {
+  try {
+    const response = await axios.get(url, {
+      responseType: 'arraybuffer',
+      timeout: 10000, // 10 second timeout
+    });
+    
+    if (response.status !== 200) {
+      throw new Error(`Failed to download image: HTTP ${response.status}`);
+    }
+    
+    return Buffer.from(response.data);
+  } catch (error) {
+    console.error('Error downloading image:', error);
+    throw new Error('Failed to download image from URL');
+  }
+}
 
 export function getMimeType(fileName: string): string {
   const ext = path.extname(fileName).toLowerCase().slice(1);
