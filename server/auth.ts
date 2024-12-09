@@ -163,9 +163,16 @@ export function setupAuth(app: Express) {
         const { emailService } = await import('./utils/email');
         await emailService.sendVerificationEmail(email, verificationToken);
 
+        // Log successful registration
+        console.log(`User registered successfully: ${email}`);
+
         res.status(201).json({ 
-          message: "Registration successful. Please check your email to verify your account.",
-          user: { id: newUser.id, email: newUser.email, emailVerified: false }
+          message: "Registration successful! Please check your email (including spam folder) to verify your account.",
+          user: { id: newUser.id, email: newUser.email, emailVerified: false },
+          verificationInfo: {
+            sent: true,
+            expiresIn: "24 hours"
+          }
         });
       } catch (emailError: any) {
         // Log the detailed error

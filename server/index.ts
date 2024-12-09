@@ -86,7 +86,15 @@ app.use((req, res, next) => {
   }
 
   const PORT = Number(process.env.PORT) || 5000;
-  server.listen(PORT, '0.0.0.0', () => {
-    log(`Server is running on port ${PORT}`);
-  });
+  try {
+    server.listen(PORT, '0.0.0.0', () => {
+      log(`Server is running on port ${PORT}`);
+      // Log environment info to help with debugging
+      log(`Environment: ${app.get('env')}`);
+      log(`Node version: ${process.version}`);
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  }
 })();
