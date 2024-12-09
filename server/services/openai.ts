@@ -387,15 +387,38 @@ export async function generateImage(scenePrompt: string): Promise<string> {
     try {
       // Download image from OpenAI URL and save locally
       const imageUrl = response.data[0].url;
-      console.log('Downloading image from OpenAI:', imageUrl);
+      console.log('Generating image from OpenAI:', {
+        imageUrl,
+        timestamp: new Date().toISOString()
+      });
       
       const imageBuffer = await downloadImage(imageUrl);
-      const localImagePath = await saveImageFile(imageBuffer, 'png', { maxSizeMB: 10 });
+      console.log('Downloaded image buffer:', {
+        size: imageBuffer.length,
+        timestamp: new Date().toISOString()
+      });
+
+      const localImagePath = await saveImageFile(imageBuffer, 'png', { 
+        maxSizeMB: 10,
+        quality: 90
+      });
       
-      console.log('Successfully saved image locally:', localImagePath);
+      console.log('Saved image locally:', {
+        localImagePath,
+        timestamp: new Date().toISOString()
+      });
+
+      if (!localImagePath) {
+        throw new Error('Failed to get local image path');
+      }
+
       return localImagePath;
     } catch (downloadError) {
-      console.error('Failed to download or save image:', downloadError);
+      console.error('Failed to process image:', {
+        error: downloadError instanceof Error ? downloadError.message : 'Unknown error',
+        stack: downloadError instanceof Error ? downloadError.stack : undefined,
+        timestamp: new Date().toISOString()
+      });
       return '/assets/fallback-story-image.png';
     }
   } catch (error) {

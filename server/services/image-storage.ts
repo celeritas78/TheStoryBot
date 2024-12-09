@@ -58,14 +58,21 @@ export async function saveImageFile(
 ): Promise<string> {
   const MAX_SIZE_MB = options.maxSizeMB || 5; // Default 5MB limit
   const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
+  const quality = options.quality || 80; // Default quality
 
-  // Log input parameters
+  // Log input parameters and validate buffer
   console.log('saveImageFile called with:', {
     bufferSize: imageBuffer.length,
     originalFormat: format,
     maxSizeMB: MAX_SIZE_MB,
-    SUPPORTED_IMAGE_FORMATS
+    quality,
+    SUPPORTED_IMAGE_FORMATS,
+    timestamp: new Date().toISOString()
   });
+
+  if (!imageBuffer || imageBuffer.length === 0) {
+    throw new Error('Invalid or empty image buffer');
+  }
 
   // Check file size
   if (imageBuffer.length > MAX_SIZE_BYTES) {
@@ -97,6 +104,12 @@ export async function saveImageFile(
   }
 
   try {
+    // Ensure the image directory exists
+    if (!fs.existsSync(IMAGE_DIR)) {
+      await fs.promises.mkdir(IMAGE_DIR, { recursive: true });
+      console.log('Created image directory:', IMAGE_DIR);
+    }
+
     const fileName = `${randomUUID()}${format}`;
     const filePath = path.join(IMAGE_DIR, fileName);
     
@@ -112,16 +125,24 @@ export async function saveImageFile(
     
     // Verify file was written successfully
     const stats = await fs.promises.stat(filePath);
+    if (stats.size === 0) {
+      throw new Error('Written file is empty');
+    }
+
     console.log('Image file saved successfully:', {
       fileName,
+      filePath,
       size: stats.size,
       timestamp: new Date().toISOString()
     });
     
-    return `/images/${fileName}`;
+    const relativePath = `/images/${fileName}`;
+    console.log('Returning image path:', relativePath);
+    return relativePath;
   } catch (error) {
     console.error('Failed to save image:', {
       error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
       timestamp: new Date().toISOString()
     });
     throw new Error('Failed to save image file. Please try again.');
