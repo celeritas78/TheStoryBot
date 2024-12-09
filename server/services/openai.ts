@@ -288,26 +288,23 @@ Output ONLY raw JSON:
 }
 
 async function createImagePromptForScene(sceneDescription: string, characters: Character[], settings: Setting[], keyElements: string[]): Promise<string> {
-  const systemPrompt = `You format illustration prompts. Output ONLY raw text. No code blocks.`;
+  const systemPrompt = `You create concise children's book illustration prompts in under 200 words. Focus on essential visual elements only.`;
 
   const userPrompt = `
-Scene Description:
-${sceneDescription}
+Create a children's book illustration prompt for this scene. Keep it under 200 words.
 
-Characters:
-${JSON.stringify(characters, null, 2)}
+Scene: ${sceneDescription}
 
-Settings:
-${JSON.stringify(settings, null, 2)}
+Main visual elements needed:
+${keyElements.join(', ')}
 
-Key Elements:
-${JSON.stringify(keyElements, null, 2)}
+Key characters' appearance:
+${characters.map(c => `${c.name}: ${c.description.split('.')[0]}`).join('\n')}
 
-Requirements:
-- Produce a single descriptive prompt capturing all details, suitable for a children's storybook illustration.
-- Include character appearances, setting atmosphere, objects, and key elements.
-- Bright, warm, child-friendly style.
-- No Markdown, no code blocks, just the prompt text.
+Setting:
+${settings.map(s => s.name).join(', ')}
+
+Style: Bright, warm, child-friendly storybook illustration style with soft lighting.
 `;
 
   const promptMsg = await callChatCompletion([
@@ -315,7 +312,6 @@ Requirements:
     {role: "user", content: userPrompt}
   ]);
 
-  // No JSON expected here, just raw text prompt
   return promptMsg.trim();
 }
 
@@ -366,9 +362,27 @@ export async function generateStoryContent({
 
 export async function generateImage(scenePrompt: string): Promise<string> {
   try {
-    const finalPrompt = `${scenePrompt}\n\nStyle guidelines:\n- Children's storybook illustration\n- Bright, warm colors\n- Cartoon-style characters, friendly expressions\n- Soft lighting, whimsical atmosphere\n- Suitable for ages 2-12\n- No scary or adult themes`;
+    // Ensure prompt doesn't exceed OpenAI's length limit
+    const MAX_PROMPT_LENGTH = 4000;
+    let finalPrompt = scenePrompt;
+    
+    if (finalPrompt.length > MAX_PROMPT_LENGTH) {
+      console.warn('Prompt too long, truncating:', {
+        originalLength: finalPrompt.length,
+        truncatedLength: MAX_PROMPT_LENGTH,
+        timestamp: new Date().toISOString()
+      });
+      finalPrompt = finalPrompt.substring(0, MAX_PROMPT_LENGTH - 200);
+    }
 
-    console.log('Generating image with prompt:', finalPrompt.substring(0, 500));
+    // Add style guidelines succinctly
+    finalPrompt = `${finalPrompt}\n\nStyle: Children's storybook illustration, bright warm colors, friendly cartoon characters, soft lighting, age-appropriate.`;
+
+    console.log('Generating image with prompt:', {
+      promptLength: finalPrompt.length,
+      preview: finalPrompt.substring(0, 200) + '...',
+      timestamp: new Date().toISOString()
+    });
 
     const response = await openai.images.generate({
       model: "dall-e-3",
@@ -380,7 +394,9 @@ export async function generateImage(scenePrompt: string): Promise<string> {
     });
 
     if (!response.data?.[0]?.url) {
-      console.warn('No image URL received from OpenAI, using fallback');
+      console.warn('No image URL received from OpenAI:', {
+        timestamp: new Date().toISOString()
+      });
       return '/assets/fallback-story-image.png';
     }
 
@@ -422,7 +438,11 @@ export async function generateImage(scenePrompt: string): Promise<string> {
       return '/assets/fallback-story-image.png';
     }
   } catch (error) {
-    console.error("OpenAI Image Generation Error:", error);
+    console.error('OpenAI Image Generation Error:', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      timestamp: new Date().toISOString()
+    });
     return '/assets/fallback-story-image.png';
   }
 }

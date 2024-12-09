@@ -1,0 +1,222 @@
+ at <anonymous> (/home/runner/CustomBedtimeStories/server/routes.ts:480:24) {
+  status: 400,
+  headers: {
+    'access-control-allow-origin': '*',
+    'alt-svc': 'h3=":443"; ma=86400',
+    'cf-cache-status': 'DYNAMIC',
+    'cf-ray': '8ef386669a9b46c2-BOM',
+    connection: 'keep-alive',
+    'content-length': '4489',
+    'content-type': 'application/json',
+    date: 'Mon, 09 Dec 2024 08:11:32 GMT',
+    'openai-organization': 'zime',
+    'openai-processing-ms': '9',
+    'openai-version': '2020-10-01',
+    server: 'cloudflare',
+    'set-cookie': '__cf_bm=7GGo5PWTOCmQJx.xoifokjSs3xHwYWyYNxw44UIzgOg-1733731892-1.0.1.1-NBZBgnRAfcy9b41EZ_gz93YDek8fMNaR7yBSXOt31pxNug3BGFMVxcUK1yXE.RTH2YfzBH77G2pdVRVAez0WwQ; path=/; expires=Mon, 09-Dec-24 08:41:32 GMT; domain=.api.openai.com; HttpOnly; Secure; SameSite=None, _cfuvid=lz3kquKCGHtHn9f0ftuBZu96aSr9x7fUiRZ7JoVAoCo-1733731892549-0.0.1.1-604800000; path=/; domain=.api.openai.com; HttpOnly; Secure; SameSite=None',
+    'strict-transport-security': 'max-age=31536000; includeSubDomains; preload',
+    'x-content-type-options': 'nosniff',
+    'x-request-id': 'req_126c74e990764d10f174841d8671cadc'
+  },
+  request_id: 'req_126c74e990764d10f174841d8671cadc',
+  error: {
+    code: null,
+    message: `"In a cheerful backyard filled with vibrant, colorful balloons and cheerful banners fluttering in the gentle breeze, families laugh and mingle, embodying the joyous spirit of the adoption event. Seven-year-old Priya, a bright and cheerful girl with long, curly black hair and twinkling brown eyes, leads her six-year-old sister Riya, who has straight black hair tied in a ponytail and a gentle nature. They are surrounded by their nurturing mom, with shoulder-length brown hair and soft features, and their playful dad, whose big, friendly laugh fills the air. The blossoming flowers and the warm sunlight create an inviting atmosphere as they watch a litter of five adorable kittens—one fluffy and gray with green eyes, a tiny ginger with a playful spirit, a curious black kitten, a gentle calico, and an all-white kitten with sparkling blue eyes—interacting with the delighted families. Nearby, a medium-sized wooden box with a worn-out lid sits slightly open, inviting the sisters to peek inside and fueling their adventurous curiosity. Soft pillows are scattered around the living room, adding comfort as the playful kittens hop around, their antics creating an atmosphere of joy and warmth, with the whole scene brimming with a warm glow of satisfaction and brighter smiles that light up the event.\\nCharacters and Objects from the Story:\\nPriya: A bright and cheerful seven-year-old girl with long, curly black hair, twinkling brown eyes, and an infectious smile. She loves animals and is always curious about the world around her. Priya is kind-hearted and takes the lead in exploring new things.\\nRiya: Priya's six-year-old sister, who has straight black hair often tied in a ponytail. Riya is a bit more reserved than her sister but equally enthusiastic. She loves to draw and has a gentle nature, often following Priya's adventurous spirit.\\nMom: A nurturing and warm woman in her early thirties, with shoulder-length brown hair and soft features. She is supportive of her daughters' interests and enjoys spending time with them. Mom is practical and attentive to the needs of the family, especially their new furry friends.\\nDad: A playful and loving father in his mid-thirties, with a big, friendly laugh and a robust build. He often encourages games and outdoor adventures. Dad has a knack for DIY projects and loves to create happy memories with his family.\\nLittle kittens: A litter of five adorable kittens with various colors and patterns: one is fluffy and gray with green eyes, another is a tiny ginger with a playful personality, a third is black with a curious nature, the fourth is calico with a gentle disposition, and the last is all-white with sparkling blue eyes. Each kitten has its charming quirks and adds joy to the family's life.\\nBox: A medium-sized, wooden box with a worn-out lid that sits on the porch. It is slightly open, inviting Priya and Riya to peek inside. The box is unmarked, adding to the mystery of its contents.\\nAdoption event decorations: Colorful balloons and cheerful banners that adorn the backyard during the adoption event. The decorations create a festive atmosphere, attracting families to come and meet the kittens.\\nSoft pillows: Plush cushions scattered around the living room for comfort while playing with the kittens. They add a cozy touch to the space, encouraging playful interactions.\\nSettings and Events from the Story:\\nCozy Porch: A sunny morning on a charming porch adorned with blooming flowers in various hues, surrounded by chirping birds. The porch is inviting and bright, with a wooden railing and potted plants that add a touch of nature.\\nLiving Room: A bright living room filled with sunlight filtering through large windows. The space is comfortable, with soft pillows scattered around and playful kittens hopping everywhere, creating an atmosphere of joy and warmth.\\nBackyard: A cheerful backyard decorated with colorful balloons and banners for the adoption event. The area is filled with laughter as families mingle around, and the air hums with excitement as they meet the playful kittens looking for new homes.\\n\\nStyle guidelines:\\n- Children's storybook illustration\\n- Bright, warm colors\\n- Cartoon-style characters, friendly expressions\\n- Soft lighting, whimsical atmosphere\\n- Suitable for ages 2-12\\n- No scary or adult themes" is too long - 'prompt'`,
+    param: null,
+    type: 'invalid_request_error'
+  },
+  code: null,
+  param: null,
+  type: 'invalid_request_error'
+}
+Generating speech for text: As the days went by, the family decided it was time to find loving homes for the kittens. They organ...
+saveAudioFile called with: {
+  bufferSize: 777600,
+  originalFormat: 'mp3',
+  SUPPORTED_AUDIO_FORMATS: { mp3: 'audio/mpeg', m4a: 'audio/mp4', wav: 'audio/wav' }
+}
+Saving audio file: {
+  fileName: 'e24c8c6c-5d3a-4f4b-866f-72032cac5ae3.mp3',
+  filePath: '/home/runner/CustomBedtimeStories/public/audio/e24c8c6c-5d3a-4f4b-866f-72032cac5ae3.mp3',
+  exists: true
+}
+Successfully saved audio file: /audio/e24c8c6c-5d3a-4f4b-866f-72032cac5ae3.mp3
+saveAudioFile called with: {
+  bufferSize: 610080,
+  originalFormat: 'mp3',
+  SUPPORTED_AUDIO_FORMATS: { mp3: 'audio/mpeg', m4a: 'audio/mp4', wav: 'audio/wav' }
+}
+Saving audio file: {
+  fileName: 'bf49a273-18b4-440c-9c7a-08850330ad09.mp3',
+  filePath: '/home/runner/CustomBedtimeStories/public/audio/bf49a273-18b4-440c-9c7a-08850330ad09.mp3',
+  exists: true
+}
+Successfully saved audio file: /audio/bf49a273-18b4-440c-9c7a-08850330ad09.mp3
+Generating image from OpenAI: {
+  imageUrl: 'https://oaidalleapiprodscus.blob.core.windows.net/private/org-8hqUrMQvREaIO7bDZXZNpDR1/user-RcpYfzRbtZ5ra2JTLyVdShGs/img-MVADCi3SuT9gbnmxNyzaz4nv.png?st=2024-12-09T07%3A11%3A57Z&se=2024-12-09T09%3A11%3A57Z&sp=r&sv=2024-08-04&sr=b&rscd=inline&rsct=image/png&skoid=d505667d-d6c1-4a0a-bac7-5c84a87759f8&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2024-12-08T23%3A25%3A53Z&ske=2024-12-09T23%3A25%3A53Z&sks=b&skv=2024-08-04&sig=x0vP62QKJw4hsJRiQZ0VMQPiWfuLl/JH3LEslvxbUb0%3D',
+  timestamp: '2024-12-09T08:11:57.812Z'
+}
+Downloaded image buffer: { size: 3096417, timestamp: '2024-12-09T08:12:02.390Z' }
+saveImageFile called with: {
+  bufferSize: 3096417,
+  originalFormat: 'png',
+  maxSizeMB: 10,
+  quality: 90,
+  SUPPORTED_IMAGE_FORMATS: {
+    png: 'image/png',
+    jpg: 'image/jpeg',
+    jpeg: 'image/jpeg',
+    webp: 'image/webp'
+  },
+  timestamp: '2024-12-09T08:12:02.390Z'
+}
+Saving image file: {
+  fileName: 'ebfd7eb9-ac81-4e6c-acea-9c141ec876a2.png',
+  filePath: '/home/runner/CustomBedtimeStories/public/images/ebfd7eb9-ac81-4e6c-acea-9c141ec876a2.png',
+  exists: true,
+  timestamp: '2024-12-09T08:12:02.390Z'
+}
+Image file saved successfully: {
+  fileName: 'ebfd7eb9-ac81-4e6c-acea-9c141ec876a2.png',
+  filePath: '/home/runner/CustomBedtimeStories/public/images/ebfd7eb9-ac81-4e6c-acea-9c141ec876a2.png',
+  size: 3096417,
+  timestamp: '2024-12-09T08:12:02.409Z'
+}
+Returning image path: /images/ebfd7eb9-ac81-4e6c-acea-9c141ec876a2.png
+Saved image locally: {
+  localImagePath: '/images/ebfd7eb9-ac81-4e6c-acea-9c141ec876a2.png',
+  timestamp: '2024-12-09T08:12:02.409Z'
+}
+Generating speech for text: In the living room, sunlight poured in through the windows as Priya, Riya, and their parents played ...
+saveAudioFile called with: {
+  bufferSize: 649920,
+  originalFormat: 'mp3',
+  SUPPORTED_AUDIO_FORMATS: { mp3: 'audio/mpeg', m4a: 'audio/mp4', wav: 'audio/wav' }
+}
+Saving audio file: {
+  fileName: 'db55bd9f-56df-4e38-b14f-ce1879500574.mp3',
+  filePath: '/home/runner/CustomBedtimeStories/public/audio/db55bd9f-56df-4e38-b14f-ce1879500574.mp3',
+  exists: true
+}
+Successfully saved audio file: /audio/db55bd9f-56df-4e38-b14f-ce1879500574.mp3
+Successfully created story segments: { storyId: 77, segmentCount: 3, timestamp: '2024-12-09T08:12:09.733Z' }
+08:12:09 AM [express] POST /api/stories 200 in 82937ms :: {"id":77,"userId":3,"childName":"Priya","th…
+Audio request received: { filename: 'bf49a273-18b4-440c-9c7a-08850330ad09.mp3' }
+Resolved file path: {
+  filePath: '/home/runner/CustomBedtimeStories/public/audio/bf49a273-18b4-440c-9c7a-08850330ad09.mp3'
+}
+Audio file stats: {
+  size: 610080,
+  path: '/home/runner/CustomBedtimeStories/public/audio/bf49a273-18b4-440c-9c7a-08850330ad09.mp3',
+  exists: true
+}
+Audio request received: { filename: 'bf49a273-18b4-440c-9c7a-08850330ad09.mp3' }
+Resolved file path: {
+  filePath: '/home/runner/CustomBedtimeStories/public/audio/bf49a273-18b4-440c-9c7a-08850330ad09.mp3'
+}
+Audio file stats: {
+  size: 610080,
+  path: '/home/runner/CustomBedtimeStories/public/audio/bf49a273-18b4-440c-9c7a-08850330ad09.mp3',
+  exists: true
+}
+Audio request received: { filename: 'db55bd9f-56df-4e38-b14f-ce1879500574.mp3' }
+Image request received: {
+  requestId: 'jvz58j',
+  filename: 'ebfd7eb9-ac81-4e6c-acea-9c141ec876a2.png',
+  timestamp: '2024-12-09T08:13:20.674Z',
+  headers: {
+    host: '2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev',
+    'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+    accept: 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+    'accept-encoding': 'gzip, deflate, br, zstd',
+    'accept-language': 'en-US,en;q=0.9',
+    cookie: 'sid=s%3AJOqWdmCTmu4rrn3MDEJAwHi2wjQn52rQ.vfc20CqKnxkq7x259mnO7YEtl4XOYoMGvQ2qMemb3FY',
+    dnt: '1',
+    referer: 'https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/create',
+    'sec-ch-ua': '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
+    'sec-ch-ua-mobile': '?0',
+    'sec-ch-ua-platform': '"macOS"',
+    'sec-fetch-dest': 'image',
+    'sec-fetch-mode': 'no-cors',
+    'sec-fetch-site': 'same-origin',
+    'x-forwarded-for': '103.197.74.154, 10.84.6.47',
+    'x-forwarded-proto': 'https',
+    'x-replit-user-bio': '',
+    'x-replit-user-id': '',
+    'x-replit-user-name': '',
+    'x-replit-user-profile-image': '',
+    'x-replit-user-roles': '',
+    'x-replit-user-teams': '',
+    'x-replit-user-url': ''
+  }
+}
+Resolved file path: {
+  filePath: '/home/runner/CustomBedtimeStories/public/audio/db55bd9f-56df-4e38-b14f-ce1879500574.mp3'
+}
+Audio file stats: {
+  size: 649920,
+  path: '/home/runner/CustomBedtimeStories/public/audio/db55bd9f-56df-4e38-b14f-ce1879500574.mp3',
+  exists: true
+}
+Audio request received: { filename: 'db55bd9f-56df-4e38-b14f-ce1879500574.mp3' }
+Resolved file path: {
+  filePath: '/home/runner/CustomBedtimeStories/public/audio/db55bd9f-56df-4e38-b14f-ce1879500574.mp3'
+}
+Audio file stats: {
+  size: 649920,
+  path: '/home/runner/CustomBedtimeStories/public/audio/db55bd9f-56df-4e38-b14f-ce1879500574.mp3',
+  exists: true
+}
+Image lookup result: {
+  filename: 'ebfd7eb9-ac81-4e6c-acea-9c141ec876a2.png',
+  foundInStorySegments: true,
+  foundInUserProfile: false,
+  timestamp: '2024-12-09T08:13:22.347Z'
+}
+Image file stats: {
+  requestId: 'jvz58j',
+  size: 3096417,
+  path: '/home/runner/CustomBedtimeStories/public/images/ebfd7eb9-ac81-4e6c-acea-9c141ec876a2.png',
+  etag: '"3096417-1733731922408"',
+  exists: true,
+  timestamp: '2024-12-09T08:13:22.347Z'
+}
+Audio request received: { filename: 'e24c8c6c-5d3a-4f4b-866f-72032cac5ae3.mp3' }
+Resolved file path: {
+  filePath: '/home/runner/CustomBedtimeStories/public/audio/e24c8c6c-5d3a-4f4b-866f-72032cac5ae3.mp3'
+}
+Audio file stats: {
+  size: 777600,
+  path: '/home/runner/CustomBedtimeStories/public/audio/e24c8c6c-5d3a-4f4b-866f-72032cac5ae3.mp3',
+  exists: true
+}
+Audio request received: { filename: 'e24c8c6c-5d3a-4f4b-866f-72032cac5ae3.mp3' }
+Resolved file path: {
+  filePath: '/home/runner/CustomBedtimeStories/public/audio/e24c8c6c-5d3a-4f4b-866f-72032cac5ae3.mp3'
+}
+Audio file stats: {
+  size: 777600,
+  path: '/home/runner/CustomBedtimeStories/public/audio/e24c8c6c-5d3a-4f4b-866f-72032cac5ae3.mp3',
+  exists: true
+}
+Audio request received: { filename: 'bf49a273-18b4-440c-9c7a-08850330ad09.mp3' }
+Resolved file path: {
+  filePath: '/home/runner/CustomBedtimeStories/public/audio/bf49a273-18b4-440c-9c7a-08850330ad09.mp3'
+}
+Audio file stats: {
+  size: 610080,
+  path: '/home/runner/CustomBedtimeStories/public/audio/bf49a273-18b4-440c-9c7a-08850330ad09.mp3',
+  exists: true
+}
+Audio request received: { filename: 'bf49a273-18b4-440c-9c7a-08850330ad09.mp3' }
+Resolved file path: {
+  filePath: '/home/runner/CustomBedtimeStories/public/audio/bf49a273-18b4-440c-9c7a-08850330ad09.mp3'
+}
+Audio file stats: {
+  size: 610080,
+  path: '/home/runner/CustomBedtimeStories/public/audio/bf49a273-18b4-440c-9c7a-08850330ad09.mp3',
+  exists: true
+}
+Fetching stories for user: 3
+Stories fetched: 9
+08:13:42 AM [express] GET /api/stories 200 in 737ms :: [{"id":77,"title":"T
