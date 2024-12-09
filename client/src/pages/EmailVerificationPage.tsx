@@ -24,22 +24,30 @@ export default function EmailVerificationPage() {
         console.log('Verification token:', token);
         
         if (!token) {
-          throw new Error('Invalid verification link');
+          setVerifying(false);
+          setError('No verification token found. Please check your verification email and try again.');
+          return;
         }
 
         const response = await fetch(`/api/verify-email/${token}`, {
-          credentials: 'include' // Important: Include credentials for session
+          credentials: 'include',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          }
         });
+        
         const data = await response.json();
 
         if (!response.ok) {
-          throw new Error(data.error || 'Verification failed');
+          throw new Error(data.error || data.message || 'Verification failed');
         }
 
-        // Clear any existing errors
+        // Verification successful
         setError(null);
+        setVerifying(false);
         
-        // Invalidate and refetch user data
+        // Update user data
         await queryClient.invalidateQueries({ queryKey: ['user'] });
         await queryClient.refetchQueries({ queryKey: ['user'] });
 
@@ -48,15 +56,20 @@ export default function EmailVerificationPage() {
           description: "Your email has been verified successfully. You can now use all features of the Story Generator.",
         });
 
-        // Set verifying to false before redirect
-        setVerifying(false);
-
         // Redirect to home page after successful verification
         setTimeout(() => setLocation('/'), 1500);
       } catch (error) {
         console.error('Verification error:', error);
-        setError(error instanceof Error ? error.message : 'Verification failed');
         setVerifying(false);
+        if (error instanceof Error) {
+          if (error.message.includes('Invalid verification token')) {
+            setError('This verification link is no longer valid. Please request a new verification email.');
+          } else {
+            setError(error.message);
+          }
+        } else {
+          setError('An unexpected error occurred during verification. Please try again later.');
+        }
       }
     };
 

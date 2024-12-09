@@ -187,7 +187,10 @@ export function setupAuth(app: Express) {
     const { token } = req.params;
 
     if (!token) {
-      return res.status(400).json({ error: "Invalid verification token" });
+      return res.status(400).json({ 
+        error: "Missing verification token",
+        message: "No verification token provided. Please check your verification email and try again."
+      });
     }
 
     console.log('Verifying token:', token);
@@ -201,15 +204,34 @@ export function setupAuth(app: Express) {
         .limit(1);
 
       if (!user) {
-        return res.status(404).json({ error: "Invalid verification token" });
+        return res.status(404).json({ 
+          error: "Invalid verification token",
+          message: "This verification link is invalid or has already been used. Please request a new verification email."
+        });
       }
 
       if (user.emailVerified) {
-        return res.status(400).json({ message: "Email already verified" });
+        return res.status(400).json({ 
+          error: "Already verified",
+          message: "Your email has already been verified. You can proceed to login."
+        });
       }
 
       if (user.verificationTokenExpiry && user.verificationTokenExpiry < now) {
-        return res.status(400).json({ error: "Verification token has expired" });
+        // Clear expired token
+        await db
+          .update(users)
+          .set({
+            verificationToken: null,
+            verificationTokenExpiry: null,
+            updatedAt: now,
+          })
+          .where(eq(users.id, user.id));
+
+        return res.status(400).json({ 
+          error: "Token expired",
+          message: "This verification link has expired. Please request a new verification email."
+        });
       }
 
       // Update user as verified
@@ -227,13 +249,28 @@ export function setupAuth(app: Express) {
       // Log the user in after verification
       req.login(updatedUser, (err) => {
         if (err) {
-          return res.status(500).json({ error: "Failed to log in after verification" });
+          return res.status(500).json({ 
+            error: "Login failed",
+            message: "Email verified successfully but failed to log you in. Please try logging in manually."
+          });
         }
-        res.json({ message: "Email verified successfully" });
+        res.json({ 
+          message: "Email verified successfully",
+          user: {
+            id: updatedUser.id,
+            email: updatedUser.email,
+            emailVerified: true
+          }
+        });
       });
     } catch (error) {
+      console.error('Email verification error:', error);
       const err = error as Error;
-      res.status(500).json({ error: "Verification failed", details: err.message });
+      res.status(500).json({ 
+        error: "Verification failed",
+        message: "An unexpected error occurred during verification. Please try again later.",
+        details: err.message
+      });
     }
   });
 
