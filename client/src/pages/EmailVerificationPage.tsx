@@ -50,30 +50,36 @@ export default function EmailVerificationPage() {
         // Clear error state first
         setError(null);
         
-        // Update user data
+        // Update user data and handle redirect
         await queryClient.invalidateQueries({ queryKey: ['user'] });
         await queryClient.refetchQueries({ queryKey: ['user'] });
+        
+        if (!mounted) return;
 
+        setVerifying(false);
         toast({
           title: "Email Verified",
           description: "Your email has been verified successfully. You can now use all features of the Story Generator.",
         });
 
-        // Set verified state and redirect
-        setVerifying(false);
-        setTimeout(() => mounted && setLocation('/'), 1500);
+        // Immediate redirect after state updates are complete
+        setLocation('/');
       } catch (error) {
         if (!mounted) return;
         
+        // Only set error if we're still mounted and verification wasn't successful
         if (error instanceof Error) {
-          setError(
-            error.message.includes('Invalid verification token')
-              ? 'This verification link is no longer valid. Please request a new verification email.'
-              : error.message
-          );
+          const errorMessage = error.message.includes('Invalid verification token')
+            ? 'This verification link is no longer valid. Please request a new verification email.'
+            : error.message;
+          
+          setError(errorMessage);
+          console.error('Verification failed:', errorMessage);
         } else {
           setError('An unexpected error occurred during verification. Please try again later.');
+          console.error('Unexpected verification error:', error);
         }
+        
         setVerifying(false);
       }
     };

@@ -49,7 +49,7 @@ export const emailService = {
       
       const msg: EmailOptions = {
         to,
-        subject: 'Verify your email - Story Generator',
+        subject: 'Verify your email - The Story Bot',
         html: `
           <div style="font-family: Arial, sans-serif;">
             <h2>Welcome!</h2>
