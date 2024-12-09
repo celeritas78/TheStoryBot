@@ -17,6 +17,22 @@ import { Loader2 } from "lucide-react";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import Header from "./components/Header";
 
+function UnverifiedEmailMessage() {
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-purple-50 to-purple-100 p-8">
+      <div className="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-md">
+        <h1 className="text-2xl font-bold text-purple-600 mb-4">Email Verification Required</h1>
+        <p className="text-gray-600 mb-4">
+          Please verify your email address to access this feature. Check your inbox for the verification link we sent you.
+        </p>
+        <p className="text-sm text-gray-500">
+          If you haven't received the verification email, you may need to check your spam folder or request a new verification link.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
   const { user, isLoading } = useUser();
   const [, setLocation] = useLocation();
@@ -38,6 +54,11 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
 
   if (!user) {
     return null;
+  }
+
+  // Show message for unverified users
+  if (!user.emailVerified) {
+    return <UnverifiedEmailMessage />;
   }
 
   return <Component />;

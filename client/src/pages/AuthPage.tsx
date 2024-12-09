@@ -40,10 +40,19 @@ export default function AuthPage() {
       await queryClient.refetchQueries({ queryKey: ['user'] });
 
       if (type === "login") {
-        toast({
-          title: "Login successful",
-          description: "Welcome to the Story Generator!",
-        });
+        // Check if email is verified
+        if (!result.data?.user?.emailVerified) {
+          toast({
+            title: "Email not verified",
+            description: "Please check your email for the verification link before accessing all features.",
+            variant: "default"
+          });
+        } else {
+          toast({
+            title: "Login successful",
+            description: "Welcome to the Story Generator!",
+          });
+        }
         const destination = new URLSearchParams(window.location.search).get('redirect') || '/';
         setLocation(destination);
       } else {
