@@ -24,9 +24,7 @@ export default function EmailVerificationPage() {
         console.log('Verification token:', token);
         
         if (!token) {
-          setVerifying(false);
-          setError('Invalid verification link');
-          return;
+          throw new Error('Invalid verification link');
         }
 
         const response = await fetch(`/api/verify-email/${token}`, {
@@ -38,6 +36,9 @@ export default function EmailVerificationPage() {
           throw new Error(data.error || 'Verification failed');
         }
 
+        // Clear any existing errors
+        setError(null);
+        
         // Invalidate and refetch user data
         await queryClient.invalidateQueries({ queryKey: ['user'] });
         await queryClient.refetchQueries({ queryKey: ['user'] });
@@ -47,11 +48,14 @@ export default function EmailVerificationPage() {
           description: "Your email has been verified successfully. You can now use all features of the Story Generator.",
         });
 
-        // Redirect to home page after successful verification and state update
-        setTimeout(() => setLocation('/'), 1000);
+        // Set verifying to false before redirect
+        setVerifying(false);
+
+        // Redirect to home page after successful verification
+        setTimeout(() => setLocation('/'), 1500);
       } catch (error) {
+        console.error('Verification error:', error);
         setError(error instanceof Error ? error.message : 'Verification failed');
-      } finally {
         setVerifying(false);
       }
     };
@@ -71,19 +75,21 @@ export default function EmailVerificationPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col items-center justify-center p-6">
-          {verifying ? (
+          {verifying && !error && (
             <>
               <Loader2 className="h-8 w-8 animate-spin text-border mb-4" />
               <p className="text-center text-muted-foreground">
                 Please wait while we verify your email...
               </p>
             </>
-          ) : error ? (
+          )}
+          {error && (
             <div className="text-center text-destructive">
               <p className="font-semibold mb-2">Unable to verify email</p>
               <p className="text-sm">{error}</p>
             </div>
-          ) : (
+          )}
+          {!verifying && !error && (
             <div className="text-center text-green-600">
               <p className="font-semibold mb-2">Email verified successfully!</p>
               <p className="text-sm">Redirecting you to the homepage...</p>
