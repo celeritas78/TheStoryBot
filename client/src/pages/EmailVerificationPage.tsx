@@ -13,6 +13,8 @@ export default function EmailVerificationPage() {
   const queryClient = useQueryClient();
 
   useEffect(() => {
+    let mounted = true;
+    
     const verifyEmail = async () => {
       try {
         // Extract token from either query params or URL path
@@ -21,11 +23,11 @@ export default function EmailVerificationPage() {
         const pathToken = window.location.pathname.split('/verify-email/')[1];
         const token = queryToken || pathToken;
 
-        console.log('Verification token:', token);
-        
         if (!token) {
-          setVerifying(false);
-          setError('No verification token found. Please check your verification email and try again.');
+          if (mounted) {
+            setError('No verification token found. Please check your verification email and try again.');
+            setVerifying(false);
+          }
           return;
         }
 
@@ -40,12 +42,13 @@ export default function EmailVerificationPage() {
         const data = await response.json();
 
         if (!response.ok) {
-          throw new Error(data.error || data.message || 'Verification failed');
+          throw new Error(data.message || data.error || 'Verification failed');
         }
 
-        // Verification successful
+        if (!mounted) return;
+
+        // Clear error state first
         setError(null);
-        setVerifying(false);
         
         // Update user data
         await queryClient.invalidateQueries({ queryKey: ['user'] });
@@ -56,24 +59,30 @@ export default function EmailVerificationPage() {
           description: "Your email has been verified successfully. You can now use all features of the Story Generator.",
         });
 
-        // Redirect to home page after successful verification
-        setTimeout(() => setLocation('/'), 1500);
-      } catch (error) {
-        console.error('Verification error:', error);
+        // Set verified state and redirect
         setVerifying(false);
+        setTimeout(() => mounted && setLocation('/'), 1500);
+      } catch (error) {
+        if (!mounted) return;
+        
         if (error instanceof Error) {
-          if (error.message.includes('Invalid verification token')) {
-            setError('This verification link is no longer valid. Please request a new verification email.');
-          } else {
-            setError(error.message);
-          }
+          setError(
+            error.message.includes('Invalid verification token')
+              ? 'This verification link is no longer valid. Please request a new verification email.'
+              : error.message
+          );
         } else {
           setError('An unexpected error occurred during verification. Please try again later.');
         }
+        setVerifying(false);
       }
     };
 
     verifyEmail();
+    
+    return () => {
+      mounted = false;
+    };
   }, [queryClient, setLocation, toast]);
 
   return (
@@ -88,21 +97,19 @@ export default function EmailVerificationPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col items-center justify-center p-6">
-          {verifying && !error && (
+          {verifying ? (
             <>
               <Loader2 className="h-8 w-8 animate-spin text-border mb-4" />
               <p className="text-center text-muted-foreground">
                 Please wait while we verify your email...
               </p>
             </>
-          )}
-          {error && (
+          ) : error ? (
             <div className="text-center text-destructive">
               <p className="font-semibold mb-2">Unable to verify email</p>
               <p className="text-sm">{error}</p>
             </div>
-          )}
-          {!verifying && !error && (
+          ) : (
             <div className="text-center text-green-600">
               <p className="font-semibold mb-2">Email verified successfully!</p>
               <p className="text-sm">Redirecting you to the homepage...</p>
