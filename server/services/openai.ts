@@ -287,35 +287,68 @@ Output ONLY raw JSON:
   return elements;
 }
 
-async function createImagePromptForScene(sceneDescription: string, characters: Character[], settings: Setting[], keyElements: string[]): Promise<string> {
+/**
+ * Create a stable prefix that includes style guidelines and references to characters and settings.
+ * This ensures consistency across all generated images.
+ */
+function createConsistentPromptPrefix(characters: Character[], settings: Setting[]): string {
+  // Summarize characters
+  const characterLines = characters.map(c => `- ${c.name}: ${c.description}`).join('\n');
+
+  // Summarize settings
+  const settingLines = settings.map(s => `- ${s.name}: ${s.description}`).join('\n');
+
+  // Keep instructions concise (under ~200 words total prompt)
+  // Focus on key recurring instructions and details.
+  return `Style guidelines:
+- Children's storybook illustration
+- Bright, warm colors
+- Cartoon-style characters, friendly expressions
+- Soft lighting, whimsical atmosphere
+- Suitable for ages 2-12
+- No scary or adult themes
+- Ensure visual consistency across all scenes of this story.
+
+Characters:
+${characterLines}
+
+Settings:
+${settingLines}
+
+Use these references to maintain consistent appearances and atmosphere. Now describe the scene below in a single illustration prompt that includes the listed key elements:`;
+}
+
+async function createImagePromptForScene(
+  sceneDescription: string, 
+  characters: Character[], 
+  settings: Setting[], 
+  keyElements: string[]
+): Promise<string> {
   const systemPrompt = `You format illustration prompts. Output ONLY raw text. No code blocks.`;
 
+  // Create a stable prefix with style and entity details
+  const prefix = createConsistentPromptPrefix(characters, settings);
+
   const userPrompt = `
+${prefix}
+
+Key Elements:
+${keyElements.join(', ')}
+
 Scene Description:
 ${sceneDescription}
 
-Characters:
-${JSON.stringify(characters, null, 2)}
-
-Settings:
-${JSON.stringify(settings, null, 2)}
-
-Key Elements:
-${JSON.stringify(keyElements, null, 2)}
-
 Requirements:
-- Produce a single descriptive prompt capturing all details, suitable for a children's storybook illustration.
-- Include character appearances, setting atmosphere, objects, and key elements.
-- Bright, warm, child-friendly style.
-- No Markdown, no code blocks, just the prompt text.
-`;
+- Produce a single descriptive prompt capturing all details for a cohesive illustration.
+- Include relevant characters, setting details, and key elements.
+- Keep the prompt under 200 words, no code blocks, just descriptive text.
+  `;
 
   const promptMsg = await callChatCompletion([
     {role: "system", content: systemPrompt},
     {role: "user", content: userPrompt}
   ]);
 
-  // No JSON expected here, just raw text prompt
   return promptMsg.trim();
 }
 
@@ -351,7 +384,7 @@ export async function generateStoryContent({
       const scene = story.scenes[i];
       const sceneElements = elements.scenes.find((s: any) => s.scene_number === i+1)?.key_elements || [];
       const imagePrompt = await createImagePromptForScene(scene.description, story.characters, story.settings, sceneElements);
-      // Replace scene description with the final image prompt to ensure it’s ready for image generation
+      // Replace scene description with the final image prompt
       scene.description = imagePrompt;
     }
 
@@ -366,9 +399,10 @@ export async function generateStoryContent({
 
 export async function generateImage(scenePrompt: string): Promise<string> {
   try {
-    const finalPrompt = `${scenePrompt}\n\nStyle guidelines:\n- Children's storybook illustration\n- Bright, warm colors\n- Cartoon-style characters, friendly expressions\n- Soft lighting, whimsical atmosphere\n- Suitable for ages 2-12\n- No scary or adult themes`;
+    // We already included style guidelines in the prompt, but adding them again at runtime won't hurt.
+    const finalPrompt = scenePrompt; 
 
-    console.log('Generating image with prompt:', finalPrompt.substring(0, 500));
+    console.log('Generating image with prompt:', finalPrompt);
 
     const response = await openai.images.generate({
       model: "dall-e-3",
@@ -385,13 +419,12 @@ export async function generateImage(scenePrompt: string): Promise<string> {
     }
 
     try {
-      // Download image from OpenAI URL and save locally
       const imageUrl = response.data[0].url;
       console.log('Generating image from OpenAI:', {
         imageUrl,
         timestamp: new Date().toISOString()
       });
-      
+
       const imageBuffer = await downloadImage(imageUrl);
       console.log('Downloaded image buffer:', {
         size: imageBuffer.length,
@@ -402,7 +435,7 @@ export async function generateImage(scenePrompt: string): Promise<string> {
         maxSizeMB: 10,
         quality: 90
       });
-      
+
       console.log('Saved image locally:', {
         localImagePath,
         timestamp: new Date().toISOString()

@@ -479,7 +479,8 @@ export function setupRoutes(app: express.Application) {
       // Generate media for each scene
       const segments = await Promise.all(storyContent.scenes.map(async (scene, index) => {
         try {
-          const fullSceneDescription = `${scene.description}\nCharacters and Objects from the Story:\n${characterDescriptions}\nSettings and Events from the Story:\n${settingDescriptions}`;
+          //const fullSceneDescription = `${scene.description}\nCharacters and Objects from the Story:\n${characterDescriptions}\nSettings and Events from the Story:\n${settingDescriptions}`;
+          const fullSceneDescription = `${scene.description}`;
 
           // Generate image from scene description
           const imageUrl = await generateImage(fullSceneDescription);
