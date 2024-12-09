@@ -147,6 +147,7 @@ export function setupAuth(app: Express) {
       const verificationToken = crypto.generateVerificationToken();
       const verificationTokenExpiry = new Date(now.getTime() + 24 * 60 * 60 * 1000); // 24 hours from now
 
+      // First create the user
       const [newUser] = await db.insert(users).values({
         email,
         password: hashedPassword,
@@ -157,18 +158,38 @@ export function setupAuth(app: Express) {
         updatedAt: now,
       }).returning();
 
-      // Import the email service and send verification email
-      const { emailService } = await import('./utils/email');
-      const emailSent = await emailService.sendVerificationEmail(email, verificationToken);
+      // Then try to send the verification email
+      try {
+        const { emailService } = await import('./utils/email');
+        await emailService.sendVerificationEmail(email, verificationToken);
 
-      if (!emailSent) {
-        return res.status(500).json({ error: "Failed to send verification email" });
+        res.status(201).json({ 
+          message: "Registration successful. Please check your email to verify your account.",
+          user: { id: newUser.id, email: newUser.email, emailVerified: false }
+        });
+      } catch (emailError: any) {
+        // Log the detailed error
+        console.error('Failed to send verification email:', emailError);
+        
+        let errorMessage = "Registration successful, but we couldn't send the verification email.";
+        let adminMessage = "";
+        
+        if (emailError.message?.includes('API key not configured')) {
+          adminMessage = "SendGrid API key is not configured.";
+        } else if (emailError.message?.includes('sender email not verified')) {
+          adminMessage = "Sender email needs to be verified in SendGrid.";
+        } else if (emailError.message?.includes('Invalid SendGrid API key')) {
+          adminMessage = "Invalid SendGrid API key provided.";
+        }
+        
+        // Still return success but with specific warning
+        res.status(201).json({ 
+          message: errorMessage,
+          user: { id: newUser.id, email: newUser.email, emailVerified: false },
+          warning: "Email verification is temporarily unavailable. Please try verifying your email later.",
+          adminMessage: adminMessage // This will help administrators identify the specific issue
+        });
       }
-
-      res.status(201).json({ 
-        message: "Registration successful. Please check your email to verify your account.",
-        user: { id: newUser.id, email: newUser.email, emailVerified: false }
-      });
     } catch (error) {
       const err = error as Error;
       res.status(500).json({ error: "Registration failed", details: err.message });
