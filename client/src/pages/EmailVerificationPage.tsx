@@ -3,12 +3,14 @@ import { useLocation } from 'wouter';
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
+import { useQueryClient } from '@tanstack/react-query';
 
 export default function EmailVerificationPage() {
   const [verifying, setVerifying] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     const verifyEmail = async () => {
@@ -26,20 +28,26 @@ export default function EmailVerificationPage() {
           return;
         }
 
-        const response = await fetch(`/api/verify-email/${token}`);
+        const response = await fetch(`/api/verify-email/${token}`, {
+          credentials: 'include' // Important: Include credentials for session
+        });
         const data = await response.json();
 
         if (!response.ok) {
           throw new Error(data.error || 'Verification failed');
         }
 
+        // Invalidate and refetch user data
+        await queryClient.invalidateQueries({ queryKey: ['user'] });
+        await queryClient.refetchQueries({ queryKey: ['user'] });
+
         toast({
           title: "Email Verified",
           description: "Your email has been verified successfully. You can now use all features of the Story Generator.",
         });
 
-        // Redirect to home page after successful verification
-        setTimeout(() => setLocation('/'), 2000);
+        // Redirect to home page after successful verification and state update
+        setTimeout(() => setLocation('/'), 1000);
       } catch (error) {
         setError(error instanceof Error ? error.message : 'Verification failed');
       } finally {
@@ -48,7 +56,7 @@ export default function EmailVerificationPage() {
     };
 
     verifyEmail();
-  }, []);
+  }, [queryClient, setLocation, toast]);
 
   return (
     <div className="container flex items-center justify-center min-h-screen">
