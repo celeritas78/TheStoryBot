@@ -24,6 +24,7 @@ export default function EmailVerificationPage() {
         console.log('Verification token:', token);
         
         if (!token) {
+          setVerifying(false);
           setError('Invalid verification link');
           return;
         }
@@ -63,16 +64,29 @@ export default function EmailVerificationPage() {
       <Card className="w-[400px]">
         <CardHeader>
           <CardTitle>Email Verification</CardTitle>
-          <CardDescription>Verifying your email address...</CardDescription>
+          <CardDescription>
+            {verifying ? "Verifying your email address..." : 
+              error ? "Verification Failed" : 
+              "Verification Successful"}
+          </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col items-center justify-center p-6">
           {verifying ? (
-            <Loader2 className="h-8 w-8 animate-spin text-border" />
+            <>
+              <Loader2 className="h-8 w-8 animate-spin text-border mb-4" />
+              <p className="text-center text-muted-foreground">
+                Please wait while we verify your email...
+              </p>
+            </>
           ) : error ? (
-            <div className="text-center text-destructive">{error}</div>
+            <div className="text-center text-destructive">
+              <p className="font-semibold mb-2">Unable to verify email</p>
+              <p className="text-sm">{error}</p>
+            </div>
           ) : (
             <div className="text-center text-green-600">
-              Email verified successfully! Redirecting...
+              <p className="font-semibold mb-2">Email verified successfully!</p>
+              <p className="text-sm">Redirecting you to the homepage...</p>
             </div>
           )}
         </CardContent>
