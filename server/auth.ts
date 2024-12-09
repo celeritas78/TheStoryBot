@@ -161,40 +161,19 @@ export function setupAuth(app: Express) {
       // Then try to send the verification email
       try {
         const { emailService } = await import('./utils/email');
-        await emailService.sendVerificationEmail(email, verificationToken);
-
-        // Log successful registration
-        console.log(`User registered successfully: ${email}`);
+        const emailSent = await emailService.sendVerificationEmail(email, verificationToken);
 
         res.status(201).json({ 
-          message: "Registration successful! Please check your email (including spam folder) to verify your account.",
-          user: { id: newUser.id, email: newUser.email, emailVerified: false },
-          verificationInfo: {
-            sent: true,
-            expiresIn: "24 hours"
-          }
+          message: emailSent 
+            ? "Registration successful! Please check your email to verify your account." 
+            : "Registration successful, but email verification is currently unavailable.",
+          user: { id: newUser.id, email: newUser.email, emailVerified: false }
         });
-      } catch (emailError: any) {
-        // Log the detailed error
-        console.error('Failed to send verification email:', emailError);
-        
-        let errorMessage = "Registration successful, but we couldn't send the verification email.";
-        let adminMessage = "";
-        
-        if (emailError.message?.includes('API key not configured')) {
-          adminMessage = "SendGrid API key is not configured.";
-        } else if (emailError.message?.includes('sender email not verified')) {
-          adminMessage = "Sender email needs to be verified in SendGrid.";
-        } else if (emailError.message?.includes('Invalid SendGrid API key')) {
-          adminMessage = "Invalid SendGrid API key provided.";
-        }
-        
-        // Still return success but with specific warning
+      } catch (error) {
+        console.error('Registration error:', error);
         res.status(201).json({ 
-          message: errorMessage,
-          user: { id: newUser.id, email: newUser.email, emailVerified: false },
-          warning: "Email verification is temporarily unavailable. Please try verifying your email later.",
-          adminMessage: adminMessage // This will help administrators identify the specific issue
+          message: "Registration successful, but email verification is currently unavailable.",
+          user: { id: newUser.id, email: newUser.email, emailVerified: false }
         });
       }
     } catch (error) {

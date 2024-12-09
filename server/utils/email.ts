@@ -38,38 +38,25 @@ export const emailService = {
   },
 
   sendVerificationEmail: async (to: string, token: string) => {
-    // Check configuration before attempting to send
-    const configErrors = validateEmailConfig();
-    if (configErrors.length > 0) {
-      throw new Error(configErrors.join(', '));
-    }
-
-    // Get the Replit URL or fallback to APP_URL
-    const appUrl = process.env.REPL_SLUG && process.env.REPL_OWNER 
-      ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`
-      : process.env.APP_URL || 'https://custombedtimestories.sandeepkhomne.repl.co';
-    const verificationLink = `${appUrl}/verify-email?token=${token}`;
-    
     try {
-      // Log the attempt to help with debugging
-      console.log('Attempting to send verification email to:', to);
+      if (!SENDGRID_CONFIG.apiKey) {
+        throw new Error('SendGrid API key is not configured');
+      }
+
+      const appUrl = process.env.REPL_SLUG && process.env.REPL_OWNER 
+        ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`
+        : process.env.APP_URL || 'http://localhost:5000';
+      const verificationLink = `${appUrl}/verify-email?token=${token}`;
       
       const msg: EmailOptions = {
         to,
-        subject: 'Verify your email address',
+        subject: 'Verify your email - Story Generator',
         html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2>Welcome to Story Generator!</h2>
-            <p>Thank you for registering. Please verify your email address by clicking the link below:</p>
-            <p>
-              <a href="${verificationLink}" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
-                Verify Email Address
-              </a>
-            </p>
-            <p>If the button doesn't work, you can also copy and paste this link into your browser:</p>
-            <p>${verificationLink}</p>
-            <p>This link will expire in 24 hours.</p>
-            <p>If you didn't request this verification, please ignore this email.</p>
+          <div style="font-family: Arial, sans-serif;">
+            <h2>Welcome!</h2>
+            <p>Click the link below to verify your email:</p>
+            <p><a href="${verificationLink}">Verify Email</a></p>
+            <p>Link expires in 24 hours.</p>
           </div>
         `,
       };
@@ -78,34 +65,11 @@ export const emailService = {
         ...msg,
         from: SENDGRID_CONFIG.fromEmail,
       });
-      
-      if (result[0]?.statusCode === 202) {
-        console.log('Successfully sent verification email to:', to);
-        return true;
-      }
-      
-      console.error('SendGrid responded with non-202 status:', result[0]?.statusCode);
-      throw new Error(`Unexpected response from SendGrid: ${result[0]?.statusCode}`);
+
+      return result[0]?.statusCode === 202;
     } catch (error: any) {
-      // Check for specific SendGrid error cases
-      if (error.response?.body?.errors) {
-        const errors = error.response.body.errors;
-        console.error('SendGrid API errors:', errors);
-        
-        // Check for common error cases
-        if (errors.some((e: any) => e.message?.includes('sender identity'))) {
-          throw new Error('Email sending failed: Sender email not verified in SendGrid');
-        }
-        if (errors.some((e: any) => e.message?.includes('authorization'))) {
-          throw new Error('Email sending failed: Invalid SendGrid API key');
-        }
-        
-        // Generic error case
-        throw new Error(`SendGrid API error: ${errors[0]?.message || 'Unknown error'}`);
-      }
-      
-      console.error('Error sending verification email:', error.message);
-      throw new Error('Failed to send verification email. Please try again later.');
+      console.error('Failed to send verification email:', error.message);
+      return false;
     }
   }
 };
