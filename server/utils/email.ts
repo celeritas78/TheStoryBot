@@ -57,7 +57,7 @@ export const emailService = {
       
       const result = await sgMail.send({
         ...msg,
-        from: process.env.SENDGRID_FROM_EMAIL,
+        from: process.env.SENDGRID_FROM_EMAIL || 'sandeep@asterial.in',
       });
       
       if (result[0]?.statusCode === 202) {
