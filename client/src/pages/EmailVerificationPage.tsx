@@ -16,21 +16,21 @@ export default function EmailVerificationPage() {
     let mounted = true;
     
     const verifyEmail = async () => {
-      try {
-        // Extract token from either query params or URL path
-        const params = new URLSearchParams(window.location.search);
-        const queryToken = params.get('token');
-        const pathToken = window.location.pathname.split('/verify-email/')[1];
-        const token = queryToken || pathToken;
+      // Extract token from either query params or URL path
+      const params = new URLSearchParams(window.location.search);
+      const queryToken = params.get('token');
+      const pathToken = window.location.pathname.split('/verify-email/')[1];
+      const token = queryToken || pathToken;
 
-        if (!token) {
-          if (mounted) {
-            setError('No verification token found. Please check your verification email and try again.');
-            setVerifying(false);
-          }
-          return;
+      if (!token) {
+        if (mounted) {
+          setError('No verification token found. Please check your verification email and try again.');
+          setVerifying(false);
         }
+        return;
+      }
 
+      try {
         const response = await fetch(`/api/verify-email/${token}`, {
           credentials: 'include',
           headers: {
@@ -47,40 +47,50 @@ export default function EmailVerificationPage() {
 
         if (!mounted) return;
 
-        // Clear error state first
+        // Clear error state and set verifying to false
         setError(null);
+        setVerifying(false);
         
-        // Update user data and handle redirect
+        // Update user data
         await queryClient.invalidateQueries({ queryKey: ['user'] });
         await queryClient.refetchQueries({ queryKey: ['user'] });
-        
+
         if (!mounted) return;
 
-        setVerifying(false);
+        // Show success message
         toast({
           title: "Email Verified",
           description: "Your email has been verified successfully. You can now use all features of the Story Generator.",
+          duration: 5000,
         });
 
-        // Immediate redirect after state updates are complete
-        setLocation('/');
+        // Redirect to home page after a short delay
+        setTimeout(() => {
+          if (mounted) {
+            setLocation('/');
+          }
+        }, 1000);
+
       } catch (error) {
         if (!mounted) return;
-        
-        // Only set error if we're still mounted and verification wasn't successful
-        if (error instanceof Error) {
-          const errorMessage = error.message.includes('Invalid verification token')
-            ? 'This verification link is no longer valid. Please request a new verification email.'
-            : error.message;
-          
-          setError(errorMessage);
-          console.error('Verification failed:', errorMessage);
-        } else {
-          setError('An unexpected error occurred during verification. Please try again later.');
-          console.error('Unexpected verification error:', error);
-        }
-        
+
         setVerifying(false);
+        
+        const errorMessage = error instanceof Error 
+          ? error.message.includes('Invalid verification token')
+            ? 'This verification link is no longer valid. Please request a new verification email.'
+            : error.message
+          : 'An unexpected error occurred during verification. Please try again later.';
+        
+        setError(errorMessage);
+        console.error('Verification failed:', errorMessage);
+        
+        toast({
+          title: "Verification Failed",
+          description: errorMessage,
+          variant: "destructive",
+          duration: 5000,
+        });
       }
     };
 
