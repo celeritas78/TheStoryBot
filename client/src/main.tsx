@@ -66,6 +66,9 @@ function AppRoutes() {
           <Route path="/verify-email">
             <EmailVerificationPage />
           </Route>
+          <Route path="/verify-email/:token">
+            <EmailVerificationPage />
+          </Route>
           <Route>404 - Page Not Found</Route>
         </Switch>
       </>

@@ -43,10 +43,12 @@ export const emailService = {
         throw new Error('SendGrid API key is not configured');
       }
 
-      const appUrl = process.env.REPL_SLUG && process.env.REPL_OWNER 
-        ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`
-        : process.env.APP_URL || 'http://localhost:5000';
-      const verificationLink = `${appUrl}/verify-email?token=${token}`;
+      // Use the current URL from request or fallback to environment
+      const appUrl = process.env.REPL_URL || 
+        (process.env.REPL_SLUG && process.env.REPL_OWNER 
+          ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`
+          : process.env.APP_URL || 'http://localhost:5000');
+      const verificationLink = `${appUrl}/verify-email/${token}`;
       
       const msg: EmailOptions = {
         to,

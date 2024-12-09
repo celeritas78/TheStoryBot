@@ -13,7 +13,12 @@ export default function EmailVerificationPage() {
   useEffect(() => {
     const verifyEmail = async () => {
       try {
-        const token = new URLSearchParams(window.location.search).get('token');
+        // Check for token in both URL params and query string
+        const params = new URLSearchParams(window.location.search);
+        const queryToken = params.get('token');
+        const pathToken = window.location.pathname.split('/verify-email/')[1];
+        const token = queryToken || pathToken;
+        
         if (!token) {
           setError('Invalid verification link');
           return;
