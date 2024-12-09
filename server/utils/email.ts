@@ -1,12 +1,29 @@
 import sgMail from '@sendgrid/mail';
 import { randomBytes } from 'crypto';
 
-// Initialize SendGrid with API key
-const apiKey = process.env.SENDGRID_API_KEY;
-if (!apiKey) {
-  console.error('SENDGRID_API_KEY is not set in environment variables');
+// Initialize SendGrid configuration
+const SENDGRID_CONFIG = {
+  apiKey: process.env.SENDGRID_API_KEY,
+  fromEmail: process.env.SENDGRID_FROM_EMAIL || 'sandeep@asterial.in'
+};
+
+// Configure SendGrid if API key is available
+if (SENDGRID_CONFIG.apiKey) {
+  sgMail.setApiKey(SENDGRID_CONFIG.apiKey);
 } else {
-  sgMail.setApiKey(apiKey);
+  console.warn('SENDGRID_API_KEY is not set in environment variables');
+}
+
+// Validate email configuration
+function validateEmailConfig() {
+  const errors = [];
+  if (!SENDGRID_CONFIG.apiKey) {
+    errors.push('SendGrid API key is not configured');
+  }
+  if (!SENDGRID_CONFIG.fromEmail) {
+    errors.push('SendGrid sender email is not configured');
+  }
+  return errors;
 }
 
 interface EmailOptions {
@@ -21,12 +38,10 @@ export const emailService = {
   },
 
   sendVerificationEmail: async (to: string, token: string) => {
-    if (!process.env.SENDGRID_API_KEY) {
-      throw new Error('SendGrid API key is not configured');
-    }
-
-    if (!process.env.SENDGRID_FROM_EMAIL) {
-      throw new Error('SendGrid sender email is not configured');
+    // Check configuration before attempting to send
+    const configErrors = validateEmailConfig();
+    if (configErrors.length > 0) {
+      throw new Error(configErrors.join(', '));
     }
 
     const verificationLink = `${process.env.APP_URL || 'http://localhost:5000'}/verify-email?token=${token}`;
@@ -57,7 +72,7 @@ export const emailService = {
       
       const result = await sgMail.send({
         ...msg,
-        from: process.env.SENDGRID_FROM_EMAIL || 'sandeep@asterial.in',
+        from: SENDGRID_CONFIG.fromEmail,
       });
       
       if (result[0]?.statusCode === 202) {
