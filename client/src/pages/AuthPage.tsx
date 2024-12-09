@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function AuthPage() {
   const [isLoading, setIsLoading] = useState(false);
+  const [registrationSuccess, setRegistrationSuccess] = useState<string | null>(null);
   const { toast } = useToast();
   const { login, register } = useUser();
   const [, setLocation] = useLocation();
@@ -18,6 +19,7 @@ export default function AuthPage() {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>, type: "login" | "register") => {
     event.preventDefault();
     setIsLoading(true);
+    setRegistrationSuccess(null);
 
     try {
       const formData = new FormData(event.currentTarget);
@@ -33,19 +35,23 @@ export default function AuthPage() {
         throw new Error(result.message);
       }
 
-      // Update user cache and redirect
+      // Update user cache
       await queryClient.invalidateQueries({ queryKey: ['user'] });
       await queryClient.refetchQueries({ queryKey: ['user'] });
 
-      toast({
-        title: type === "login" ? "Login successful" : "Registration successful",
-        description: type === "login" 
-          ? "Welcome to the Story Generator!" 
-          : "Please check your email to verify your account.",
-      });
-
-      const destination = new URLSearchParams(window.location.search).get('redirect') || '/';
-      setLocation(destination);
+      if (type === "login") {
+        toast({
+          title: "Login successful",
+          description: "Welcome to the Story Generator!",
+        });
+        const destination = new URLSearchParams(window.location.search).get('redirect') || '/';
+        setLocation(destination);
+      } else {
+        // For registration, show the success message on the page
+        setRegistrationSuccess("Registration successful! Please check your email to verify your account. You won't be able to create stories until your email is verified.");
+        // Reset the form
+        event.currentTarget.reset();
+      }
     } catch (error) {
       toast({
         variant: "destructive",
@@ -60,6 +66,11 @@ export default function AuthPage() {
   return (
     <div className="container flex items-center justify-center min-h-screen">
       <Card className="w-[400px]">
+        {registrationSuccess && (
+          <div className="p-4 mb-4 text-sm bg-green-50 border-l-4 border-green-500">
+            <p className="font-medium text-green-800">{registrationSuccess}</p>
+          </div>
+        )}
         <CardHeader>
           <CardTitle>Welcome</CardTitle>
           <CardDescription>Login or create an account to continue</CardDescription>
