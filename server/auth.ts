@@ -183,12 +183,14 @@ export function setupAuth(app: Express) {
   });
 
   // Email verification endpoint
-  app.get("/api/verify-email", async (req, res) => {
-    const { token } = req.query;
+  app.get("/api/verify-email/:token", async (req, res) => {
+    const { token } = req.params;
 
-    if (!token || typeof token !== 'string') {
+    if (!token) {
       return res.status(400).json({ error: "Invalid verification token" });
     }
+
+    console.log('Verifying token:', token);
 
     try {
       const now = new Date();
