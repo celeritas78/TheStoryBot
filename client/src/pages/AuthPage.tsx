@@ -39,7 +39,9 @@ export default function AuthPage() {
 
       toast({
         title: type === "login" ? "Login successful" : "Registration successful",
-        description: "Welcome to the Story Generator!",
+        description: type === "login" 
+          ? "Welcome to the Story Generator!" 
+          : "Please check your email to verify your account.",
       });
 
       const destination = new URLSearchParams(window.location.search).get('redirect') || '/';

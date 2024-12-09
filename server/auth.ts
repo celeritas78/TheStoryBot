@@ -33,6 +33,9 @@ export const crypto = {
     const suppliedPasswordBuf = (await scryptAsync(suppliedPassword, salt, 64)) as Buffer;
     return timingSafeEqual(hashedPasswordBuf, suppliedPasswordBuf);
   },
+  generateVerificationToken: () => {
+    return randomBytes(32).toString('hex');
+  }
 };
 
 // Extend Express Session and User types
@@ -141,21 +144,87 @@ export function setupAuth(app: Express) {
 
       const hashedPassword = await crypto.hash(password);
       const now = new Date();
+      const verificationToken = crypto.generateVerificationToken();
+      const verificationTokenExpiry = new Date(now.getTime() + 24 * 60 * 60 * 1000); // 24 hours from now
 
       const [newUser] = await db.insert(users).values({
         email,
         password: hashedPassword,
+        emailVerified: false,
+        verificationToken,
+        verificationTokenExpiry,
         createdAt: now,
         updatedAt: now,
       }).returning();
 
-      req.login(newUser, (err) => {
-        if (err) return next(err);
-        res.status(201).json({ message: "Registration successful", user: { id: newUser.id, email: newUser.email } });
+      // Import the email service and send verification email
+      const { emailService } = await import('./utils/email');
+      const emailSent = await emailService.sendVerificationEmail(email, verificationToken);
+
+      if (!emailSent) {
+        return res.status(500).json({ error: "Failed to send verification email" });
+      }
+
+      res.status(201).json({ 
+        message: "Registration successful. Please check your email to verify your account.",
+        user: { id: newUser.id, email: newUser.email, emailVerified: false }
       });
     } catch (error) {
       const err = error as Error;
       res.status(500).json({ error: "Registration failed", details: err.message });
+    }
+  });
+
+  // Email verification endpoint
+  app.get("/api/verify-email", async (req, res) => {
+    const { token } = req.query;
+
+    if (!token || typeof token !== 'string') {
+      return res.status(400).json({ error: "Invalid verification token" });
+    }
+
+    try {
+      const now = new Date();
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.verificationToken, token))
+        .limit(1);
+
+      if (!user) {
+        return res.status(404).json({ error: "Invalid verification token" });
+      }
+
+      if (user.emailVerified) {
+        return res.status(400).json({ message: "Email already verified" });
+      }
+
+      if (user.verificationTokenExpiry && user.verificationTokenExpiry < now) {
+        return res.status(400).json({ error: "Verification token has expired" });
+      }
+
+      // Update user as verified
+      const [updatedUser] = await db
+        .update(users)
+        .set({
+          emailVerified: true,
+          verificationToken: null,
+          verificationTokenExpiry: null,
+          updatedAt: now,
+        })
+        .where(eq(users.id, user.id))
+        .returning();
+
+      // Log the user in after verification
+      req.login(updatedUser, (err) => {
+        if (err) {
+          return res.status(500).json({ error: "Failed to log in after verification" });
+        }
+        res.json({ message: "Email verified successfully" });
+      });
+    } catch (error) {
+      const err = error as Error;
+      res.status(500).json({ error: "Verification failed", details: err.message });
     }
   });
 
