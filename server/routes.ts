@@ -429,7 +429,7 @@ export function setupRoutes(app: express.Application) {
       }).returning();
 
   // Credit purchase endpoints
-  app.post("/api/credits/purchase", async (req, res) => {
+  app.post("/api/credits/purchase", async (req: Request, res: Response) => {
     try {
       if (!req.isAuthenticated || !req.isAuthenticated()) {
         console.log('Unauthorized credit purchase attempt');
@@ -438,6 +438,11 @@ export function setupRoutes(app: express.Application) {
 
       const { amount } = req.body;
       const userId = req.user?.id;
+
+      if (!userId) {
+        console.error('User ID missing in authenticated request');
+        return res.status(401).json({ error: "Invalid user session" });
+      }
 
       console.log('Credit purchase request:', {
         userId,
@@ -460,15 +465,18 @@ export function setupRoutes(app: express.Application) {
       }
 
       // Create Stripe payment intent
-      const { clientSecret, paymentIntentId } = await createPaymentIntent({
-        amount: amount * 100, // Convert to cents for Stripe
+      const paymentResponse = await createPaymentIntent({
+        amount, // Amount in USD
         userId,
+        description: `Purchase ${amount} story credits`,
+        receiptEmail: req.user?.email
       });
 
       console.log('Stripe payment intent created:', {
         userId,
         amount,
-        paymentIntentId,
+        paymentIntentId: paymentResponse.paymentIntentId,
+        status: paymentResponse.status,
         timestamp: new Date().toISOString()
       });
 
@@ -476,13 +484,23 @@ export function setupRoutes(app: express.Application) {
       const [transaction] = await db.insert(creditTransactions)
         .values({
           userId,
-          amount: amount * 100, // Store in cents
-          credits: amount,
+          amount: paymentResponse.amount, // Amount in cents from Stripe
+          credits: amount * CREDITS_PER_USD,
           status: 'pending',
-          stripePaymentId: paymentIntentId,
+          stripePaymentId: paymentResponse.paymentIntentId,
           createdAt: new Date(),
         })
         .returning();
+
+      if (!transaction) {
+        console.error('Failed to create credit transaction:', {
+          userId,
+          amount,
+          paymentIntentId: paymentResponse.paymentIntentId,
+          timestamp: new Date().toISOString()
+        });
+        throw new Error('Failed to create credit transaction');
+      }
 
       console.log('Credit transaction created:', {
         userId,
