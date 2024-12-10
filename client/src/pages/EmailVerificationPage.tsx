@@ -51,6 +51,10 @@ export default function EmailVerificationPage() {
         setError(null);
         setVerifying(false);
         
+        // Handle success case first
+        setError(null);
+        setVerifying(false);
+
         // Update user data
         await queryClient.invalidateQueries({ queryKey: ['user'] });
         await queryClient.refetchQueries({ queryKey: ['user'] });
@@ -64,31 +68,48 @@ export default function EmailVerificationPage() {
           duration: 5000,
         });
 
-        // Redirect to home page after a short delay
+        // Redirect to home page after a short delay to show the success message
         setTimeout(() => {
           if (mounted) {
             setLocation('/');
           }
-        }, 1000);
+        }, 2000);
 
       } catch (error) {
         if (!mounted) return;
 
         setVerifying(false);
         
-        const errorMessage = error instanceof Error 
-          ? error.message.includes('Invalid verification token')
-            ? 'This verification link is no longer valid. Please request a new verification email.'
-            : error.message
-          : 'An unexpected error occurred during verification. Please try again later.';
+        let errorMessage;
+        if (error instanceof Error) {
+          if (error.message.includes('Invalid verification token')) {
+            // Check if user is already verified
+            const userData = await queryClient.getQueryData(['user']);
+            if (userData?.emailVerified) {
+              errorMessage = 'Your email has already been verified. You can proceed to use all features.';
+              // Redirect to home after showing the message
+              setTimeout(() => {
+                if (mounted) {
+                  setLocation('/');
+                }
+              }, 2000);
+            } else {
+              errorMessage = 'This verification link is no longer valid. Please request a new verification email.';
+            }
+          } else {
+            errorMessage = error.message;
+          }
+        } else {
+          errorMessage = 'An unexpected error occurred during verification. Please try again later.';
+        }
         
         setError(errorMessage);
         console.error('Verification failed:', errorMessage);
         
         toast({
-          title: "Verification Failed",
+          title: "Verification Status",
           description: errorMessage,
-          variant: "destructive",
+          variant: errorMessage.includes('already been verified') ? 'default' : 'destructive',
           duration: 5000,
         });
       }
