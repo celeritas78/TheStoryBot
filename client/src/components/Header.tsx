@@ -32,7 +32,7 @@ export default function Header() {
           <div className="flex items-center gap-6">
             <Link href="/">
               <div className="flex items-center gap-2">
-                <img src="/images/logo.png" alt="Story Bot Logo" className="h-8 w-8" />
+                <img src="/logo.svg" alt="Story Bot Logo" className="h-10 w-10" />
                 <h1 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 text-transparent bg-clip-text">
                   The Story Bot
                 </h1>
