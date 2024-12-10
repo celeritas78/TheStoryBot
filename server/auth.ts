@@ -197,18 +197,35 @@ export function setupAuth(app: Express) {
 
     try {
       const now = new Date();
-      const [user] = await db
+      // Add debug logging
+      const users_result = await db
         .select()
         .from(users)
-        .where(eq(users.verificationToken, token))
-        .limit(1);
+        .where(eq(users.verificationToken, token));
+      
+      console.log('Found users:', users_result.length, 'for token:', token);
+      
+      const [user] = users_result;
 
       if (!user) {
+        // Add debug query to check if token exists in any form
+        const all_tokens = await db
+          .select({ 
+            id: users.id, 
+            email: users.email, 
+            token: users.verificationToken 
+          })
+          .from(users);
+        
+        console.log('All verification tokens in system:', all_tokens);
+        
         return res.status(404).json({ 
           error: "Invalid verification token",
           message: "This verification link is invalid or has already been used. Please request a new verification email."
         });
       }
+
+      console.log('Found user:', { id: user.id, email: user.email, emailVerified: user.emailVerified });
 
       if (user.emailVerified) {
         return res.status(400).json({ 
@@ -218,6 +235,7 @@ export function setupAuth(app: Express) {
       }
 
       if (user.verificationTokenExpiry && user.verificationTokenExpiry < now) {
+        console.log('Token expired at:', user.verificationTokenExpiry, 'current time:', now);
         // Clear expired token
         await db
           .update(users)
