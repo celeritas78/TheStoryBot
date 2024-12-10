@@ -209,10 +209,11 @@ export function setupAuth(app: Express) {
 
       if (!user) {
         // Check if the user exists but has already been verified
+        // Check if user exists by email from the token
         const [verifiedUser] = await db
           .select()
           .from(users)
-          .where(eq(users.verificationToken, null))
+          .where(eq(users.email, user?.email))
           .limit(1);
 
         if (verifiedUser && verifiedUser.emailVerified) {
