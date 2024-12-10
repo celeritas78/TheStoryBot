@@ -221,23 +221,37 @@ export default function ProfilePage() {
               variant="destructive"
               disabled={isDeleting}
               onClick={async () => {
-                if (window.confirm("Are you sure you want to delete your account? This action cannot be undone.")) {
+                const confirmed = window.confirm(
+                  "Are you sure you want to delete your account? This action cannot be undone and will permanently remove all your stories and data."
+                );
+                
+                if (confirmed) {
                   setIsDeleting(true);
                   try {
                     const result = await deleteAccount();
+                    
                     if (!result.ok) {
-                      throw new Error(result.message);
+                      throw new Error(result.message || "Failed to delete account");
                     }
+                    
                     toast({
                       title: "Account deleted",
-                      description: "Your account has been permanently deleted.",
+                      description: "Your account has been permanently deleted. You will be redirected to the home page.",
                     });
-                    window.location.href = "/";
+                    
+                    // Clear any cached data
+                    queryClient.clear();
+                    
+                    // Small delay to show the success message before redirect
+                    setTimeout(() => {
+                      window.location.href = "/";
+                    }, 1500);
                   } catch (error) {
+                    console.error("Delete account error:", error);
                     toast({
                       variant: "destructive",
                       title: "Error",
-                      description: error instanceof Error ? error.message : "Failed to delete account",
+                      description: error instanceof Error ? error.message : "Failed to delete account. Please try again.",
                     });
                   } finally {
                     setIsDeleting(false);
@@ -248,7 +262,7 @@ export default function ProfilePage() {
               {isDeleting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Deleting Account
+                  Deleting Account...
                 </>
               ) : (
                 "Delete Account"

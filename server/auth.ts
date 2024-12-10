@@ -449,6 +449,47 @@ export function setupAuth(app: Express) {
   });
 
   app.get("/api/user", (req, res) => {
+  // Delete account route
+  app.delete("/api/account", async (req, res) => {
+    try {
+      if (!req.isAuthenticated() || !req.user) {
+        return res.status(401).json({ message: "Not logged in" });
+      }
+
+      const userId = req.user.id;
+      
+      // Delete the user from the database
+      const [deletedUser] = await db
+        .delete(users)
+        .where(eq(users.id, userId))
+        .returning();
+
+      if (!deletedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Destroy the session
+      req.logout((err) => {
+        if (err) {
+          console.error('Error during logout after account deletion:', err);
+          return res.status(500).json({ message: "Error during logout" });
+        }
+        
+        req.session.destroy((err) => {
+          if (err) {
+            console.error('Error destroying session after account deletion:', err);
+            return res.status(500).json({ message: "Error destroying session" });
+          }
+          
+          res.json({ message: "Account deleted successfully" });
+        });
+      });
+    } catch (error) {
+      console.error('Account deletion error:', error);
+      res.status(500).json({ message: "Failed to delete account" });
+    }
+  });
+
     if (!req.isAuthenticated || !req.isAuthenticated()) {
       return res.status(401).json({ message: "Not logged in" });
     }
