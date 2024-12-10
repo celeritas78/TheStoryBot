@@ -7,7 +7,8 @@ export const CREDIT_EXPIRY_DAYS = null; // Credits don't expire
 
 // Stripe configuration
 export const STRIPE_CURRENCY = 'usd';
-export const STRIPE_PAYMENT_MODE = 'payment'; // One-time payment
+export const STRIPE_PAYMENT_MODE = 'payment';
 export const STRIPE_STATEMENT_DESCRIPTOR = 'Story Credits';
 export const STRIPE_STATEMENT_DESCRIPTOR_SUFFIX = 'Credits';
-export const STRIPE_TEST_MODE = true; // Use test mode initially
+export const STRIPE_TEST_MODE = true;
+export const STRIPE_API_VERSION = '2023-10-16' as const; // Use stable API version

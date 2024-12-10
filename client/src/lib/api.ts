@@ -154,9 +154,11 @@ export interface CreditBalance {
   isPremium: boolean;
 }
 
-export interface PaymentIntent {
+export interface CreatePaymentResponse {
   clientSecret: string;
   transactionId: number;
+  amount: number;
+  currency: string;
 }
 
 export async function getCreditBalance(): Promise<CreditBalance> {
@@ -174,7 +176,7 @@ export async function getCreditBalance(): Promise<CreditBalance> {
   return response.json();
 }
 
-export async function purchaseCredits(amount: number): Promise<PaymentIntent> {
+export async function purchaseCredits(amount: number): Promise<CreatePaymentResponse> {
   const response = await fetch(`${API_BASE}/credits/purchase`, {
     method: "POST",
     headers: {

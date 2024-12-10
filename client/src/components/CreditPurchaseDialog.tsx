@@ -6,12 +6,21 @@ import { Label } from "./ui/label";
 import { purchaseCredits } from "../lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
+import type { PaymentState } from "../types/payment";
 
 interface CreditPurchaseDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
 }
+
+const initialPaymentState: PaymentState = {
+  status: 'idle',
+  error: null,
+  clientSecret: null,
+  amount: null,
+  transactionId: null,
+};
 
 export function CreditPurchaseDialog({
   open,
@@ -21,33 +30,58 @@ export function CreditPurchaseDialog({
   const [amount, setAmount] = useState(10); // Default to 10 credits
   const MIN_CREDITS = 1;
   const MAX_CREDITS = 100;
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [paymentState, setPaymentState] = useState<PaymentState>(initialPaymentState);
   const stripe = useStripe();
   const elements = useElements();
   const { toast } = useToast();
 
+  // Reset payment state when dialog closes
   useEffect(() => {
-    if (open && amount > 0) {
-      purchaseCredits(amount)
-        .then(({ clientSecret }) => {
-          setClientSecret(clientSecret);
-        })
-        .catch((error) => {
-          toast({
-            title: "Error",
-            description: error instanceof Error ? error.message : "Failed to initialize payment",
-            variant: "destructive",
-          });
-          onOpenChange(false);
-        });
+    if (!open) {
+      setPaymentState(initialPaymentState);
     }
-  }, [open, amount, toast, onOpenChange]);
+  }, [open]);
+
+  // Initialize payment when dialog opens
+  useEffect(() => {
+    if (open && amount > 0 && paymentState.status === 'idle') {
+      initializePayment();
+    }
+  }, [open, amount]);
+
+  const initializePayment = async () => {
+    try {
+      setPaymentState(state => ({ ...state, status: 'processing', error: null }));
+      
+      const response = await purchaseCredits(amount);
+      
+      setPaymentState(state => ({
+        ...state,
+        status: 'idle',
+        clientSecret: response.clientSecret,
+        amount: response.amount,
+        transactionId: response.transactionId
+      }));
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to initialize payment";
+      setPaymentState(state => ({
+        ...state,
+        status: 'failed',
+        error: { message: errorMessage }
+      }));
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+      onOpenChange(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!stripe || !elements || !clientSecret) {
+    if (!stripe || !elements || !paymentState.clientSecret) {
       toast({
         title: "Error",
         description: "Payment system not initialized",
@@ -56,24 +90,42 @@ export function CreditPurchaseDialog({
       return;
     }
 
-    setIsProcessing(true);
-
     try {
-      const { error, paymentIntent } = await stripe.confirmPayment({
+      setPaymentState(state => ({ ...state, status: 'processing', error: null }));
+
+      const { error: stripeError } = await stripe.confirmPayment({
         elements,
         confirmParams: {
           return_url: `${window.location.origin}/credits/confirm`,
-          payment_method: 'card',
+          payment_method_data: {
+            billing_details: {
+              email: window.localStorage.getItem('userEmail') || undefined
+            }
+          }
         },
+        redirect: 'if_required'
       });
 
-      if (error) {
+      if (stripeError) {
+        console.error('Payment failed:', stripeError);
+        setPaymentState(state => ({
+          ...state,
+          status: 'failed',
+          error: { 
+            message: stripeError.message ?? "Payment failed",
+            code: stripeError.type
+          }
+        }));
         toast({
           title: "Payment failed",
-          description: error.message,
+          description: stripeError.message,
           variant: "destructive",
         });
-      } else if (paymentIntent && paymentIntent.status === "succeeded") {
+      } else {
+        setPaymentState(state => ({
+          ...state,
+          status: 'succeeded'
+        }));
         toast({
           title: "Payment successful",
           description: `Added ${amount} credits to your account`,
@@ -82,15 +134,22 @@ export function CreditPurchaseDialog({
         onOpenChange(false);
       }
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to process payment";
+      setPaymentState(state => ({
+        ...state,
+        status: 'failed',
+        error: { message: errorMessage }
+      }));
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to process payment",
+        description: errorMessage,
         variant: "destructive",
       });
-    } finally {
-      setIsProcessing(false);
     }
   };
+
+  const isProcessing = paymentState.status === 'processing';
+  const showPaymentForm = paymentState.clientSecret && paymentState.status !== 'succeeded';
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -112,26 +171,39 @@ export function CreditPurchaseDialog({
               min={MIN_CREDITS}
               max={MAX_CREDITS}
               step={1}
+              disabled={isProcessing || showPaymentForm}
             />
             <p className="text-sm text-gray-500">
               Total: ${amount}.00 USD
             </p>
           </div>
-          <PaymentElement options={{
-            layout: 'tabs',
-            defaultValues: {
-              billingDetails: {
-                name: ''
-              }
-            }
-          }} />
-          <Button
-            type="submit"
-            disabled={isProcessing}
-            className="w-full"
-          >
-            {isProcessing ? "Processing..." : "Purchase Credits"}
-          </Button>
+          
+          {paymentState.error && (
+            <div className="text-red-500 text-sm mb-4">
+              {paymentState.error.message}
+            </div>
+          )}
+
+          {showPaymentForm ? (
+            <>
+              <PaymentElement 
+                options={{
+                  layout: 'tabs'
+                }}
+              />
+              <Button
+                type="submit"
+                disabled={isProcessing}
+                className="w-full"
+              >
+                {isProcessing ? "Processing payment..." : `Pay $${amount}.00`}
+              </Button>
+            </>
+          ) : (
+            <div className="flex items-center justify-center p-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
+            </div>
+          )}
         </form>
       </DialogContent>
     </Dialog>

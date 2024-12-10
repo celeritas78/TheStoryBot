@@ -4,13 +4,22 @@ import {
   STRIPE_CURRENCY,
   STRIPE_PAYMENT_MODE,
   STRIPE_STATEMENT_DESCRIPTOR,
-  STRIPE_STATEMENT_DESCRIPTOR_SUFFIX
+  STRIPE_STATEMENT_DESCRIPTOR_SUFFIX,
+  STRIPE_API_VERSION
 } from '../config';
 
 // Initialize Stripe with secret key
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-11-20.acacia', // Latest API version
+if (!process.env.STRIPE_SECRET_KEY) {
+  throw new Error('STRIPE_SECRET_KEY is required');
+}
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+  apiVersion: '2023-10-16',
   typescript: true,
+  appInfo: {
+    name: 'Story Credits Purchase',
+    version: '1.0.0'
+  }
 });
 
 export interface CreatePaymentIntentParams {
@@ -48,18 +57,18 @@ export async function createPaymentIntent({
     const paymentIntent = await stripe.paymentIntents.create({
       amount: amountInCents,
       currency: STRIPE_CURRENCY,
+      automatic_payment_methods: {
+        enabled: true
+      },
       metadata: {
         userId: userId.toString(),
         credits: credits.toString(),
-        purpose: 'story_credits',
+        purpose: 'story_credits'
       },
       description: description || `Purchase ${credits} story credits`,
       receipt_email: receiptEmail,
-      statement_descriptor: STRIPE_STATEMENT_DESCRIPTOR,
-      statement_descriptor_suffix: STRIPE_STATEMENT_DESCRIPTOR_SUFFIX,
-      payment_method_types: ['card'],
-      setup_future_usage: null,
-      confirmation_method: 'automatic'
+      statement_descriptor: STRIPE_STATEMENT_DESCRIPTOR?.substring(0, 22), // Stripe limit
+      statement_descriptor_suffix: STRIPE_STATEMENT_DESCRIPTOR_SUFFIX?.substring(0, 22), // Stripe limit
     });
 
     console.log('Payment intent created:', {
