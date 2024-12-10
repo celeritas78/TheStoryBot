@@ -85,9 +85,20 @@ async function fetchUser(): Promise<User | null> {
       resetTokenExpiry: userData.resetTokenExpiry ? new Date(userData.resetTokenExpiry) : null,
       lastLoginAt: userData.lastLoginAt ? new Date(userData.lastLoginAt) : null,
       active: userData.active,
+      isPremium: userData.isPremium ?? false,
+      storyCredits: userData.storyCredits ?? 3,
       createdAt: new Date(userData.createdAt),
       updatedAt: new Date(userData.updatedAt)
     };
+
+    console.log('Processed user data:', {
+      id: user.id,
+      email: user.email,
+      isPremium: user.isPremium,
+      storyCredits: user.storyCredits,
+      timestamp: new Date().toISOString()
+    });
+
     return user;
   } catch (error: any) {
     console.error('Failed to fetch user:', error);

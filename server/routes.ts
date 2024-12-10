@@ -511,8 +511,10 @@ export function setupRoutes(app: express.Application) {
       });
 
       res.json({
-        clientSecret,
+        clientSecret: paymentResponse.clientSecret,
         transactionId: transaction.id,
+        amount: paymentResponse.amount,
+        currency: paymentResponse.currency
       });
     } catch (error) {
       console.error('Error creating payment intent:', {
