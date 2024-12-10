@@ -8,7 +8,7 @@ import csrf from "csurf";
 import { promisify } from "util";
 import { users, type User as SelectUser } from "@db/schema";
 import { db } from "../db";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { z } from "zod";
 
 // Extend SessionData to include our custom properties
@@ -197,7 +197,7 @@ export function setupAuth(app: Express) {
 
     try {
       const now = new Date();
-      // Add debug logging
+      // First try to find user by token
       const users_result = await db
         .select()
         .from(users)
@@ -215,22 +215,49 @@ export function setupAuth(app: Express) {
         } : null
       });
       
-      const [user] = users_result;
+      let user = users_result[0];
 
+      // If no user found by token, check if there's a recently verified user
       if (!user) {
-        console.log('Step 2a - No user found with token:', token);
+        console.log('Step 2 - No user found with token, checking recently verified users');
+        // Look for user verified in the last hour
+        const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+        const [recentlyVerifiedUser] = await db
+          .select()
+          .from(users)
+          .where(eq(users.emailVerified, true))
+          .where(sql`${users.updatedAt} > ${oneHourAgo}`)
+          .orderBy(sql`${users.updatedAt} DESC`)
+          .limit(1);
+
+        if (recentlyVerifiedUser) {
+          console.log('Step 2a - Found recently verified user:', {
+            id: recentlyVerifiedUser.id,
+            email: recentlyVerifiedUser.email,
+            verifiedAt: recentlyVerifiedUser.updatedAt
+          });
+          return res.status(200).json({
+            message: "Email has already been verified",
+            user: {
+              id: recentlyVerifiedUser.id,
+              email: recentlyVerifiedUser.email,
+              emailVerified: true
+            }
+          });
+        }
+
+        console.log('Step 2b - No verified user found, token is invalid');
         return res.status(404).json({ 
           error: "Invalid verification token",
           message: "This verification link is invalid or has expired. Please request a new verification email."
         });
       }
 
-      // If we found a user, check if they're already verified
+      // If user found by token but already verified
       if (user.emailVerified) {
-        console.log('Step 2b - User already verified:', {
+        console.log('Step 3 - User found by token and already verified:', {
           id: user.id,
-          email: user.email,
-          emailVerified: user.emailVerified
+          email: user.email
         });
         return res.status(200).json({ 
           message: "Email already verified",
