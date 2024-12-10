@@ -365,15 +365,21 @@ export async function generateStoryContent({
     // Step 1: Generate outline
     const outline = await generateOutline({ childName, childAge, mainCharacter, theme });
 
+    console.log('Generating Outline:', outline);
+
     // Step 2: Define entities (characters, objects, settings)
     const entities = await defineEntities({ outline, childName, childAge, mainCharacter, theme });
+
+    console.log('Generating entities:', entities);
 
     // Step 3: Generate full story
     const story = await generateFullStory({ outline, entities, childName, childAge, mainCharacter, theme });
 
+    console.log('Generating story:', story);
+
     // Step 4: Extract narration scripts (optional)
     const scripts = await extractNarrationScripts(story);
-    console.log('Extracted narration scripts:', scripts.map(s => s.substring(0, 50) + '...'));
+    console.log('Extracted narration scripts:', scripts.map(s => s.substring(0, 1000) + '...'));
 
     // Step 5: Extract key elements for each scene
     const elements = await extractKeyElementsFromScenes(story);
