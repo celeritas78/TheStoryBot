@@ -208,17 +208,25 @@ export function setupAuth(app: Express) {
       const [user] = users_result;
 
       if (!user) {
-        // Add debug query to check if token exists in any form
-        const all_tokens = await db
-          .select({ 
-            id: users.id, 
-            email: users.email, 
-            token: users.verificationToken 
-          })
-          .from(users);
-        
-        console.log('All verification tokens in system:', all_tokens);
-        
+        // Check if the user exists but has already been verified
+        const [verifiedUser] = await db
+          .select()
+          .from(users)
+          .where(eq(users.verificationToken, null))
+          .limit(1);
+
+        if (verifiedUser && verifiedUser.emailVerified) {
+          return res.status(200).json({ 
+            message: "Email already verified",
+            user: {
+              id: verifiedUser.id,
+              email: verifiedUser.email,
+              emailVerified: true
+            }
+          });
+        }
+
+        // If not found or not verified, show the invalid token message
         return res.status(404).json({ 
           error: "Invalid verification token",
           message: "This verification link is invalid or has already been used. Please request a new verification email."

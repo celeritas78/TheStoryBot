@@ -4,6 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 import { useQueryClient } from '@tanstack/react-query';
+import type { User } from "@db/schema";
 
 export default function EmailVerificationPage() {
   const [verifying, setVerifying] = useState(true);
@@ -84,8 +85,8 @@ export default function EmailVerificationPage() {
         if (error instanceof Error) {
           if (error.message.includes('Invalid verification token')) {
             // Check if user is already verified
-            const userData = await queryClient.getQueryData(['user']);
-            if (userData?.emailVerified) {
+            const userData = await queryClient.getQueryData<User>(['user']);
+            if (userData && userData.emailVerified) {
               errorMessage = 'Your email has already been verified. You can proceed to use all features.';
               // Redirect to home after showing the message
               setTimeout(() => {
