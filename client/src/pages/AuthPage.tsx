@@ -58,8 +58,16 @@ export default function AuthPage() {
       } else {
         // For registration, show the success message on the page
         setRegistrationSuccess("Registration successful! Please check your email to verify your account. You won't be able to create stories until your email is verified.");
-        // Reset the form
-        event.currentTarget.reset();
+        
+        // Safely reset the form
+        try {
+          const form = event.currentTarget as HTMLFormElement;
+          if (form && typeof form.reset === 'function') {
+            form.reset();
+          }
+        } catch (error) {
+          console.error('Failed to reset form:', error);
+        }
       }
     } catch (error) {
       toast({
