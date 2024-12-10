@@ -377,36 +377,57 @@ export function setupAuth(app: Express) {
   });
 
   // Login route
-  app.post("/api/login", passport.authenticate("local"), (req, res) => {
-    console.log('Login endpoint hit, authenticated user:', req.isAuthenticated());
-    if (!req.user) {
-      console.log('No user object after authentication');
-      return res.status(401).json({ message: "Authentication failed" });
-    }
-
-    const user = req.user as SelectUser;
-    console.log('User authenticated successfully:', { id: user.id, email: user.email });
-
-    // Omit password and include all other user data
-    const { password, ...safeUser } = user;
-    const response = { 
-      message: "Login successful", 
-      user: safeUser as SafeUser,
-      isAuthenticated: true
-    };
-
-    // Save user data in session
-    req.session.user = safeUser as SafeUser;
-    
-    // Save session before sending response
-    req.session.save((err) => {
+  app.post("/api/login", (req, res, next) => {
+    passport.authenticate("local", (err, user, info) => {
       if (err) {
-        console.error('Session save failed:', err);
-        return res.status(500).json({ message: "Session save failed" });
+        console.error('Login error:', err);
+        return res.status(500).json({ 
+          message: "Login failed", 
+          error: err.message 
+        });
       }
-      console.log('Session saved successfully');
-      res.json(response);
-    });
+
+      if (!user) {
+        console.log('Authentication failed:', info?.message || 'Invalid credentials');
+        return res.status(401).json({ 
+          message: "Authentication failed",
+          error: info?.message || "Invalid email or password"
+        });
+      }
+
+      req.logIn(user, (err) => {
+        if (err) {
+          console.error('Session initialization failed:', err);
+          return res.status(500).json({ 
+            message: "Login failed", 
+            error: "Failed to initialize session" 
+          });
+        }
+
+        const { password, ...safeUser } = user;
+        const response = { 
+          message: "Login successful", 
+          user: safeUser as SafeUser,
+          isAuthenticated: true
+        };
+
+        // Save user data in session
+        req.session.user = safeUser as SafeUser;
+        
+        // Save session before sending response
+        req.session.save((err) => {
+          if (err) {
+            console.error('Session save failed:', err);
+            return res.status(500).json({ 
+              message: "Login failed", 
+              error: "Failed to save session" 
+            });
+          }
+          console.log('Login successful:', { id: user.id, email: user.email });
+          res.json(response);
+        });
+      });
+    })(req, res, next);
   });
 
   // Logout route
