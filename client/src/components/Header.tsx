@@ -85,7 +85,7 @@ export default function Header() {
                   <Link href="/profile">
                     <DropdownMenuItem className="cursor-pointer">
                       <Settings className="h-4 w-4 mr-2" />
-                      Profile Settings
+                      Profile
                     </DropdownMenuItem>
                   </Link>
                   <DropdownMenuItem className="cursor-pointer" onClick={handleLogout}>

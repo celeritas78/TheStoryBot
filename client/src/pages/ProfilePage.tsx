@@ -109,11 +109,21 @@ export default function ProfilePage() {
     <div className="container max-w-2xl py-10">
       <Card>
         <CardHeader>
-          <CardTitle>Profile Settings</CardTitle>
+          <CardTitle>Profile</CardTitle>
           <CardDescription>Update your profile information</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                name="email"
+                value={user.email}
+                disabled
+                className="bg-gray-50"
+              />
+            </div>
             <div className="space-y-2">
               <Label htmlFor="displayName">Display Name</Label>
               <Input
