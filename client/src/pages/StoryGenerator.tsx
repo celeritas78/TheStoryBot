@@ -15,7 +15,10 @@ import { ErrorBoundary } from "react-error-boundary";
 import { Loader2 } from "lucide-react";
 
 // Initialize Stripe outside of component to avoid re-initialization
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
+// Initialize Stripe in test mode
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY, {
+  apiVersion: '2024-11-20.acacia',
+});
 
 interface ErrorFallbackProps {
   error: Error;
@@ -110,7 +113,6 @@ export default function StoryGenerator() {
         colorText: '#1f2937',
       },
     },
-    mode: 'setup' as const,
     currency: 'usd',
     paymentMethodTypes: ['card'] as const,
   }), []);

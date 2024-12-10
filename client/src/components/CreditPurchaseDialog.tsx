@@ -18,7 +18,9 @@ export function CreditPurchaseDialog({
   onOpenChange,
   onSuccess
 }: CreditPurchaseDialogProps) {
-  const [amount, setAmount] = useState(5);
+  const [amount, setAmount] = useState(10); // Default to 10 credits
+  const MIN_CREDITS = 1;
+  const MAX_CREDITS = 100;
   const [isProcessing, setIsProcessing] = useState(false);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const stripe = useStripe();
@@ -107,8 +109,9 @@ export function CreditPurchaseDialog({
               id="amount"
               value={amount}
               onChange={(e) => setAmount(Number(e.target.value))}
-              min={1}
-              max={100}
+              min={MIN_CREDITS}
+              max={MAX_CREDITS}
+              step={1}
             />
             <p className="text-sm text-gray-500">
               Total: ${amount}.00 USD
