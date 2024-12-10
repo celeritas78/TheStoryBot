@@ -2,10 +2,12 @@ import express from 'express';
 import fs from 'fs';
 import { z } from 'zod';
 import { db } from '../db';
-import { stories, storySegments, users } from '../db/schema';
-import { eq, desc } from 'drizzle-orm';
+import { stories, storySegments, users, creditTransactions } from '../db/schema';
+import { eq, desc, sql, and } from 'drizzle-orm';
+import type { Request, Response } from 'express';
 import multer from 'multer';
 import { saveImageFile } from './services/image-storage';
+import { createPaymentIntent, confirmPaymentIntent } from './services/stripe';
 import bcrypt from 'bcryptjs';
 import { 
   generateStoryContent, 
@@ -13,10 +15,6 @@ import {
   generateSpeech 
 } from './services/openai';
 import { sendErrorResponse } from './utils/error';
-import { 
-  createPaymentIntent, 
-  confirmPaymentIntent 
-} from './services/stripe';
 import { 
   CREDITS_PER_USD, 
   MAX_CREDITS_PURCHASE, 
@@ -434,14 +432,28 @@ export function setupRoutes(app: express.Application) {
   app.post("/api/credits/purchase", async (req, res) => {
     try {
       if (!req.isAuthenticated || !req.isAuthenticated()) {
+        console.log('Unauthorized credit purchase attempt');
         return res.status(401).json({ error: "Not logged in" });
       }
 
       const { amount } = req.body;
       const userId = req.user?.id;
 
+      console.log('Credit purchase request:', {
+        userId,
+        requestedAmount: amount,
+        timestamp: new Date().toISOString()
+      });
+
       // Validate amount
       if (!amount || amount < MIN_CREDITS_PURCHASE || amount > MAX_CREDITS_PURCHASE) {
+        console.log('Invalid credit purchase amount:', {
+          userId,
+          amount,
+          min: MIN_CREDITS_PURCHASE,
+          max: MAX_CREDITS_PURCHASE,
+          timestamp: new Date().toISOString()
+        });
         return res.status(400).json({ 
           error: `Amount must be between ${MIN_CREDITS_PURCHASE} and ${MAX_CREDITS_PURCHASE} credits` 
         });
@@ -449,8 +461,15 @@ export function setupRoutes(app: express.Application) {
 
       // Create Stripe payment intent
       const { clientSecret, paymentIntentId } = await createPaymentIntent({
-        amount,
+        amount: amount * 100, // Convert to cents for Stripe
         userId,
+      });
+
+      console.log('Stripe payment intent created:', {
+        userId,
+        amount,
+        paymentIntentId,
+        timestamp: new Date().toISOString()
       });
 
       // Create pending transaction
@@ -465,12 +484,26 @@ export function setupRoutes(app: express.Application) {
         })
         .returning();
 
+      console.log('Credit transaction created:', {
+        userId,
+        transactionId: transaction.id,
+        amount,
+        status: 'pending',
+        timestamp: new Date().toISOString()
+      });
+
       res.json({
         clientSecret,
         transactionId: transaction.id,
       });
     } catch (error) {
-      console.error('Error creating payment intent:', error);
+      console.error('Error creating payment intent:', {
+        error,
+        userId: req.user?.id,
+        amount: req.body.amount,
+        timestamp: new Date().toISOString(),
+        stack: error instanceof Error ? error.stack : undefined
+      });
       res.status(500).json({ error: 'Failed to create payment intent' });
     }
   });
@@ -478,53 +511,95 @@ export function setupRoutes(app: express.Application) {
   app.post("/api/credits/confirm", async (req, res) => {
     try {
       if (!req.isAuthenticated || !req.isAuthenticated()) {
+        console.log('Unauthorized payment confirmation attempt');
         return res.status(401).json({ error: "Not logged in" });
       }
 
       const { paymentIntentId } = req.body;
       const userId = req.user?.id;
 
+      console.log('Payment confirmation request:', {
+        userId,
+        paymentIntentId,
+        timestamp: new Date().toISOString()
+      });
+
       // Confirm payment with Stripe
       const isSuccessful = await confirmPaymentIntent(paymentIntentId);
 
       if (!isSuccessful) {
+        console.log('Payment confirmation failed:', {
+          userId,
+          paymentIntentId,
+          timestamp: new Date().toISOString()
+        });
         return res.status(400).json({ error: "Payment failed" });
       }
 
-      // Update transaction and user credits
-      const [transaction] = await db
-        .select()
-        .from(creditTransactions)
-        .where(eq(creditTransactions.stripePaymentId, paymentIntentId))
-        .limit(1);
+      // Update transaction and user credits within a transaction
+      const result = await db.transaction(async (tx) => {
+        // Find the transaction
+        const [transaction] = await tx
+          .select()
+          .from(creditTransactions)
+          .where(eq(creditTransactions.stripePaymentId, paymentIntentId))
+          .limit(1);
 
-      if (!transaction) {
-        return res.status(404).json({ error: "Transaction not found" });
-      }
+        if (!transaction) {
+          console.error('Transaction not found:', {
+            userId,
+            paymentIntentId,
+            timestamp: new Date().toISOString()
+          });
+          throw new Error("Transaction not found");
+        }
 
-      // Update transaction status
-      await db
-        .update(creditTransactions)
-        .set({ status: 'completed' })
-        .where(eq(creditTransactions.id, transaction.id));
+        console.log('Found transaction:', {
+          transactionId: transaction.id,
+          userId,
+          credits: transaction.credits,
+          timestamp: new Date().toISOString()
+        });
 
-      // Update user credits
-      const [updatedUser] = await db
-        .update(users)
-        .set({
-          storyCredits: sql`${users.storyCredits} + ${transaction.credits}`,
-          isPremium: true,
-        })
-        .where(eq(users.id, userId))
-        .returning();
+        // Update transaction status
+        await tx
+          .update(creditTransactions)
+          .set({ status: 'completed' })
+          .where(eq(creditTransactions.id, transaction.id));
+
+        // Update user credits
+        const [updatedUser] = await tx
+          .update(users)
+          .set({
+            storyCredits: sql`${users.storyCredits} + ${transaction.credits}`,
+            isPremium: true,
+          })
+          .where(eq(users.id, userId))
+          .returning();
+
+        return { transaction, updatedUser };
+      });
+
+      console.log('Credit purchase completed:', {
+        userId,
+        transactionId: result.transaction.id,
+        newCreditBalance: result.updatedUser.storyCredits,
+        timestamp: new Date().toISOString()
+      });
 
       res.json({
         success: true,
-        credits: updatedUser.storyCredits,
+        credits: result.updatedUser.storyCredits,
         isPremium: true,
       });
     } catch (error) {
-      console.error('Error confirming payment:', error);
+      console.error('Error confirming payment:', {
+        error,
+        userId: req.user?.id,
+        paymentIntentId: req.body.paymentIntentId,
+        timestamp: new Date().toISOString(),
+        stack: error instanceof Error ? error.stack : undefined
+      });
       res.status(500).json({ error: 'Failed to confirm payment' });
     }
   });
@@ -575,16 +650,31 @@ export function setupRoutes(app: express.Application) {
       const [user] = await db
         .select({
           credits: users.storyCredits,
+          isPremium: users.isPremium,
         })
         .from(users)
         .where(eq(users.id, userId))
         .limit(1);
 
+      console.log('Checking user credits:', {
+        userId,
+        currentCredits: user?.credits,
+        isPremium: user?.isPremium,
+        timestamp: new Date().toISOString()
+      });
+
       if (!user || user.credits < 1) {
+        console.log('Insufficient credits for story creation:', {
+          userId,
+          currentCredits: user?.credits || 0,
+          isPremium: user?.isPremium,
+          timestamp: new Date().toISOString()
+        });
         return res.status(403).json({ 
           error: "Insufficient credits", 
           creditsNeeded: true,
-          currentCredits: user?.credits || 0
+          currentCredits: user?.credits || 0,
+          isPremium: user?.isPremium || false
         });
       } 
 
@@ -594,6 +684,7 @@ export function setupRoutes(app: express.Application) {
         childAge,
         mainCharacter,
         theme,
+        creditsBeforeDeduction: user.credits,
         timestamp: new Date().toISOString()
       });
 
@@ -650,14 +741,32 @@ export function setupRoutes(app: express.Application) {
       }));
 
       // Deduct one credit and save story to the database
-      const [story] = await db.transaction(async (tx) => {
-        // Deduct credit
-        await tx
+      const result = await db.transaction(async (tx) => {
+        // Deduct credit and verify the update
+        const [updatedUser] = await tx
           .update(users)
           .set({
             storyCredits: sql`${users.storyCredits} - 1`
           })
-          .where(eq(users.id, userId));
+          .where(and(
+            eq(users.id, userId),
+            sql`${users.storyCredits} > 0`
+          ))
+          .returning();
+
+        if (!updatedUser) {
+          console.error('Failed to deduct credit:', {
+            userId,
+            timestamp: new Date().toISOString()
+          });
+          throw new Error('Failed to deduct credit');
+        }
+
+        console.log('Credit deducted successfully:', {
+          userId,
+          newBalance: updatedUser.storyCredits,
+          timestamp: new Date().toISOString()
+        });
 
         // Create story
         const [newStory] = await tx
@@ -667,42 +776,45 @@ export function setupRoutes(app: express.Application) {
             title: storyContent.title,
             childName,
             childAge: parsedAge,
-          characters: JSON.stringify({ mainCharacter }),
-          theme,
-          content: segments.map(s => s.content).join('\n\n'),
-          imageUrls: JSON.stringify(segments.map(s => s.imageUrl)),
-          parentApproved: false,
-          createdAt: new Date(),
-        })
-        .returning();
+            characters: JSON.stringify({ mainCharacter }),
+            theme,
+            content: segments.map(s => s.content).join('\n\n'),
+            imageUrls: JSON.stringify(segments.map(s => s.imageUrl)),
+            parentApproved: false,
+            createdAt: new Date(),
+          })
+          .returning();
 
-      if (!story || !story.id) {
-        throw new Error("Failed to create story record");
-      }
+        if (!newStory || !newStory.id) {
+          throw new Error("Failed to create story record");
+        }
 
-      // Insert all story segments
-      const insertedSegments = await db.insert(storySegments)
-        .values(segments.map(segment => ({
-          storyId: story.id,
-          content: segment.content,
-          imageUrl: segment.imageUrl,
-          audioUrl: segment.audioUrl,
-          sequence: segment.sequence,
-        })))
-        .returning();
+        // Insert all story segments
+        const insertedSegments = await tx.insert(storySegments)
+          .values(segments.map(segment => ({
+            storyId: newStory.id,
+            content: segment.content,
+            imageUrl: segment.imageUrl,
+            audioUrl: segment.audioUrl,
+            sequence: segment.sequence,
+          })))
+          .returning();
 
-      console.log('Successfully created story segments:', {
-        storyId: story.id,
-        segmentCount: insertedSegments.length,
-        timestamp: new Date().toISOString()
+        console.log('Successfully created story segments:', {
+          storyId: newStory.id,
+          segmentCount: insertedSegments.length,
+          timestamp: new Date().toISOString()
+        });
+
+        return { newStory, insertedSegments };
       });
 
       res.json({
-        id: story.id,
+        id: result.newStory.id,
         userId, 
-        childName: story.childName,
-        theme: story.theme,
-        segments: insertedSegments,
+        childName: result.newStory.childName,
+        theme: result.newStory.theme,
+        segments: result.insertedSegments,
       });
     } catch (error) {
       console.error('Story generation failed:', {

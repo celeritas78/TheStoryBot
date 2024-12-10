@@ -378,9 +378,14 @@ export function setupAuth(app: Express) {
 
   // Login route
   app.post("/api/login", (req, res, next) => {
-    passport.authenticate("local", (err, user, info) => {
+    passport.authenticate("local", (err: Error | null, user: Express.User | false, info: { message: string } | undefined) => {
       if (err) {
-        console.error('Login error:', err);
+        console.error('Login error:', {
+          error: err,
+          timestamp: new Date().toISOString(),
+          userId: req.user?.id,
+          email: req.body.email
+        });
         return res.status(500).json({ 
           message: "Login failed", 
           error: err.message 
