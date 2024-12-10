@@ -9,6 +9,13 @@ import multer from 'multer';
 import { saveImageFile } from './services/image-storage';
 import { createPaymentIntent, confirmPaymentIntent } from './services/stripe';
 import bcrypt from 'bcryptjs';
+import { MAX_FREE_STORIES } from './config';
+
+interface UserWithStoryCount {
+  credits: number;
+  isPremium: boolean;
+  totalStories: number;
+}
 import { 
   generateStoryContent, 
   generateImage, 
@@ -688,15 +695,28 @@ export function setupRoutes(app: express.Application) {
       const { childName, childAge, mainCharacter, theme } = req.body;
       const userId = req.user?.id;
 
-      // Check if user has enough credits
+      // Check if user has enough credits and handle free/premium plan restrictions
       const [user] = await db
         .select({
           credits: users.storyCredits,
           isPremium: users.isPremium,
+          totalStories: sql`(SELECT COUNT(*) FROM ${stories} WHERE ${stories.userId} = ${userId})::int`,
         })
         .from(users)
         .where(eq(users.id, userId))
-        .limit(1);
+        .limit(1) as unknown as [UserWithStoryCount];
+
+      // Handle free plan restrictions
+      if (!user?.isPremium && (user?.totalStories || 0) >= MAX_FREE_STORIES) {
+        return res.status(403).json({
+          error: "Free plan limit reached",
+          creditsNeeded: true,
+          currentCredits: user?.credits || 0,
+          isPremium: false,
+          maxFreeStories: MAX_FREE_STORIES,
+          upgradeToPremium: true
+        });
+      }
 
       console.log('Checking user credits:', {
         userId,

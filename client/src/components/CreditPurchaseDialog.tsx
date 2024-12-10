@@ -171,7 +171,7 @@ export function CreditPurchaseDialog({
               min={MIN_CREDITS}
               max={MAX_CREDITS}
               step={1}
-              disabled={isProcessing || showPaymentForm}
+              disabled={isProcessing || !!showPaymentForm}
             />
             <p className="text-sm text-gray-500">
               Total: ${amount}.00 USD
