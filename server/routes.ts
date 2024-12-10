@@ -15,6 +15,16 @@ interface UserWithStoryCount {
   credits: number;
   isPremium: boolean;
   totalStories: number;
+  message?: string;
+}
+
+interface SubscriptionCheckResponse {
+  error?: string;
+  creditsNeeded: boolean;
+  currentCredits: number;
+  isPremium: boolean;
+  maxFreeStories: number;
+  upgradeToPremium: boolean;
 }
 import { 
   generateStoryContent, 
@@ -22,6 +32,7 @@ import {
   generateSpeech 
 } from './services/openai';
 import { sendErrorResponse } from './utils/error';
+import { subscriptionService } from './services/subscription';
 import { 
   CREDITS_PER_USD, 
   MAX_CREDITS_PURCHASE, 
@@ -695,58 +706,42 @@ export function setupRoutes(app: express.Application) {
       const { childName, childAge, mainCharacter, theme } = req.body;
       const userId = req.user?.id;
 
-      // Check if user has enough credits and handle free/premium plan restrictions
-      const [user] = await db
-        .select({
-          credits: users.storyCredits,
-          isPremium: users.isPremium,
-          totalStories: sql`(SELECT COUNT(*) FROM ${stories} WHERE ${stories.userId} = ${userId})::int`,
-        })
-        .from(users)
-        .where(eq(users.id, userId))
-        .limit(1) as unknown as [UserWithStoryCount];
-
-      // Handle free plan restrictions
-      if (!user?.isPremium && (user?.totalStories || 0) >= MAX_FREE_STORIES) {
-        return res.status(403).json({
-          error: "Free plan limit reached",
-          creditsNeeded: true,
-          currentCredits: user?.credits || 0,
-          isPremium: false,
-          maxFreeStories: MAX_FREE_STORIES,
-          upgradeToPremium: true
-        });
-      }
-
-      console.log('Checking user credits:', {
-        userId,
-        currentCredits: user?.credits,
-        isPremium: user?.isPremium,
-        timestamp: new Date().toISOString()
-      });
-
-      if (!user || user.credits < 1) {
-        console.log('Insufficient credits for story creation:', {
+      try {
+        // Check subscription status and eligibility
+        const subscriptionStatus = await subscriptionService.checkStoryCreationEligibility(userId);
+        
+        console.log('Subscription status check:', {
           userId,
-          currentCredits: user?.credits || 0,
-          isPremium: user?.isPremium,
+          status: subscriptionStatus,
           timestamp: new Date().toISOString()
         });
-        return res.status(403).json({ 
-          error: "Insufficient credits", 
-          creditsNeeded: true,
-          currentCredits: user?.credits || 0,
-          isPremium: user?.isPremium || false
-        });
-      } 
 
+        if (!subscriptionStatus.isEligible) {
+          const response: SubscriptionCheckResponse = {
+            error: subscriptionStatus.message,
+            creditsNeeded: subscriptionStatus.currentCredits <= 0,
+            currentCredits: subscriptionStatus.currentCredits,
+            isPremium: subscriptionStatus.isPremium,
+            maxFreeStories: MAX_FREE_STORIES,
+            upgradeToPremium: !subscriptionStatus.isPremium && 
+              subscriptionStatus.totalStories >= MAX_FREE_STORIES
+          };
+          return res.status(403).json(response);
+        }
+      } catch (error) {
+        console.error('Error checking subscription status:', error);
+        return res.status(500).json({ error: 'Failed to check subscription status' });
+      }
+
+      // Already checked eligibility above, so if we're here we can proceed
       console.log('Story generation request:', {
         userId,
         childName,
         childAge,
         mainCharacter,
         theme,
-        creditsBeforeDeduction: user.credits,
+        creditsBeforeDeduction: subscriptionStatus.currentCredits,
+        isPremium: subscriptionStatus.isPremium,
         timestamp: new Date().toISOString()
       });
 
@@ -804,19 +799,10 @@ export function setupRoutes(app: express.Application) {
 
       // Deduct one credit and save story to the database
       const result = await db.transaction(async (tx) => {
-        // Deduct credit and verify the update
-        const [updatedUser] = await tx
-          .update(users)
-          .set({
-            storyCredits: sql`${users.storyCredits} - 1`
-          })
-          .where(and(
-            eq(users.id, userId),
-            sql`${users.storyCredits} > 0`
-          ))
-          .returning();
-
-        if (!updatedUser) {
+        // Deduct credit using subscription service
+        const newCredits = await subscriptionService.deductStoryCredit(userId);
+        
+        if (newCredits === undefined) {
           console.error('Failed to deduct credit:', {
             userId,
             timestamp: new Date().toISOString()
@@ -826,7 +812,7 @@ export function setupRoutes(app: express.Application) {
 
         console.log('Credit deducted successfully:', {
           userId,
-          newBalance: updatedUser.storyCredits,
+          newBalance: newCredits,
           timestamp: new Date().toISOString()
         });
 
