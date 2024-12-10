@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import StoryForm from "../components/StoryForm";
 import StoryViewer from "../components/StoryViewer";
 import { Button } from "@/components/ui/button";
@@ -8,9 +8,14 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { generateStory, getCreditBalance, type Story, type StoryFormData } from "../lib/api";
 import { Link } from "wouter";
 import { CreditPurchaseDialog } from "../components/CreditPurchaseDialog";
+import { Elements } from "@stripe/react-stripe-js";
+import { loadStripe } from "@stripe/stripe-js";
 
 import { ErrorBoundary } from "react-error-boundary";
 import { Loader2 } from "lucide-react";
+
+// Initialize Stripe outside of component to avoid re-initialization
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
 interface ErrorFallbackProps {
   error: Error;
@@ -95,6 +100,21 @@ export default function StoryGenerator() {
     setStory(null);
   };
 
+  // Define Stripe Elements options
+  const stripeOptions = useMemo(() => ({
+    appearance: {
+      theme: 'stripe' as const,
+      variables: {
+        colorPrimary: '#6366f1',
+        colorBackground: '#ffffff',
+        colorText: '#1f2937',
+      },
+    },
+    mode: 'setup' as const,
+    currency: 'usd',
+    paymentMethodTypes: ['card'] as const,
+  }), []);
+
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback} onReset={() => setStory(null)}>
       <div className="min-h-screen bg-gradient-to-b from-purple-50 to-purple-100 p-8">
@@ -118,14 +138,19 @@ export default function StoryGenerator() {
             </div>
           </header>
           
-          <CreditPurchaseDialog
-            open={showCreditPurchase}
-            onOpenChange={setShowCreditPurchase}
-            onSuccess={() => {
-              refetchCredits();
-              setShowCreditPurchase(false);
-            }}
-          />
+          {showCreditPurchase && (
+            <Elements stripe={stripePromise} options={stripeOptions}>
+              <CreditPurchaseDialog
+                open={showCreditPurchase}
+                onOpenChange={setShowCreditPurchase}
+                onSuccess={() => {
+                  refetchCredits();
+                  setShowCreditPurchase(false);
+                }}
+              />
+            </Elements>
+          )}
+
           {mutation.isPending && (
             <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
               <div className="bg-white p-4 rounded-lg flex items-center space-x-2">

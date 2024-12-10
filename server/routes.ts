@@ -510,8 +510,9 @@ export function setupRoutes(app: express.Application) {
         timestamp: new Date().toISOString()
       });
 
+      const { clientSecret } = paymentResponse;
       res.json({
-        clientSecret: paymentResponse.clientSecret,
+        clientSecret,
         transactionId: transaction.id,
         amount: paymentResponse.amount,
         currency: paymentResponse.currency

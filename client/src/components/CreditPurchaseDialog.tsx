@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useStripe, useElements, PaymentElement } from "@stripe/react-stripe-js";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "./ui/dialog";
 import { Button } from "./ui/button";
@@ -6,6 +5,7 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { purchaseCredits } from "../lib/api";
 import { useToast } from "@/hooks/use-toast";
+import { useState, useEffect } from "react";
 
 interface CreditPurchaseDialogProps {
   open: boolean;
@@ -20,25 +20,44 @@ export function CreditPurchaseDialog({
 }: CreditPurchaseDialogProps) {
   const [amount, setAmount] = useState(5);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
   const stripe = useStripe();
   const elements = useElements();
   const { toast } = useToast();
 
+  useEffect(() => {
+    if (open && amount > 0) {
+      purchaseCredits(amount)
+        .then(({ clientSecret }) => {
+          setClientSecret(clientSecret);
+        })
+        .catch((error) => {
+          toast({
+            title: "Error",
+            description: error instanceof Error ? error.message : "Failed to initialize payment",
+            variant: "destructive",
+          });
+          onOpenChange(false);
+        });
+    }
+  }, [open, amount, toast, onOpenChange]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!stripe || !elements) {
+    if (!stripe || !elements || !clientSecret) {
+      toast({
+        title: "Error",
+        description: "Payment system not initialized",
+        variant: "destructive",
+      });
       return;
     }
 
     setIsProcessing(true);
 
     try {
-      // Create payment intent
-      const { clientSecret } = await purchaseCredits(amount);
-
-      // Confirm payment with Stripe
-      const result = await stripe.confirmPayment({
+      const { error, paymentIntent } = await stripe.confirmPayment({
         elements,
         confirmParams: {
           return_url: `${window.location.origin}/credits/confirm`,
@@ -46,13 +65,13 @@ export function CreditPurchaseDialog({
         redirect: "if_required",
       });
 
-      if (result.error) {
+      if (error) {
         toast({
           title: "Payment failed",
-          description: result.error.message,
+          description: error.message,
           variant: "destructive",
         });
-      } else {
+      } else if (paymentIntent && paymentIntent.status === "succeeded") {
         toast({
           title: "Payment successful",
           description: `Added ${amount} credits to your account`,
