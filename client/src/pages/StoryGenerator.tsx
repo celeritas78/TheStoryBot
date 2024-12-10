@@ -15,10 +15,17 @@ import { ErrorBoundary } from "react-error-boundary";
 import { Loader2 } from "lucide-react";
 
 // Initialize Stripe outside of component to avoid re-initialization
+const STRIPE_PUBLISHABLE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+
 // Initialize Stripe in test mode
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY, {
-  apiVersion: '2024-11-20.acacia',
+const stripePromise = loadStripe(STRIPE_PUBLISHABLE_KEY, {
+  apiVersion: '2024-11-20',
 });
+
+// Validate Stripe initialization
+if (!STRIPE_PUBLISHABLE_KEY) {
+  console.error('Missing Stripe publishable key. Please ensure VITE_STRIPE_PUBLISHABLE_KEY is set in the environment.');
+}
 
 interface ErrorFallbackProps {
   error: Error;

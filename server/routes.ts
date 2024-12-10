@@ -18,7 +18,12 @@ import { sendErrorResponse } from './utils/error';
 import { 
   CREDITS_PER_USD, 
   MAX_CREDITS_PURCHASE, 
-  MIN_CREDITS_PURCHASE 
+  MIN_CREDITS_PURCHASE,
+  FREE_CREDITS,
+  STRIPE_CURRENCY,
+  STRIPE_PAYMENT_MODE,
+  STRIPE_STATEMENT_DESCRIPTOR,
+  STRIPE_STATEMENT_DESCRIPTOR_SUFFIX
 } from './config';
 import { 
   getAudioFilePath, 
@@ -426,9 +431,25 @@ export function setupRoutes(app: express.Application) {
         password: hashedPassword,
         displayName, 
         createdAt: new Date(),
+        storyCredits: FREE_CREDITS, // Give free credits to new users
       }).returning();
 
-  // Credit purchase endpoints
+      res.status(201).json({ 
+        message: "Registration successful", 
+        user: { 
+          id: newUser.id, 
+          email: newUser.email, 
+          displayName: newUser.displayName, 
+          storyCredits: FREE_CREDITS 
+        } 
+      });
+    } catch (err) {
+      console.error("Error registering user:", err);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Credit management endpoints
   app.post("/api/credits/purchase", async (req: Request, res: Response) => {
     try {
       if (!req.isAuthenticated || !req.isAuthenticated()) {
@@ -625,6 +646,8 @@ export function setupRoutes(app: express.Application) {
     }
   });
 
+  
+      // Credit balance endpoint
   app.get("/api/credits/balance", async (req, res) => {
     try {
       if (!req.isAuthenticated || !req.isAuthenticated()) {
@@ -641,6 +664,10 @@ export function setupRoutes(app: express.Application) {
         .where(eq(users.id, userId))
         .limit(1);
 
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
       res.json({
         credits: user.credits,
         isPremium: user.isPremium,
@@ -648,12 +675,6 @@ export function setupRoutes(app: express.Application) {
     } catch (error) {
       console.error('Error fetching credit balance:', error);
       res.status(500).json({ error: 'Failed to fetch credit balance' });
-    }
-  });
-      res.status(201).json({ message: "Registration successful", user: { id: newUser.id, email: newUser.email, displayName: newUser.displayName } });
-    } catch (err) {
-      console.error("Error registering user:", err);
-      res.status(500).json({ error: "Internal server error" });
     }
   });
 
