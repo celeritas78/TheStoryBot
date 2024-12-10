@@ -78,7 +78,7 @@ export default function Header() {
                       <AvatarImage src={user.avatarUrl || ''} alt={user.displayName || user.email} />
                       <AvatarFallback>{(user.displayName || user.email).charAt(0).toUpperCase()}</AvatarFallback>
                     </Avatar>
-                    <span>{user.displayName || user.email}</span>
+                    <span>Settings</span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
