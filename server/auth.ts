@@ -203,11 +203,22 @@ export function setupAuth(app: Express) {
         .from(users)
         .where(eq(users.verificationToken, token));
       
-      console.log('Found users:', users_result.length, 'for token:', token);
+      console.log('Step 1 - Query results:', {
+        usersFound: users_result.length,
+        token,
+        firstUser: users_result[0] ? {
+          id: users_result[0].id,
+          email: users_result[0].email,
+          emailVerified: users_result[0].emailVerified,
+          tokenMatch: users_result[0].verificationToken === token,
+          tokenExpiry: users_result[0].verificationTokenExpiry
+        } : null
+      });
       
       const [user] = users_result;
 
       if (!user) {
+        console.log('Step 2a - No user found with token:', token);
         return res.status(404).json({ 
           error: "Invalid verification token",
           message: "This verification link is invalid or has expired. Please request a new verification email."
@@ -216,6 +227,11 @@ export function setupAuth(app: Express) {
 
       // If we found a user, check if they're already verified
       if (user.emailVerified) {
+        console.log('Step 2b - User already verified:', {
+          id: user.id,
+          email: user.email,
+          emailVerified: user.emailVerified
+        });
         return res.status(200).json({ 
           message: "Email already verified",
           user: {
@@ -226,7 +242,13 @@ export function setupAuth(app: Express) {
         });
       }
 
-      console.log('Found user:', { id: user.id, email: user.email, emailVerified: user.emailVerified });
+      console.log('Step 3 - Processing verification for user:', {
+        id: user.id,
+        email: user.email,
+        emailVerified: user.emailVerified,
+        currentTime: now.toISOString(),
+        tokenExpiry: user.verificationTokenExpiry?.toISOString()
+      });
 
       if (user.emailVerified) {
         return res.status(400).json({ 
@@ -254,6 +276,12 @@ export function setupAuth(app: Express) {
       }
 
       try {
+        console.log('Step 4 - Attempting to update user verification status:', {
+          userId: user.id,
+          currentStatus: user.emailVerified,
+          updateTime: now.toISOString()
+        });
+
         // Update user as verified in a transaction to ensure atomicity
         const [updatedUser] = await db
           .update(users)
@@ -266,7 +294,18 @@ export function setupAuth(app: Express) {
           .where(eq(users.id, user.id))
           .returning();
 
+        console.log('Step 5 - Update result:', {
+          success: !!updatedUser,
+          updatedUser: updatedUser ? {
+            id: updatedUser.id,
+            email: updatedUser.email,
+            emailVerified: updatedUser.emailVerified,
+            verificationToken: updatedUser.verificationToken
+          } : null
+        });
+
         if (!updatedUser) {
+          console.log('Step 5a - Failed to update user');
           return res.status(500).json({
             error: "Verification failed",
             message: "Failed to update verification status. Please try again."
