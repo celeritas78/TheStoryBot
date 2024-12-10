@@ -63,8 +63,8 @@ export function CreditPurchaseDialog({
         elements,
         confirmParams: {
           return_url: `${window.location.origin}/credits/confirm`,
+          payment_method: 'card',
         },
-        redirect: "if_required",
       });
 
       if (error) {
@@ -117,7 +117,14 @@ export function CreditPurchaseDialog({
               Total: ${amount}.00 USD
             </p>
           </div>
-          <PaymentElement />
+          <PaymentElement options={{
+            layout: 'tabs',
+            defaultValues: {
+              billingDetails: {
+                name: ''
+              }
+            }
+          }} />
           <Button
             type="submit"
             disabled={isProcessing}

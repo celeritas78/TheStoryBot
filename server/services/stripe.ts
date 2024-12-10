@@ -48,7 +48,6 @@ export async function createPaymentIntent({
     const paymentIntent = await stripe.paymentIntents.create({
       amount: amountInCents,
       currency: STRIPE_CURRENCY,
-      payment_method_types: ['card'],
       metadata: {
         userId: userId.toString(),
         credits: credits.toString(),
@@ -58,6 +57,9 @@ export async function createPaymentIntent({
       receipt_email: receiptEmail,
       statement_descriptor: STRIPE_STATEMENT_DESCRIPTOR,
       statement_descriptor_suffix: STRIPE_STATEMENT_DESCRIPTOR_SUFFIX,
+      payment_method_types: ['card'],
+      setup_future_usage: null,
+      confirmation_method: 'automatic'
     });
 
     console.log('Payment intent created:', {
