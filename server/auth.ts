@@ -8,7 +8,7 @@ import csrf from "csurf";
 import { promisify } from "util";
 import { users, type User as SelectUser } from "@db/schema";
 import { db } from "../db";
-import { eq, sql } from "drizzle-orm";
+import { eq, sql, and } from "drizzle-orm";
 import { z } from "zod";
 
 // Extend SessionData to include our custom properties
@@ -225,8 +225,10 @@ export function setupAuth(app: Express) {
         const [recentlyVerifiedUser] = await db
           .select()
           .from(users)
-          .where(eq(users.emailVerified, true))
-          .where(sql`${users.updatedAt} > ${oneHourAgo}`)
+          .where(and(
+            eq(users.emailVerified, true),
+            sql`${users.updatedAt} > ${oneHourAgo}`
+          ))
           .orderBy(sql`${users.updatedAt} DESC`)
           .limit(1);
 
