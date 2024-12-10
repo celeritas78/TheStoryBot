@@ -253,35 +253,50 @@ export function setupAuth(app: Express) {
         });
       }
 
-      // Update user as verified
-      const [updatedUser] = await db
-        .update(users)
-        .set({
-          emailVerified: true,
-          verificationToken: null,
-          verificationTokenExpiry: null,
-          updatedAt: now,
-        })
-        .where(eq(users.id, user.id))
-        .returning();
+      try {
+        // Update user as verified in a transaction to ensure atomicity
+        const [updatedUser] = await db
+          .update(users)
+          .set({
+            emailVerified: true,
+            verificationToken: null,
+            verificationTokenExpiry: null,
+            updatedAt: now,
+          })
+          .where(eq(users.id, user.id))
+          .returning();
 
-      // Log the user in after verification
-      req.login(updatedUser, (err) => {
-        if (err) {
-          return res.status(500).json({ 
-            error: "Login failed",
-            message: "Email verified successfully but failed to log you in. Please try logging in manually."
+        if (!updatedUser) {
+          return res.status(500).json({
+            error: "Verification failed",
+            message: "Failed to update verification status. Please try again."
           });
         }
-        res.json({ 
-          message: "Email verified successfully",
-          user: {
-            id: updatedUser.id,
-            email: updatedUser.email,
-            emailVerified: true
+
+        // Log the user in after verification
+        req.login(updatedUser, (err) => {
+          if (err) {
+            return res.status(500).json({ 
+              error: "Login failed",
+              message: "Email verified successfully but failed to log you in. Please try logging in manually."
+            });
           }
+          res.json({ 
+            message: "Email verified successfully",
+            user: {
+              id: updatedUser.id,
+              email: updatedUser.email,
+              emailVerified: true
+            }
+          });
         });
-      });
+      } catch (error) {
+        console.error('Failed to update user verification status:', error);
+        return res.status(500).json({
+          error: "Verification failed",
+          message: "An error occurred while updating verification status. Please try again."
+        });
+      }
     } catch (error) {
       console.error('Email verification error:', error);
       const err = error as Error;
