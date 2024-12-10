@@ -4,9 +4,10 @@ import StoryViewer from "../components/StoryViewer";
 import { Button } from "@/components/ui/button";
 import { Title } from "@/components/ui/title";
 import { useToast } from "@/hooks/use-toast";
-import { useMutation } from "@tanstack/react-query";
-import { generateStory, type Story, type StoryFormData } from "../lib/api";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { generateStory, getCreditBalance, type Story, type StoryFormData } from "../lib/api";
 import { Link } from "wouter";
+import { CreditPurchaseDialog } from "../components/CreditPurchaseDialog";
 
 import { ErrorBoundary } from "react-error-boundary";
 import { Loader2 } from "lucide-react";
@@ -30,7 +31,13 @@ function ErrorFallback({ error, resetErrorBoundary }: ErrorFallbackProps) {
 
 export default function StoryGenerator() {
   const [story, setStory] = useState<Story | null>(null);
+  const [showCreditPurchase, setShowCreditPurchase] = useState(false);
   const { toast } = useToast();
+
+  const { data: creditBalance, refetch: refetchCredits } = useQuery({
+    queryKey: ['credits'],
+    queryFn: getCreditBalance,
+  });
 
   const mutation = useMutation({
     mutationFn: async (formData: StoryFormData) => {
@@ -52,11 +59,22 @@ export default function StoryGenerator() {
         message: errorMessage,
         stack: error.stack,
       });
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      
+      // Check if error is due to insufficient credits
+      if (error.message.includes("Insufficient credits")) {
+        setShowCreditPurchase(true);
+        toast({
+          title: "Insufficient Credits",
+          description: "Please purchase more credits to create stories",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      }
     },
   });
 
@@ -83,12 +101,31 @@ export default function StoryGenerator() {
         <div className="container mx-auto">
           <header className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-4">
-              
               <Title>
                 {story ? (story.title || `${story.childName}'s Story`) : 'Create Your Story'}
               </Title>
             </div>
+            <div className="flex items-center gap-4">
+              <div className="text-sm text-gray-600">
+                Credits: {creditBalance?.credits || 0}
+              </div>
+              <Button
+                variant="outline"
+                onClick={() => setShowCreditPurchase(true)}
+              >
+                Buy Credits
+              </Button>
+            </div>
           </header>
+          
+          <CreditPurchaseDialog
+            open={showCreditPurchase}
+            onOpenChange={setShowCreditPurchase}
+            onSuccess={() => {
+              refetchCredits();
+              setShowCreditPurchase(false);
+            }}
+          />
           {mutation.isPending && (
             <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
               <div className="bg-white p-4 rounded-lg flex items-center space-x-2">

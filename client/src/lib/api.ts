@@ -147,3 +147,65 @@ export async function getAllStories() {
 
   throw lastError || new Error('Failed to fetch stories after all retries');
 }
+
+// Credit-related types and functions
+export interface CreditBalance {
+  credits: number;
+  isPremium: boolean;
+}
+
+export interface PaymentIntent {
+  clientSecret: string;
+  transactionId: number;
+}
+
+export async function getCreditBalance(): Promise<CreditBalance> {
+  const response = await fetch(`${API_BASE}/credits/balance`, {
+    headers: {
+      "Accept": "application/json",
+    },
+    credentials: 'include',
+  });
+
+  if (!response.ok) {
+    await handleApiError(response);
+  }
+
+  return response.json();
+}
+
+export async function purchaseCredits(amount: number): Promise<PaymentIntent> {
+  const response = await fetch(`${API_BASE}/credits/purchase`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Accept": "application/json",
+    },
+    credentials: 'include',
+    body: JSON.stringify({ amount }),
+  });
+
+  if (!response.ok) {
+    await handleApiError(response);
+  }
+
+  return response.json();
+}
+
+export async function confirmCreditPurchase(paymentIntentId: string): Promise<CreditBalance> {
+  const response = await fetch(`${API_BASE}/credits/confirm`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Accept": "application/json",
+    },
+    credentials: 'include',
+    body: JSON.stringify({ paymentIntentId }),
+  });
+
+  if (!response.ok) {
+    await handleApiError(response);
+  }
+
+  return response.json();
+}

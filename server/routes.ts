@@ -14,6 +14,15 @@ import {
 } from './services/openai';
 import { sendErrorResponse } from './utils/error';
 import { 
+  createPaymentIntent, 
+  confirmPaymentIntent 
+} from './services/stripe';
+import { 
+  CREDITS_PER_USD, 
+  MAX_CREDITS_PURCHASE, 
+  MIN_CREDITS_PURCHASE 
+} from './config';
+import { 
   getAudioFilePath, 
   audioFileExists, 
   isAudioFormatSupported,
@@ -421,6 +430,130 @@ export function setupRoutes(app: express.Application) {
         createdAt: new Date(),
       }).returning();
 
+  // Credit purchase endpoints
+  app.post("/api/credits/purchase", async (req, res) => {
+    try {
+      if (!req.isAuthenticated || !req.isAuthenticated()) {
+        return res.status(401).json({ error: "Not logged in" });
+      }
+
+      const { amount } = req.body;
+      const userId = req.user?.id;
+
+      // Validate amount
+      if (!amount || amount < MIN_CREDITS_PURCHASE || amount > MAX_CREDITS_PURCHASE) {
+        return res.status(400).json({ 
+          error: `Amount must be between ${MIN_CREDITS_PURCHASE} and ${MAX_CREDITS_PURCHASE} credits` 
+        });
+      }
+
+      // Create Stripe payment intent
+      const { clientSecret, paymentIntentId } = await createPaymentIntent({
+        amount,
+        userId,
+      });
+
+      // Create pending transaction
+      const [transaction] = await db.insert(creditTransactions)
+        .values({
+          userId,
+          amount: amount * 100, // Store in cents
+          credits: amount,
+          status: 'pending',
+          stripePaymentId: paymentIntentId,
+          createdAt: new Date(),
+        })
+        .returning();
+
+      res.json({
+        clientSecret,
+        transactionId: transaction.id,
+      });
+    } catch (error) {
+      console.error('Error creating payment intent:', error);
+      res.status(500).json({ error: 'Failed to create payment intent' });
+    }
+  });
+
+  app.post("/api/credits/confirm", async (req, res) => {
+    try {
+      if (!req.isAuthenticated || !req.isAuthenticated()) {
+        return res.status(401).json({ error: "Not logged in" });
+      }
+
+      const { paymentIntentId } = req.body;
+      const userId = req.user?.id;
+
+      // Confirm payment with Stripe
+      const isSuccessful = await confirmPaymentIntent(paymentIntentId);
+
+      if (!isSuccessful) {
+        return res.status(400).json({ error: "Payment failed" });
+      }
+
+      // Update transaction and user credits
+      const [transaction] = await db
+        .select()
+        .from(creditTransactions)
+        .where(eq(creditTransactions.stripePaymentId, paymentIntentId))
+        .limit(1);
+
+      if (!transaction) {
+        return res.status(404).json({ error: "Transaction not found" });
+      }
+
+      // Update transaction status
+      await db
+        .update(creditTransactions)
+        .set({ status: 'completed' })
+        .where(eq(creditTransactions.id, transaction.id));
+
+      // Update user credits
+      const [updatedUser] = await db
+        .update(users)
+        .set({
+          storyCredits: sql`${users.storyCredits} + ${transaction.credits}`,
+          isPremium: true,
+        })
+        .where(eq(users.id, userId))
+        .returning();
+
+      res.json({
+        success: true,
+        credits: updatedUser.storyCredits,
+        isPremium: true,
+      });
+    } catch (error) {
+      console.error('Error confirming payment:', error);
+      res.status(500).json({ error: 'Failed to confirm payment' });
+    }
+  });
+
+  app.get("/api/credits/balance", async (req, res) => {
+    try {
+      if (!req.isAuthenticated || !req.isAuthenticated()) {
+        return res.status(401).json({ error: "Not logged in" });
+      }
+
+      const userId = req.user?.id;
+      const [user] = await db
+        .select({
+          credits: users.storyCredits,
+          isPremium: users.isPremium,
+        })
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1);
+
+      res.json({
+        credits: user.credits,
+        isPremium: user.isPremium,
+      });
+    } catch (error) {
+      console.error('Error fetching credit balance:', error);
+      res.status(500).json({ error: 'Failed to fetch credit balance' });
+    }
+  });
       res.status(201).json({ message: "Registration successful", user: { id: newUser.id, email: newUser.email, displayName: newUser.displayName } });
     } catch (err) {
       console.error("Error registering user:", err);
@@ -436,7 +569,24 @@ export function setupRoutes(app: express.Application) {
       }
 
       const { childName, childAge, mainCharacter, theme } = req.body;
-      const userId = req.user?.id; 
+      const userId = req.user?.id;
+
+      // Check if user has enough credits
+      const [user] = await db
+        .select({
+          credits: users.storyCredits,
+        })
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1);
+
+      if (!user || user.credits < 1) {
+        return res.status(403).json({ 
+          error: "Insufficient credits", 
+          creditsNeeded: true,
+          currentCredits: user?.credits || 0
+        });
+      } 
 
       console.log('Story generation request:', {
         userId,
@@ -499,13 +649,24 @@ export function setupRoutes(app: express.Application) {
         }
       }));
 
-      // Save story to the database, including the userId
-      const [story] = await db.insert(stories)
-        .values({
-          userId, 
-          title: storyContent.title,
-          childName,
-          childAge: parsedAge,
+      // Deduct one credit and save story to the database
+      const [story] = await db.transaction(async (tx) => {
+        // Deduct credit
+        await tx
+          .update(users)
+          .set({
+            storyCredits: sql`${users.storyCredits} - 1`
+          })
+          .where(eq(users.id, userId));
+
+        // Create story
+        const [newStory] = await tx
+          .insert(stories)
+          .values({
+            userId, 
+            title: storyContent.title,
+            childName,
+            childAge: parsedAge,
           characters: JSON.stringify({ mainCharacter }),
           theme,
           content: segments.map(s => s.content).join('\n\n'),
