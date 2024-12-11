@@ -157,6 +157,19 @@ export function CreditPurchaseDialog({
     }
   }, [open]);
 
+  // Log payment form state changes
+  useEffect(() => {
+    if (!canShowPaymentForm) {
+      console.log('Payment form not ready:', {
+        hasStripe: !!stripe,
+        hasElements: !!elements,
+        hasClientSecret: !!paymentState.clientSecret,
+        status: paymentState.status,
+        timestamp: new Date().toISOString()
+      });
+    }
+  }, [canShowPaymentForm, stripe, elements, paymentState.clientSecret, paymentState.status]);
+
   // Initialize payment when dialog opens or amount changes
   useEffect(() => {
     let isActive = true;
@@ -368,7 +381,6 @@ export function CreditPurchaseDialog({
                         console.log('Payment element state changed:', {
                           complete: event.complete,
                           empty: event.empty,
-                          error: event.error,
                           timestamp: new Date().toISOString()
                         });
                       }}
@@ -385,13 +397,6 @@ export function CreditPurchaseDialog({
                   <div className="text-center p-4">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-2" />
                     <p className="text-gray-600">Initializing payment form...</p>
-                    {console.log('Payment form not ready:', {
-                      hasStripe: !!stripe,
-                      hasElements: !!elements,
-                      hasClientSecret: !!paymentState.clientSecret,
-                      status: paymentState.status,
-                      timestamp: new Date().toISOString()
-                    })}
                   </div>
                 )}
               </Elements>
