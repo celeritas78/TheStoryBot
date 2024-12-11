@@ -6,7 +6,7 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { purchaseCredits } from "../lib/api";
 import { useToast } from "@/hooks/use-toast";
-import type { PaymentState } from "../types/payment";
+import type { PaymentState, PaymentStatus } from "../types/payment";
 
 const initialPaymentState: PaymentState = {
   status: "idle",
