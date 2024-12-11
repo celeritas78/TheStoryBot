@@ -112,8 +112,10 @@ export async function createPaymentIntent({
     const paymentIntent = await stripe.paymentIntents.create({
       amount: amountInCents,
       currency: STRIPE_CURRENCY,
-      payment_method_types: ['card'],
-      setup_future_usage: 'off_session',
+      automatic_payment_methods: {
+        enabled: true,
+        allow_redirects: 'never'
+      },
       metadata: {
         userId: userId.toString(),
         credits: credits.toString(),
