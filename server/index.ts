@@ -197,8 +197,8 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // Set development port to 5000
-  const PORT = process.env.NODE_ENV === 'production' ? (process.env.PORT || 5000) : 5000;
+  // Use port 3000 for development, otherwise use environment variable
+  const PORT = process.env.PORT || 3000;
 
   // Add shutdown handler
   function handleShutdown() {
@@ -240,6 +240,8 @@ app.use((req, res, next) => {
   try {
     await new Promise<void>((resolve, reject) => {
       const port = typeof PORT === 'string' ? parseInt(PORT, 10) : PORT;
+      console.log('Starting server on port:', port);
+      
       server.listen(port, '0.0.0.0', () => {
         log(`Server initialization complete`);
         log(`Server Details:
