@@ -1,4 +1,6 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { Elements } from "@stripe/react-stripe-js";
+import { loadStripe } from "@stripe/stripe-js";
 import StoryForm from "../components/StoryForm";
 import StoryViewer from "../components/StoryViewer";
 import { Button } from "@/components/ui/button";
@@ -6,159 +8,42 @@ import { Title } from "@/components/ui/title";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { generateStory, getCreditBalance, type Story, type StoryFormData } from "../lib/api";
-import { Link } from "wouter";
 import { CreditPurchaseDialog } from "../components/CreditPurchaseDialog";
-import { Elements } from "@stripe/react-stripe-js";
-import { loadStripe, type Stripe, type StripeElementsOptions } from "@stripe/stripe-js";
-import { ErrorBoundary } from "react-error-boundary";
 import { Loader2 } from "lucide-react";
 
-// Get Stripe publishable key from environment
-const STRIPE_PUBLISHABLE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+// Stripe Promise
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY!);
 
-// Initialize Stripe with proper error handling
-const initializeStripe = async () => {
-  const requestId = Math.random().toString(36).substring(7);
-  console.log('Starting Stripe initialization...', {
-    requestId,
-    hasKey: !!STRIPE_PUBLISHABLE_KEY,
-    keyPrefix: STRIPE_PUBLISHABLE_KEY ? STRIPE_PUBLISHABLE_KEY.substring(0, 8) : 'missing',
-    timestamp: new Date().toISOString()
-  });
+// Add the console log here to debug the environment variable
+console.log("For testing:");
+console.log("Stripe Publishable Key:", import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
-  if (!STRIPE_PUBLISHABLE_KEY) {
-    const error = new Error('Stripe publishable key is missing');
-    console.error('Stripe initialization failed:', {
-      requestId,
-      error: error.message,
-      timestamp: new Date().toISOString()
-    });
-    throw error;
+stripePromise.then((stripe) => {
+  if (!stripe) {
+    console.error("Stripe failed to initialize. Check your publishable key.");
+  } else {
+    console.log("stripe: ", stripe);
   }
+});
 
-  try {
-    const stripe = await loadStripe(STRIPE_PUBLISHABLE_KEY);
-    if (!stripe) {
-      throw new Error('Failed to initialize Stripe instance');
-    }
-
-    console.log('Stripe initialized successfully:', {
-      requestId,
-      stripeInstance: !!stripe,
-      timestamp: new Date().toISOString()
-    });
-
-    return stripe;
-  } catch (error) {
-    console.error('Stripe initialization failed:', {
-      requestId,
-      error: error instanceof Error ? error.message : 'Unknown error',
-      type: error instanceof Error ? error.constructor.name : 'Unknown',
-      stack: error instanceof Error ? error.stack : undefined,
-      timestamp: new Date().toISOString()
-    });
-    throw error instanceof Error ? error : new Error('Failed to initialize Stripe');
-  }
-};
-
-interface ErrorFallbackProps {
-  error: Error;
-  resetErrorBoundary: () => void;
-}
-
-function ErrorFallback({ error, resetErrorBoundary }: ErrorFallbackProps) {
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-purple-50 to-purple-100 p-4">
-      <div className="container mx-auto max-w-4xl text-center">
-        <h2 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 text-transparent bg-clip-text mb-4">
-          Something went wrong
-        </h2>
-        <pre className="text-red-500 mb-4">{error.message}</pre>
-        <Button onClick={resetErrorBoundary}>Try again</Button>
-      </div>
-    </div>
-  );
-}
 
 export default function StoryGenerator() {
   const [story, setStory] = useState<Story | null>(null);
   const [showCreditPurchase, setShowCreditPurchase] = useState(false);
   const { toast } = useToast();
-  
-  // Initialize Stripe with proper logging and state management
-  const [stripeInstance, setStripeInstance] = useState<Stripe | null>(null);
-  const [stripeLoading, setStripeLoading] = useState(false);
-  const [stripeError, setStripeError] = useState<string | null>(null);
-
-  const initializeStripe = useCallback(async () => {
-    if (!STRIPE_PUBLISHABLE_KEY || stripeInstance || stripeLoading) {
-      return;
-    }
-
-    const requestId = Math.random().toString(36).substring(7);
-    console.log('Starting Stripe initialization...', {
-      requestId,
-      hasKey: true,
-      keyPrefix: STRIPE_PUBLISHABLE_KEY.substring(0, 8),
-      timestamp: new Date().toISOString()
-    });
-
-    setStripeLoading(true);
-    setStripeError(null);
-
-    try {
-      const instance = await loadStripe(STRIPE_PUBLISHABLE_KEY);
-      
-      if (!instance) {
-        throw new Error('Failed to initialize Stripe instance');
-      }
-
-      console.log('Stripe initialized successfully:', {
-        requestId,
-        timestamp: new Date().toISOString()
-      });
-
-      setStripeInstance(instance);
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error('Stripe initialization failed:', {
-        requestId,
-        error: errorMessage,
-        type: error instanceof Error ? error.constructor.name : 'Unknown',
-        stack: error instanceof Error ? error.stack : undefined,
-        timestamp: new Date().toISOString()
-      });
-      setStripeError(errorMessage);
-    } finally {
-      setStripeLoading(false);
-    }
-  }, [STRIPE_PUBLISHABLE_KEY, stripeInstance]);
-
-  // Initialize Stripe when component mounts or when key becomes available
-  useEffect(() => {
-    if (STRIPE_PUBLISHABLE_KEY && !stripeInstance && !stripeLoading) {
-      void initializeStripe();
-    }
-  }, [STRIPE_PUBLISHABLE_KEY, stripeInstance, stripeLoading, initializeStripe]);
-
-  // Retry initialization if it failed
-  const handleRetryStripeInit = useCallback(() => {
-    setStripeError(null);
-    void initializeStripe();
-  }, [initializeStripe]);
 
   const { data: creditBalance, refetch: refetchCredits } = useQuery({
-    queryKey: ['credits'],
+    queryKey: ["credits"],
     queryFn: getCreditBalance,
   });
 
   const mutation = useMutation({
     mutationFn: async (formData: StoryFormData) => {
-      console.log('Submitting form data:', formData);
+      console.log("Submitting form data:", formData);
       return generateStory(formData);
     },
     onSuccess: (data: Story) => {
-      console.log('Story generated successfully:', data);
+      console.log("Story generated successfully:", data);
       setStory(data);
       toast({
         title: "Story created!",
@@ -167,12 +52,7 @@ export default function StoryGenerator() {
     },
     onError: (error: Error) => {
       const errorMessage = error.message || "Failed to generate story. Please try again.";
-      console.error("Story generation error:", {
-        error,
-        message: errorMessage,
-        stack: error.stack,
-      });
-      
+      console.error("Story generation error:", errorMessage);
       if (error.message.includes("Insufficient credits")) {
         setShowCreditPurchase(true);
         toast({
@@ -199,7 +79,6 @@ export default function StoryGenerator() {
       });
       return;
     }
-    
     mutation.mutate(formData);
   };
 
@@ -207,135 +86,65 @@ export default function StoryGenerator() {
     setStory(null);
   };
 
-  // Stripe Elements options with proper typing
-  const defaultStripeOptions: StripeElementsOptions = {
+  const stripeOptions = useMemo(() => ({
     appearance: {
-      theme: 'stripe',
+      theme: "stripe" as "stripe", // Cast to satisfy TypeScript
       variables: {
-        colorPrimary: '#6366f1',
-        colorBackground: '#ffffff',
-        colorText: '#1f2937',
-      },
-    },
-  };
-
-  const stripeOptions: StripeElementsOptions = useMemo(() => ({
-    appearance: {
-      theme: 'stripe',
-      variables: {
-        colorPrimary: '#6366f1',
-        colorBackground: '#ffffff',
-        colorText: '#1f2937',
+        colorPrimary: "#6366f1",
+        colorBackground: "#ffffff",
+        colorText: "#1f2937",
       },
     },
   }), []);
 
   return (
-    <ErrorBoundary FallbackComponent={ErrorFallback} onReset={() => setStory(null)}>
-      <div className="min-h-screen bg-gradient-to-b from-purple-50 to-purple-100 p-8">
-        <div className="container mx-auto">
-          <header className="flex items-center justify-between mb-8">
-            <div className="flex items-center gap-4">
-              <Title>
-                {story ? (story.title || `${story.childName}'s Story`) : 'Create Your Story'}
-              </Title>
+    <div className="min-h-screen bg-gradient-to-b from-purple-50 to-purple-100 p-8">
+      <div className="container mx-auto">
+        <header className="flex items-center justify-between mb-8">
+          <Title>{story ? story.title || `${story.childName}'s Story` : "Create Your Story"}</Title>
+          <div className="flex items-center gap-4">
+            <div className="text-sm text-gray-600">Credits: {creditBalance?.credits || 0}</div>
+            <Button variant="outline" onClick={() => setShowCreditPurchase(true)}>
+              Buy Credits
+            </Button>
+          </div>
+        </header>
+
+        {showCreditPurchase && (
+          <Elements stripe={stripePromise} options={stripeOptions}>
+            <CreditPurchaseDialog
+              open={showCreditPurchase}
+              onOpenChange={setShowCreditPurchase}
+              onSuccess={() => {
+                refetchCredits();
+                setShowCreditPurchase(false);
+              }}
+            />
+          </Elements>
+        )}
+
+        {mutation.isPending && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-white p-4 rounded-lg flex items-center space-x-2">
+              <Loader2 className="h-6 w-6 animate-spin" />
+              <span>Generating your story...</span>
             </div>
-            <div className="flex items-center gap-4">
-              <div className="text-sm text-gray-600">
-                Credits: {creditBalance?.credits || 0}
-              </div>
-              <Button
-                variant="outline"
-                onClick={() => setShowCreditPurchase(true)}
-              >
-                Buy Credits
+          </div>
+        )}
+
+        {!story ? (
+          <StoryForm onSubmit={handleSubmit} isLoading={mutation.isPending} />
+        ) : (
+          <div>
+            <StoryViewer story={story} showHomeIcon={false} />
+            <div className="mt-4 text-center">
+              <Button variant="outline" onClick={handleReset}>
+                Create Another Story
               </Button>
             </div>
-          </header>
-          
-          {showCreditPurchase && (
-            <ErrorBoundary
-              FallbackComponent={({ error }) => (
-                <div className="text-red-500 p-4 text-center">
-                  <p>Failed to load payment form:</p>
-                  <p>{error.message}</p>
-                </div>
-              )}
-            >
-              {stripeError ? (
-                <div className="text-red-500 p-4 text-center">
-                  <p>Failed to initialize payment system:</p>
-                  <p>{stripeError}</p>
-                  <div className="flex gap-2 justify-center mt-4">
-                    <Button onClick={handleRetryStripeInit} variant="default">
-                      Retry
-                    </Button>
-                    <Button onClick={() => setShowCreditPurchase(false)} variant="secondary">
-                      Close
-                    </Button>
-                  </div>
-                </div>
-              ) : stripeLoading ? (
-                <div className="flex items-center justify-center p-4">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
-                  <span className="ml-2">Initializing payment system...</span>
-                </div>
-              ) : !stripeInstance ? (
-                <div className="text-center p-4">
-                  <p>Payment system not available</p>
-                  <Button onClick={handleRetryStripeInit} className="mt-4">
-                    Retry
-                  </Button>
-                </div>
-              ) : (
-                <Elements 
-                  stripe={stripeInstance} 
-                  options={{
-                    ...defaultStripeOptions,
-                    loader: 'auto',
-                  }}
-                >
-                  <CreditPurchaseDialog
-                    open={showCreditPurchase}
-                    onOpenChange={setShowCreditPurchase}
-                    onSuccess={() => {
-                      refetchCredits();
-                      setShowCreditPurchase(false);
-                    }}
-                  />
-                </Elements>
-              )}
-            </ErrorBoundary>
-          )}
-
-          {mutation.isPending && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-              <div className="bg-white p-4 rounded-lg flex items-center space-x-2">
-                <Loader2 className="h-6 w-6 animate-spin" />
-                <span>Generating your story...</span>
-                <span>Will take up to a minute...</span>
-              </div>
-            </div>
-          )}
-
-          {!story ? (
-            <StoryForm onSubmit={handleSubmit} isLoading={mutation.isPending} />
-          ) : (
-            <div>
-              <StoryViewer story={story} showHomeIcon={false} />
-              <div className="mt-4 text-center">
-                <Button
-                  variant="outline"
-                  onClick={handleReset}
-                  className="mx-2"
-                >
-                  Create Another Story
-                </Button>
-              </div>
-            </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
-    </ErrorBoundary>
+    </div>
   );
 }
