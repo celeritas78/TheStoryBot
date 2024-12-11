@@ -138,14 +138,8 @@ export function CreditPurchaseDialog({
       const { error: stripeError } = await stripe.confirmPayment({
         elements,
         confirmParams: {
-          return_url: `${window.location.origin}/credits/confirm`,
-          payment_method_data: {
-            billing_details: {
-              email: window.localStorage.getItem('userEmail') || undefined
-            }
-          }
-        },
-        redirect: 'if_required'
+          return_url: `${window.location.origin}/credits/confirm`
+        }
       });
 
       if (stripeError) {
@@ -230,18 +224,13 @@ export function CreditPurchaseDialog({
             <>
               <PaymentElement 
                 options={{
-                  layout: 'tabs',
-                  fields: {
-                    billingDetails: {
-                      email: 'auto'
-                    }
-                  }
+                  layout: 'tabs'
                 }}
-                onLoadError={(event: { elementType: string; error: StripeError }) => {
-                  console.error('PaymentElement load error:', event);
+                onLoadError={(error) => {
+                  console.error('PaymentElement load error:', error);
                   toast({
                     title: "Payment Error",
-                    description: event.error.message || "Failed to load payment form",
+                    description: "Failed to load payment form. Please try again.",
                     variant: "destructive",
                   });
                 }}

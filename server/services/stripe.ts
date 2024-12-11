@@ -113,7 +113,8 @@ export async function createPaymentIntent({
       amount: amountInCents,
       currency: STRIPE_CURRENCY,
       automatic_payment_methods: {
-        enabled: true
+        enabled: true,
+        allow_redirects: 'never'
       },
       metadata: {
         userId: userId.toString(),
@@ -123,7 +124,8 @@ export async function createPaymentIntent({
       description: description || `Purchase ${credits} story credits`,
       receipt_email: receiptEmail,
       statement_descriptor: STRIPE_STATEMENT_DESCRIPTOR?.substring(0, 22),
-      statement_descriptor_suffix: STRIPE_STATEMENT_DESCRIPTOR_SUFFIX?.substring(0, 22)
+      statement_descriptor_suffix: STRIPE_STATEMENT_DESCRIPTOR_SUFFIX?.substring(0, 22),
+      confirm: false
     });
 
     console.log('Payment intent created:', {
