@@ -538,15 +538,34 @@ export function setupRoutes(app: express.Application) {
 
           const paymentIntent = await stripe.paymentIntents.retrieve(transaction.stripePaymentId);
           
-          return res.json({
+          console.log('Retrieved payment intent:', {
+            requestId,
+            paymentIntentId: paymentIntent.id,
+            status: paymentIntent.status,
+            timestamp: new Date().toISOString()
+          });
+          
+          const responseData = {
             clientSecret: paymentIntent.client_secret,
             transactionId: transaction.id,
             amount: transaction.amount,
             currency: STRIPE_CURRENCY,
+            status: paymentIntent.status || 'requires_payment_method',
             creditsToAdd: transaction.credits,
             currentCredits: req.user?.storyCredits || 0,
             projectedTotalCredits: (req.user?.storyCredits || 0) + transaction.credits
+          };
+
+          console.log('Sending credit purchase response:', {
+            requestId,
+            transactionId: transaction.id,
+            amount: transaction.amount,
+            status: paymentIntent.status,
+            creditsToAdd: transaction.credits,
+            timestamp: new Date().toISOString()
           });
+
+          return res.json(responseData);
         }
       }
 
@@ -651,15 +670,42 @@ export function setupRoutes(app: express.Application) {
         return { transaction, paymentResponse };
       });
 
-      res.json({
+      console.log('Creating response data:', {
+        requestId,
+        transactionId: result.transaction.id,
+        status: result.paymentResponse.status,
+        timestamp: new Date().toISOString()
+      });
+
+      const responseData = {
         clientSecret: result.paymentResponse.clientSecret,
         transactionId: result.transaction.id,
         amount: result.paymentResponse.amount,
         currency: result.paymentResponse.currency,
+        status: result.paymentResponse.status || 'requires_payment_method',
         creditsToAdd,
         currentCredits: currentUser?.credits || 0,
         projectedTotalCredits
+      };
+
+      console.log('Response data created:', {
+        requestId,
+        hasClientSecret: !!responseData.clientSecret,
+        hasStatus: !!responseData.status,
+        status: responseData.status,
+        timestamp: new Date().toISOString()
       });
+
+      console.log('Sending new credit purchase response:', {
+        requestId,
+        transactionId: result.transaction.id,
+        amount: result.paymentResponse.amount,
+        status: result.paymentResponse.status,
+        creditsToAdd,
+        timestamp: new Date().toISOString()
+      });
+
+      res.json(responseData);
     } catch (error) {
       console.error('Error creating payment intent:', {
         requestId,
