@@ -235,9 +235,6 @@ export function CreditPurchaseDialog({
                     billingDetails: {
                       email: 'auto'
                     }
-                  },
-                  appearance: {
-                    theme: 'stripe'
                   }
                 }}
                 onLoadError={(event: { elementType: string; error: StripeError }) => {
