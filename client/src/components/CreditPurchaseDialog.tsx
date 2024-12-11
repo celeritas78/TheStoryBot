@@ -64,23 +64,13 @@ export function CreditPurchaseDialog({
   }, [open, amount]);
 
   const initializePayment = async () => {
-    const startTime = Date.now();
     console.log('Initializing credit purchase:', {
       amount,
       timestamp: new Date().toISOString(),
       stripeLoaded: !!stripe,
-      elementsLoaded: !!elements
+      elementsLoaded: !!elements,
+      status: paymentState.status
     });
-
-    if (!stripe || !elements) {
-      console.error('Stripe not initialized:', { stripe: !!stripe, elements: !!elements });
-      toast({
-        title: "Payment Error",
-        description: "Payment system not initialized properly",
-        variant: "destructive",
-      });
-      return;
-    }
 
     try {
       setPaymentState(state => ({ ...state, status: 'processing', error: null }));
@@ -91,7 +81,6 @@ export function CreditPurchaseDialog({
         amount,
         transactionId: response.transactionId,
         clientSecret: response.clientSecret ? 'exists' : 'missing',
-        duration: Date.now() - startTime,
         timestamp: new Date().toISOString()
       });
 
@@ -100,14 +89,23 @@ export function CreditPurchaseDialog({
         status: 'idle',
         clientSecret: response.clientSecret,
         amount: response.amount,
-        transactionId: response.transactionId
+        transactionId: response.transactionId,
+        creditsToAdd: response.creditsToAdd,
+        currentCredits: response.currentCredits,
+        projectedTotalCredits: response.projectedTotalCredits
       }));
+
+      if (elements) {
+        elements.update({ 
+          amount: response.amount * 100,
+          currency: 'usd'
+        });
+      }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Failed to initialize payment";
       console.error('Credit purchase initialization failed:', {
         error: errorMessage,
         amount,
-        duration: Date.now() - startTime,
         timestamp: new Date().toISOString(),
         stack: error instanceof Error ? error.stack : undefined
       });
@@ -168,10 +166,7 @@ export function CreditPurchaseDialog({
           variant: "destructive",
         });
       } else {
-        setPaymentState(state => ({
-          ...state,
-          status: 'succeeded'
-        }));
+        setPaymentState(state => ({ ...state, status: 'succeeded' }));
         toast({
           title: "Payment successful",
           description: `Added ${amount} credits to your account`,
@@ -197,6 +192,14 @@ export function CreditPurchaseDialog({
   const isProcessing = paymentState.status === 'processing';
   const showPaymentForm = paymentState.clientSecret && paymentState.status !== 'succeeded';
 
+  console.log('Rendering CreditPurchaseDialog:', {
+    stripeLoaded: !!stripe,
+    elementsLoaded: !!elements,
+    amount,
+    paymentState,
+    timestamp: new Date().toISOString()
+  });
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
@@ -206,64 +209,64 @@ export function CreditPurchaseDialog({
             Add more credits to your account. Each credit allows you to create one story.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid w-full items-center gap-1.5">
-            <Label htmlFor="amount">Number of Credits</Label>
-            <Input
-              type="number"
-              id="amount"
-              value={amount}
-              onChange={(e) => setAmount(Number(e.target.value))}
-              min={MIN_CREDITS}
-              max={MAX_CREDITS}
-              step={1}
-              disabled={isProcessing || !!showPaymentForm}
-            />
-            <p className="text-sm text-gray-500">
-              Total: ${amount}.00 USD
-            </p>
+        
+        {!stripe || !elements ? (
+          <div className="p-4 text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-2" />
+            <p className="text-sm text-gray-600">Initializing payment system...</p>
           </div>
-          
-          {paymentState.error && (
-            <div className="text-red-500 text-sm mb-4">
-              {paymentState.error.message}
-            </div>
-          )}
-
-          {showPaymentForm ? (
-            <>
-              <PaymentElement 
-                options={{
-                  layout: 'tabs',
-                  fields: {
-                    billingDetails: {
-                      name: 'auto',
-                    }
-                  }
-                }}
-                onLoadError={(error) => {
-                  console.error('Payment form load error:', error);
-                  toast({
-                    title: "Payment Error",
-                    description: "Failed to load payment form. Please try again.",
-                    variant: "destructive",
-                  });
-                }}
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid w-full items-center gap-1.5">
+              <Label htmlFor="amount">Number of Credits</Label>
+              <Input
+                type="number"
+                id="amount"
+                value={amount}
+                onChange={(e) => setAmount(Number(e.target.value))}
+                min={MIN_CREDITS}
+                max={MAX_CREDITS}
+                step={1}
+                disabled={isProcessing || !!showPaymentForm}
               />
-              <Button
-                type="submit"
-                disabled={isProcessing || !stripe || !elements}
-                className="w-full"
-              >
-                {isProcessing ? "Processing payment..." : `Pay $${amount}.00`}
-              </Button>
-            </>
-          ) : (
-            <div className="flex items-center justify-center p-4">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
+              <p className="text-sm text-gray-500">
+                Total: ${amount}.00 USD
+              </p>
             </div>
-          )}
-        </form>
+            
+            {paymentState.error && (
+              <div className="text-red-500 text-sm mb-4">
+                {paymentState.error.message}
+              </div>
+            )}
+
+            {showPaymentForm ? (
+              <>
+                <PaymentElement 
+                  options={{
+                    layout: 'tabs',
+                    fields: {
+                      billingDetails: {
+                        name: 'auto',
+                      }
+                    }
+                  }}
+                />
+                <Button
+                  type="submit"
+                  disabled={isProcessing || !stripe || !elements}
+                  className="w-full"
+                >
+                  {isProcessing ? "Processing payment..." : `Pay $${amount}.00`}
+                </Button>
+              </>
+            ) : (
+              <div className="flex items-center justify-center p-4">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
+              </div>
+            )}
+          </form>
+        )}
       </DialogContent>
     </Dialog>
   );

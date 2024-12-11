@@ -19,15 +19,32 @@ const STRIPE_PUBLISHABLE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
 
 // Initialize Stripe outside component
 const initializeStripe = () => {
+  console.log('Starting Stripe initialization...', {
+    hasKey: !!STRIPE_PUBLISHABLE_KEY,
+    keyPrefix: STRIPE_PUBLISHABLE_KEY ? STRIPE_PUBLISHABLE_KEY.substring(0, 8) : 'missing'
+  });
+
   if (!STRIPE_PUBLISHABLE_KEY) {
     console.error('Missing Stripe publishable key');
-    return null;
+    return Promise.reject(new Error('Missing Stripe publishable key'));
   }
 
   return loadStripe(STRIPE_PUBLISHABLE_KEY, {
     apiVersion: '2024-11-20.acacia',
-  }).catch(error => {
-    console.error('Failed to initialize Stripe:', error);
+  })
+  .then(stripe => {
+    console.log('Stripe initialized successfully:', {
+      stripeInstance: !!stripe,
+      timestamp: new Date().toISOString()
+    });
+    return stripe;
+  })
+  .catch(error => {
+    console.error('Failed to initialize Stripe:', {
+      error: error.message,
+      type: error.type,
+      timestamp: new Date().toISOString()
+    });
     return null;
   });
 };
@@ -119,18 +136,17 @@ export default function StoryGenerator() {
   };
 
   // Define Stripe Elements options
-  const stripeOptions: StripeElementsOptions = useMemo(() => ({
+  const stripeOptions = useMemo<StripeElementsOptions>(() => ({
     appearance: {
-      theme: 'stripe',
+      theme: 'stripe' as const,
       variables: {
         colorPrimary: '#6366f1',
         colorBackground: '#ffffff',
         colorText: '#1f2937',
       },
-    } as Appearance,
-    currency: 'usd',
-    mode: 'payment',
-    amount: 1000, // Default amount in cents
+    },
+    clientSecret: '', // Will be set when payment is initialized
+    mode: 'payment' as const,
   }), []);
 
   return (
