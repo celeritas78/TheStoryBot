@@ -154,12 +154,8 @@ export interface CreditBalance {
   isPremium: boolean;
 }
 
-export interface CreatePaymentResponse {
-  clientSecret: string;
-  transactionId: number;
-  amount: number;
-  currency: string;
-}
+// Import the response type from payment.ts
+export type { CreatePaymentResponse } from '../types/payment';
 
 export async function getCreditBalance(): Promise<CreditBalance> {
   const response = await fetch(`${API_BASE}/credits/balance`, {

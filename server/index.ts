@@ -27,10 +27,8 @@ setupAuth(app);
 
 // Middleware to debug req.isAuthenticated
 app.use((req, res, next) => {
-  //console.log("Middleware stack check: ", req.isAuthenticated ? req.isAuthenticated() : "Undefined");
   next();
 });
-
 
 // Logging middleware for API routes
 app.use((req, res, next) => {
@@ -85,7 +83,8 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  const PORT = Number(process.env.PORT) || 5000;
+  // Set development port to 3000
+  const PORT = process.env.NODE_ENV === 'production' ? (process.env.PORT || 5000) : 3000;
 
   // Add shutdown handler
   function handleShutdown() {
@@ -125,28 +124,33 @@ app.use((req, res, next) => {
   });
 
   try {
-    server.listen(PORT, '0.0.0.0', () => {
-      log(`Server initialization complete`);
-      log(`Server Details:
-        Port: ${PORT}
-        Environment: ${app.get('env')}
-        Node Version: ${process.version}
-        Start Time: ${new Date().toISOString()}
-      `);
-    });
+    await new Promise<void>((resolve, reject) => {
+      const port = typeof PORT === 'string' ? parseInt(PORT, 10) : PORT;
+      server.listen(port, '0.0.0.0', () => {
+        log(`Server initialization complete`);
+        log(`Server Details:
+          Port: ${port}
+          Environment: ${app.get('env')}
+          Node Version: ${process.version}
+          Start Time: ${new Date().toISOString()}
+        `);
+        resolve();
+      });
 
-    server.on('error', (error: NodeJS.ErrnoException) => {
-      if (error.code === 'EADDRINUSE') {
-        console.error(`Port ${PORT} is already in use`);
-        process.exit(1);
-      } else {
-        console.error('Server error:', {
-          code: error.code,
-          message: error.message,
-          stack: error.stack,
-          timestamp: new Date().toISOString()
-        });
-      }
+      server.on('error', (error: NodeJS.ErrnoException) => {
+        if (error.code === 'EADDRINUSE') {
+          console.error(`Port ${PORT} is already in use`);
+          reject(new Error(`Port ${PORT} is already in use`));
+        } else {
+          console.error('Server error:', {
+            code: error.code,
+            message: error.message,
+            stack: error.stack,
+            timestamp: new Date().toISOString()
+          });
+          reject(error);
+        }
+      });
     });
   } catch (error) {
     console.error('Failed to start server:', {

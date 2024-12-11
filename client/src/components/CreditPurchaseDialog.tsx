@@ -39,29 +39,44 @@ export function CreditPurchaseDialog({
   useEffect(() => {
     if (!open) {
       setPaymentState(initialPaymentState);
+      setAmount(10); // Reset amount to default
     }
   }, [open]);
 
-  // Initialize payment when dialog opens
+  // Initialize payment when dialog opens or amount changes
   useEffect(() => {
     if (open && amount > 0 && paymentState.status === 'idle') {
-      void initializePayment();
+      const timer = setTimeout(() => {
+        void initializePayment();
+      }, 300); // Add small delay to prevent rapid re-initialization
+      return () => clearTimeout(timer);
     }
-  }, [open, amount]);
+  }, [open, amount, paymentState.status]);
 
   const initializePayment = async () => {
     if (!stripe) {
       console.error('Stripe not initialized');
       toast({
         title: "Payment Error",
-        description: "Payment system not initialized properly",
+        description: "Payment system not initialized properly. Please try again later.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (amount < MIN_CREDITS || amount > MAX_CREDITS) {
+      toast({
+        title: "Invalid Amount",
+        description: `Please choose between ${MIN_CREDITS} and ${MAX_CREDITS} credits`,
         variant: "destructive",
       });
       return;
     }
 
     const startTime = Date.now();
+    const requestId = Math.random().toString(36).substring(7);
     console.log('Starting payment initialization...', {
+      requestId,
       amount,
       timestamp: new Date().toISOString()
     });
@@ -71,14 +86,18 @@ export function CreditPurchaseDialog({
       
       const response = await purchaseCredits(amount);
       
-      if (!response.clientSecret) {
+      if (!response?.clientSecret) {
         throw new Error('No client secret received from server');
       }
 
       console.log('Payment intent created:', {
+        requestId,
         amount: response.amount,
         status: response.status,
-        paymentIntentId: response.paymentIntentId,
+        transactionId: response.transactionId,
+        creditsToAdd: response.creditsToAdd,
+        currentCredits: response.currentCredits,
+        projectedTotal: response.projectedTotalCredits,
         timestamp: new Date().toISOString()
       });
 
@@ -87,9 +106,10 @@ export function CreditPurchaseDialog({
         status: 'idle',
         clientSecret: response.clientSecret,
         amount: response.amount,
-        creditsToAdd: amount,
-        currentCredits: undefined,
-        projectedTotalCredits: undefined
+        creditsToAdd: response.creditsToAdd,
+        currentCredits: response.currentCredits,
+        projectedTotalCredits: response.projectedTotalCredits,
+        transactionId: response.transactionId
       }));
 
     } catch (error: unknown) {
@@ -97,12 +117,21 @@ export function CreditPurchaseDialog({
       const errorStack = error instanceof Error ? error.stack : undefined;
       
       console.error('Credit purchase initialization failed:', {
+        requestId,
         error: errorMessage,
         amount,
         duration: Date.now() - startTime,
         timestamp: new Date().toISOString(),
         stack: errorStack
       });
+
+      // Handle specific error cases
+      let userMessage = errorMessage;
+      if (errorMessage.includes('amount must be between')) {
+        userMessage = `Please choose between ${MIN_CREDITS} and ${MAX_CREDITS} credits`;
+      } else if (errorMessage.includes('No client secret')) {
+        userMessage = "Unable to initialize payment. Please try again later.";
+      }
 
       setPaymentState(state => ({
         ...state,
@@ -115,10 +144,14 @@ export function CreditPurchaseDialog({
 
       toast({
         title: "Payment Error",
-        description: errorMessage,
+        description: userMessage,
         variant: "destructive",
       });
-      onOpenChange(false);
+
+      // Only close dialog for certain errors
+      if (errorMessage.includes('No client secret') || errorMessage.includes('not initialized')) {
+        onOpenChange(false);
+      }
     }
   };
 
