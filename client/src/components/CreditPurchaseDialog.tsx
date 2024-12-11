@@ -50,11 +50,24 @@ export function CreditPurchaseDialog({
   }, [open, amount]);
 
   const initializePayment = async () => {
+    const startTime = Date.now();
+    console.log('Initializing credit purchase:', {
+      amount,
+      timestamp: new Date().toISOString()
+    });
+
     try {
       setPaymentState(state => ({ ...state, status: 'processing', error: null }));
       
       const response = await purchaseCredits(amount);
       
+      console.log('Credit purchase initialized:', {
+        amount,
+        transactionId: response.transactionId,
+        duration: Date.now() - startTime,
+        timestamp: new Date().toISOString()
+      });
+
       setPaymentState(state => ({
         ...state,
         status: 'idle',
@@ -64,13 +77,25 @@ export function CreditPurchaseDialog({
       }));
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Failed to initialize payment";
+      console.error('Credit purchase initialization failed:', {
+        error: errorMessage,
+        amount,
+        duration: Date.now() - startTime,
+        timestamp: new Date().toISOString(),
+        stack: error instanceof Error ? error.stack : undefined
+      });
+
       setPaymentState(state => ({
         ...state,
         status: 'failed',
-        error: { message: errorMessage }
+        error: { 
+          message: errorMessage,
+          code: error instanceof Error ? error.name : 'UNKNOWN_ERROR'
+        }
       }));
+
       toast({
-        title: "Error",
+        title: "Payment Error",
         description: errorMessage,
         variant: "destructive",
       });

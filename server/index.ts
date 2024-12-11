@@ -86,15 +86,74 @@ app.use((req, res, next) => {
   }
 
   const PORT = Number(process.env.PORT) || 5000;
+
+  // Add shutdown handler
+  function handleShutdown() {
+    log('Server shutting down...');
+    server.close(() => {
+      log('Server closed');
+      process.exit(0);
+    });
+
+    // Force close after 10s
+    setTimeout(() => {
+      log('Forcing server shutdown...');
+      process.exit(1);
+    }, 10000);
+  }
+
+  // Handle termination signals
+  process.on('SIGTERM', handleShutdown);
+  process.on('SIGINT', handleShutdown);
+
+  // Handle uncaught errors
+  process.on('uncaughtException', (error) => {
+    console.error('Uncaught exception:', {
+      error: error.message,
+      stack: error.stack,
+      timestamp: new Date().toISOString()
+    });
+    handleShutdown();
+  });
+
+  process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Rejection:', {
+      reason,
+      promise,
+      timestamp: new Date().toISOString()
+    });
+  });
+
   try {
     server.listen(PORT, '0.0.0.0', () => {
-      log(`Server is running on port ${PORT}`);
-      // Log environment info to help with debugging
-      log(`Environment: ${app.get('env')}`);
-      log(`Node version: ${process.version}`);
+      log(`Server initialization complete`);
+      log(`Server Details:
+        Port: ${PORT}
+        Environment: ${app.get('env')}
+        Node Version: ${process.version}
+        Start Time: ${new Date().toISOString()}
+      `);
+    });
+
+    server.on('error', (error: NodeJS.ErrnoException) => {
+      if (error.code === 'EADDRINUSE') {
+        console.error(`Port ${PORT} is already in use`);
+        process.exit(1);
+      } else {
+        console.error('Server error:', {
+          code: error.code,
+          message: error.message,
+          stack: error.stack,
+          timestamp: new Date().toISOString()
+        });
+      }
     });
   } catch (error) {
-    console.error('Failed to start server:', error);
+    console.error('Failed to start server:', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      timestamp: new Date().toISOString()
+    });
     process.exit(1);
   }
 })();

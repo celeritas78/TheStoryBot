@@ -17,15 +17,22 @@ import { Loader2 } from "lucide-react";
 // Initialize Stripe outside of component to avoid re-initialization
 const STRIPE_PUBLISHABLE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
 
-// Initialize Stripe in test mode
-const stripePromise = loadStripe(STRIPE_PUBLISHABLE_KEY, {
-  apiVersion: '2023-10-16',
-});
-
 // Validate Stripe initialization
 if (!STRIPE_PUBLISHABLE_KEY) {
   console.error('Missing Stripe publishable key. Please ensure VITE_STRIPE_PUBLISHABLE_KEY is set in the environment.');
+  throw new Error('Stripe configuration missing. Contact support if this persists.');
 }
+
+// Initialize Stripe in test mode with error handling
+const stripePromise = loadStripe(STRIPE_PUBLISHABLE_KEY, {
+  apiVersion: '2023-10-16',
+}).catch(error => {
+  console.error('Failed to initialize Stripe:', error);
+  throw new Error('Payment system initialization failed. Please try again later.');
+});
+
+// Log successful initialization
+console.log('Stripe initialization started with key prefix:', STRIPE_PUBLISHABLE_KEY.substring(0, 8));
 
 interface ErrorFallbackProps {
   error: Error;

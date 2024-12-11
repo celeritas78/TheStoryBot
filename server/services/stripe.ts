@@ -8,19 +8,49 @@ import {
   STRIPE_API_VERSION
 } from '../config';
 
-// Initialize Stripe with secret key
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('STRIPE_SECRET_KEY is required');
+// Initialize Stripe with secret key and proper error handling
+function initializeStripe() {
+  console.log('Initializing Stripe service...', {
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV,
+    apiVersion: STRIPE_API_VERSION
+  });
+
+  if (!process.env.STRIPE_SECRET_KEY) {
+    console.error('Missing Stripe secret key', {
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV
+    });
+    throw new Error('STRIPE_SECRET_KEY is required');
+  }
+
+  try {
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: STRIPE_API_VERSION as any,
+      typescript: true,
+      appInfo: {
+        name: 'Story Credits Purchase',
+        version: '1.0.0'
+      }
+    });
+
+    console.log('Stripe service initialized successfully', {
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV
+    });
+
+    return stripe;
+  } catch (error) {
+    console.error('Failed to initialize Stripe:', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      timestamp: new Date().toISOString()
+    });
+    throw error;
+  }
 }
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: STRIPE_API_VERSION as any,
-  typescript: true,
-  appInfo: {
-    name: 'Story Credits Purchase',
-    version: '1.0.0'
-  }
-});
+const stripe = initializeStripe();
 
 export interface CreatePaymentIntentParams {
   amount: number; // Amount in USD
