@@ -84,12 +84,12 @@ export const CreditPurchaseDialog = ({
   const [paymentState, setPaymentState] = useState<PaymentState>(initialPaymentState);
   const { toast } = useToast();
 
-  const stripe = useStripe();
-  const elements = useElements();
-
-  console.log("CreditPurchaseDialog rendered with clientSecret:", paymentState.clientSecret);
-  console.log("Stripe instance:", stripe);
-  console.log("Elements instance:", elements);
+  console.log("CreditPurchaseDialog rendered with state:", {
+    hasClientSecret: !!paymentState.clientSecret,
+    status: paymentState.status,
+    amount: paymentState.amount,
+    timestamp: new Date().toISOString()
+  });
 
   const initializePayment = useCallback(async () => {
     console.log("Initializing payment with state:", {
@@ -150,32 +150,7 @@ export const CreditPurchaseDialog = ({
     if (open && paymentState.status === "idle") initializePayment();
   }, [open, initializePayment, paymentState.status]);
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    if (!stripe || !elements || !paymentState.clientSecret) {
-      toast({ title: "Error", description: "Payment system not initialized", variant: "destructive" });
-      return;
-    }
-
-    try {
-      const { error } = await stripe.confirmPayment({
-        elements,
-        confirmParams: { return_url: `${window.location.origin}/credits/confirm` },
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      toast({ title: "Payment successful", description: `Added ${amount} credits to your account` });
-      onSuccess?.();
-      onOpenChange(false);
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Payment failed";
-      toast({ title: "Payment Error", description: errorMessage, variant: "destructive" });
-    }
-  };
+  
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
