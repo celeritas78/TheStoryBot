@@ -43,6 +43,16 @@ export function CreditPurchaseDialog({
     }
   }, [open]);
 
+  // Initialize Stripe when component mounts
+  useEffect(() => {
+    if (open && !stripe) {
+      console.log('Waiting for Stripe to initialize...', {
+        hasStripe: !!stripe,
+        timestamp: new Date().toISOString()
+      });
+    }
+  }, [open, stripe]);
+
   // Initialize payment when dialog opens or amount changes
   useEffect(() => {
     if (open && amount > 0 && paymentState.status === 'idle') {

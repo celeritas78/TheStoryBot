@@ -85,13 +85,39 @@ export default function StoryGenerator() {
   const [showCreditPurchase, setShowCreditPurchase] = useState(false);
   const { toast } = useToast();
   
-  // Initialize Stripe only once when needed
+  // Initialize Stripe with proper logging
   const [stripePromise] = useState(() => {
+    console.log('Starting Stripe initialization...', {
+      hasKey: !!STRIPE_PUBLISHABLE_KEY,
+      keyPrefix: STRIPE_PUBLISHABLE_KEY ? STRIPE_PUBLISHABLE_KEY.substring(0, 8) : 'missing',
+      timestamp: new Date().toISOString()
+    });
+
     if (!STRIPE_PUBLISHABLE_KEY) {
       console.error('Stripe publishable key is missing');
       return null;
     }
-    return loadStripe(STRIPE_PUBLISHABLE_KEY);
+
+    return loadStripe(STRIPE_PUBLISHABLE_KEY)
+      .then(stripe => {
+        if (!stripe) {
+          throw new Error('Failed to initialize Stripe instance');
+        }
+        console.log('Stripe initialized successfully:', {
+          stripeInstance: !!stripe,
+          timestamp: new Date().toISOString()
+        });
+        return stripe;
+      })
+      .catch(error => {
+        console.error('Stripe initialization failed:', {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          type: error instanceof Error ? error.constructor.name : 'Unknown',
+          stack: error instanceof Error ? error.stack : undefined,
+          timestamp: new Date().toISOString()
+        });
+        return null;
+      });
   });
 
   const { data: creditBalance, refetch: refetchCredits } = useQuery({
