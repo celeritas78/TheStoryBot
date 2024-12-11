@@ -75,24 +75,32 @@ async function initializeStripe(): Promise<Stripe | null> {
   }
 }
 
-// Initialize stripe and handle potential initialization failure
+// Initialize stripe instance
 let stripeInstance: Stripe | null = null;
-
-// Initialize Stripe immediately but don't block
-void (async () => {
-  stripeInstance = await initializeStripe();
-  if (!stripeInstance) {
-    console.error('Failed to initialize Stripe service, payment features will be unavailable');
-  }
-})();
 
 // Export getter for stripe instance to ensure proper initialization check
 export function getStripe(): Stripe | null {
   return stripeInstance;
 }
 
-// Export for backward compatibility
-export const stripe: Stripe | null = null;
+// Initialize Stripe and return promise for server startup
+export async function initializeStripeService(): Promise<void> {
+  try {
+    stripeInstance = await initializeStripe();
+    if (!stripeInstance) {
+      throw new Error('Failed to initialize Stripe service');
+    }
+  } catch (error) {
+    console.error('Stripe initialization failed:', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      timestamp: new Date().toISOString()
+    });
+    throw error;
+  }
+}
+
+// Export for backward compatibility - use getStripe() instead
+export const stripe = null;
 
 export interface CreatePaymentIntentParams {
   amount: number; // Amount in USD
@@ -183,6 +191,7 @@ export async function createPaymentIntent({
 
 export async function confirmPaymentIntent(paymentIntentId: string): Promise<boolean> {
   try {
+    const stripe = getStripe();
     if (!stripe) {
       throw new Error('Stripe service not initialized');
     }

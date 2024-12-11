@@ -4,7 +4,7 @@ import { setupVite, serveStatic } from "./vite";
 import { createServer } from "http";
 import { setupAuth } from "./auth";
 // Import required services
-import { getStripe } from './services/stripe';
+import { getStripe, initializeStripeService } from './services/stripe';
 
 function log(message: string) {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
@@ -27,31 +27,63 @@ process.on('unhandledRejection', (reason, promise) => {
 
 // Initialize and verify critical services
 async function initializeServices() {
-  const stripe = getStripe();
-  if (!stripe) {
-    console.warn('Stripe service is not initialized. Payment features will be disabled.');
-  } else {
-    try {
-      // Test Stripe connection
-      await stripe.paymentMethods.list({ limit: 1 });
-      console.log('Stripe service verified and ready', {
-        timestamp: new Date().toISOString()
-      });
-    } catch (error) {
-      console.error('Failed to verify Stripe service:', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        timestamp: new Date().toISOString()
-      });
+  try {
+    await initializeStripeService();
+    const stripe = getStripe();
+    if (!stripe) {
+      throw new Error('Stripe failed to initialize after successful service start');
     }
+    
+    // Test Stripe connection
+    await stripe.paymentMethods.list({ limit: 1 });
+    console.log('Stripe service verified and ready', {
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Failed to initialize Stripe service:', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      timestamp: new Date().toISOString()
+    });
+    throw error; // Propagate the error to prevent server start
   }
 }
-
-// Initialize services
-void initializeServices();
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Initialize services before setting up routes
+// Initialize services before setting up routes
+console.log('Starting service initialization...');
+try {
+  await initializeServices();
+  console.log('Services initialized successfully');
+} catch (error) {
+  console.error('Failed to initialize services:', {
+    error: error instanceof Error ? error.message : 'Unknown error',
+    stack: error instanceof Error ? error.stack : undefined,
+    timestamp: new Date().toISOString()
+  });
+  process.exit(1);
+}
+
+// Set up error handlers for uncaught exceptions
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught exception:', {
+    error: error.message,
+    stack: error.stack,
+    timestamp: new Date().toISOString()
+  });
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection:', {
+    reason,
+    promise,
+    timestamp: new Date().toISOString()
+  });
+});
 
 // Serve static files from client/public directory
 app.use(express.static('client/public'));
