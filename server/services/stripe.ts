@@ -131,7 +131,7 @@ async function initializeStripe(retryCount = 3): Promise<Stripe | null> {
 // Initialize stripe instance
 let stripeInstance: Stripe | null = null;
 
-// Export getter for stripe instance to ensure proper initialization check
+// Export getter for stripe instance
 export function getStripe(): Stripe | null {
   return stripeInstance;
 }
@@ -140,9 +140,20 @@ export function getStripe(): Stripe | null {
 export async function initializeStripeService(): Promise<void> {
   const environment = process.env.NODE_ENV || 'development';
   const startTime = Date.now();
+  const requestId = Math.random().toString(36).substring(7);
+  
+  if (!process.env.STRIPE_SECRET_KEY) {
+    console.warn('STRIPE_SECRET_KEY not provided - payment features will be disabled', {
+      requestId,
+      timestamp: new Date().toISOString(),
+      environment
+    });
+    return;
+  }
   
   try {
     console.log('Starting Stripe service initialization...', {
+      requestId,
       environment,
       timestamp: new Date().toISOString()
     });
@@ -150,7 +161,8 @@ export async function initializeStripeService(): Promise<void> {
     stripeInstance = await initializeStripe();
     
     if (!stripeInstance) {
-      console.warn('Stripe service initialization incomplete - some features will be disabled', {
+      console.warn('Stripe initialization returned null - payment features will be disabled', {
+        requestId,
         environment,
         duration: Date.now() - startTime,
         timestamp: new Date().toISOString()
@@ -158,7 +170,11 @@ export async function initializeStripeService(): Promise<void> {
       return;
     }
     
+    // Test the connection
+    await stripeInstance.paymentIntents.list({ limit: 1 });
+    
     console.log('Stripe service initialized successfully', {
+      requestId,
       environment,
       duration: Date.now() - startTime,
       timestamp: new Date().toISOString()
@@ -166,6 +182,7 @@ export async function initializeStripeService(): Promise<void> {
   } catch (error) {
     const duration = Date.now() - startTime;
     console.error('Stripe service initialization failed:', {
+      requestId,
       error: error instanceof Error ? error.message : 'Unknown error',
       type: error instanceof Error ? error.constructor.name : 'Unknown',
       stack: error instanceof Error ? error.stack : undefined,
@@ -174,8 +191,8 @@ export async function initializeStripeService(): Promise<void> {
       timestamp: new Date().toISOString()
     });
     
-    // Don't throw - allow the application to start without Stripe
-    return;
+    // Reset stripe instance on error
+    stripeInstance = null;
   }
 }
 

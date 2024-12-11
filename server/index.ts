@@ -25,92 +25,72 @@ process.on('unhandledRejection', (reason, promise) => {
   });
 });
 
-// Initialize and verify critical services
-async function initializeServices() {
-  try {
-    await initializeStripeService();
-    const stripe = getStripe();
-    if (!stripe) {
-      throw new Error('Stripe failed to initialize after successful service start');
-    }
-    
-    // Test Stripe connection
-    await stripe.paymentMethods.list({ limit: 1 });
-    console.log('Stripe service verified and ready', {
-      timestamp: new Date().toISOString()
-    });
-  } catch (error) {
-    console.error('Failed to initialize Stripe service:', {
-      error: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined,
-      timestamp: new Date().toISOString()
-    });
-    throw error; // Propagate the error to prevent server start
-  }
-}
-
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Initialize services before setting up routes
+// Initialize and verify critical services
+async function initializeServices() {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    console.warn('STRIPE_SECRET_KEY not provided - payment features will be disabled', {
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV
+    });
+    return false;
+  }
+
+  try {
+    await initializeStripeService();
+    return true;
+  } catch (error) {
+    console.error('Payment services initialization failed:', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      timestamp: new Date().toISOString()
+    });
+    // Don't throw, return false to indicate Stripe is not available
+    return false;
+  }
+}
+
+// Initialize Express application and all services
 async function startServer() {
   const startTime = Date.now();
   const requestId = Math.random().toString(36).substring(7);
   
-  console.log('Starting service initialization...', {
+  console.log('Starting server initialization...', {
     requestId,
     timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV,
-    hasStripeKey: !!process.env.STRIPE_SECRET_KEY
+    environment: process.env.NODE_ENV
   });
 
-  let stripeInitialized = false;
+  try {
+    // First set up auth and routes
+    setupAuth(app);
+    setupRoutes(app);
 
-  // Initialize Stripe if the key is available
-  if (process.env.STRIPE_SECRET_KEY) {
-    try {
-      await initializeServices();
-      stripeInitialized = true;
-      
-      console.log('Services initialized successfully', {
-        requestId,
-        duration: Date.now() - startTime,
-        timestamp: new Date().toISOString(),
-        environment: process.env.NODE_ENV,
-        stripeEnabled: true
-      });
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      
-      // Log the error but don't exit - payment features will be disabled
-      console.error('Payment services initialization failed:', {
-        requestId,
-        error: errorMessage,
-        stack: errorStack,
-        duration: Date.now() - startTime,
-        timestamp: new Date().toISOString()
-      });
-      
-      // Continue app startup without Stripe
-      console.log('Continuing without payment services - features will be limited', {
-        requestId,
-        duration: Date.now() - startTime,
-        timestamp: new Date().toISOString(),
-        stripeEnabled: false,
-        reason: errorMessage
-      });
-    }
-  } else {
-    console.warn('STRIPE_SECRET_KEY not provided - payment features will be disabled', {
+    // Then initialize Stripe and other services
+    const stripeInitialized = await initializeServices();
+    
+    console.log('Server initialization completed', {
       requestId,
+      duration: Date.now() - startTime,
       timestamp: new Date().toISOString(),
-      environment: process.env.NODE_ENV
+      environment: process.env.NODE_ENV,
+      stripeEnabled: stripeInitialized
     });
-  }
 
-  return stripeInitialized;
+    return stripeInitialized;
+  } catch (error) {
+    console.error('Server initialization failed:', {
+      requestId,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      duration: Date.now() - startTime,
+      timestamp: new Date().toISOString()
+    });
+    throw error;
+  }
 }
 
 // Initialize services and start the server

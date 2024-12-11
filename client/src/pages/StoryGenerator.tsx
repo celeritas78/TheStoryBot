@@ -14,7 +14,7 @@ import { Loader2 } from "lucide-react";
 // Stripe Promise
 // Initialize Stripe with test mode publishable key
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY!, {
-  apiVersion: "2024-11-20.acacia",
+  apiVersion: "2023-10-16",
   stripeAccount: undefined,
 });
 
