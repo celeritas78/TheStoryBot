@@ -28,16 +28,36 @@ const PaymentForm = ({
   const stripe = useStripe();
   const elements = useElements();
   const { toast } = useToast();
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (elements) {
+        elements.clear();
+      }
+    };
+  }, [elements]);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!stripe || !elements) {
-      toast({ title: "Error", description: "Payment system not initialized", variant: "destructive" });
+      toast({ 
+        title: "Error", 
+        description: "Payment system not initialized", 
+        variant: "destructive" 
+      });
+      return;
+    }
+
+    if (isProcessing) {
+      console.log("Payment already processing, preventing duplicate submission");
       return;
     }
 
     try {
+      setIsProcessing(true);
       const { error, paymentIntent } = await stripe.confirmPayment({
         elements,
         confirmParams: { 
@@ -52,6 +72,13 @@ const PaymentForm = ({
       });
 
       if (error) {
+        console.error('Payment error:', {
+          type: error.type,
+          message: error.message,
+          code: error.code,
+          timestamp: new Date().toISOString()
+        });
+
         if (error.type === 'card_error' || error.type === 'validation_error') {
           toast({ 
             title: "Payment Error", 
@@ -61,7 +88,7 @@ const PaymentForm = ({
         } else {
           toast({ 
             title: "Payment Error", 
-            description: "An unexpected error occurred", 
+            description: "An unexpected error occurred. Please try again.", 
             variant: "destructive" 
           });
         }
@@ -71,16 +98,20 @@ const PaymentForm = ({
       if (paymentIntent?.status === 'succeeded') {
         toast({ 
           title: "Payment Successful", 
-          description: `Added ${amount} credits to your account`, 
+          description: `Successfully added ${amount} credits to your account`, 
         });
         onSuccess?.();
       } else if (paymentIntent?.status === 'requires_action') {
         toast({ 
           title: "Authentication Required", 
-          description: "Please complete the authentication process", 
+          description: "Additional verification required. Please follow the prompts.", 
         });
-        // The payment requires additional authentication steps
-        // The stripe.confirmPayment will handle the redirect automatically
+      } else {
+        console.warn('Unexpected payment intent status:', paymentIntent?.status);
+        toast({ 
+          title: "Payment Status", 
+          description: "Payment is being processed. Please wait.", 
+        });
       }
     } catch (error) {
       console.error('Payment confirmation error:', error);
@@ -129,24 +160,34 @@ export const CreditPurchaseDialog = ({
   });
 
   const initializePayment = useCallback(async () => {
+    const requestId = Math.random().toString(36).substring(7);
     console.log("Initializing payment with state:", {
+      requestId,
       hasClientSecret: !!paymentState.clientSecret,
       amount,
       status: paymentState.status,
       timestamp: new Date().toISOString()
     });
 
-    if (paymentState.clientSecret) {
-      console.log("Payment already initialized, skipping");
+    // Prevent multiple initialization attempts if already processing
+    if (paymentState.status === "processing") {
+      console.log("Payment already processing, skipping", { requestId });
       return;
+    }
+
+    // Clear any existing payment if not in a final state
+    if (paymentState.clientSecret && !["succeeded", "canceled"].includes(paymentState.status)) {
+      console.log("Resetting existing payment state", { requestId });
+      setPaymentState(initialPaymentState);
     }
 
     try {
       setPaymentState((state) => ({ ...state, status: "processing", error: null }));
-      console.log("Requesting credit purchase from server...");
+      console.log("Requesting credit purchase from server...", { requestId });
 
       const response = await purchaseCredits(amount);
       console.log("Credit purchase response:", {
+        requestId,
         hasClientSecret: !!response?.clientSecret,
         status: response?.status,
         amount: response?.amount,
@@ -154,24 +195,27 @@ export const CreditPurchaseDialog = ({
       });
 
       if (!response?.clientSecret || !response?.status) {
-        console.error("Invalid server response:", response);
-        throw new Error("Invalid response from server");
+        throw new Error("Invalid response from server: missing required fields");
       }
 
-      console.log("Setting payment state with client secret");
-      // Convert Stripe PaymentIntent status to our PaymentStatus type
-      const paymentStatus = response.status === "requires_payment_method" ? "requires_payment_method" :
-                           response.status === "succeeded" ? "succeeded" :
-                           response.status === "requires_action" ? "requires_action" :
-                           response.status === "requires_confirmation" ? "requires_confirmation" :
-                           response.status === "requires_capture" ? "requires_capture" :
-                           response.status === "canceled" ? "canceled" : "processing";
-                           
+      // Map Stripe PaymentIntent status to our PaymentStatus type
+      const statusMap: Record<string, PaymentStatus> = {
+        requires_payment_method: "requires_payment_method",
+        succeeded: "succeeded",
+        requires_action: "requires_action",
+        requires_confirmation: "requires_confirmation",
+        requires_capture: "requires_capture",
+        canceled: "canceled"
+      };
+
+      const paymentStatus = statusMap[response.status] || "processing";
+      
       setPaymentState((prevState) => ({
         ...prevState,
         status: paymentStatus,
         clientSecret: response.clientSecret,
         amount: response.amount,
+        error: null
       }));
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Failed to initialize payment";
@@ -191,10 +235,43 @@ export const CreditPurchaseDialog = ({
   }, [amount, paymentState.clientSecret, toast]);
 
   useEffect(() => {
-    if (open && paymentState.status === "idle") initializePayment();
-  }, [open, initializePayment, paymentState.status]);
+    let isMounted = true;
 
-  
+    if (open && paymentState.status === "idle") {
+      initializePayment().catch(error => {
+        if (isMounted) {
+          console.error('Failed to initialize payment:', error);
+          toast({ 
+            title: "Error", 
+            description: "Failed to initialize payment. Please try again.", 
+            variant: "destructive" 
+          });
+        }
+      });
+    }
+
+    // Cleanup function
+    return () => {
+      isMounted = false;
+      // Reset payment state when dialog closes
+      if (!open) {
+        setPaymentState(initialPaymentState);
+        setAmount(10); // Reset to default amount
+      }
+    };
+  }, [open, initializePayment, paymentState.status, toast]);
+
+  // Handle dialog close
+  const handleOpenChange = (newOpen: boolean) => {
+    if (!newOpen && paymentState.status === "processing") {
+      // Show confirmation before closing during processing
+      if (window.confirm("Are you sure you want to cancel the payment process?")) {
+        onOpenChange(false);
+      }
+    } else {
+      onOpenChange(newOpen);
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
