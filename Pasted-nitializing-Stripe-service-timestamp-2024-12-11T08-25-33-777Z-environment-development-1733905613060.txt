@@ -1,0 +1,96 @@
+nitializing Stripe service... {
+  timestamp: '2024-12-11T08:25:33.777Z',
+  environment: 'development',
+  apiVersion: '2024-11-20.acacia',
+  hasSecretKey: true
+}
+Stripe service initialized successfully { timestamp: '2024-12-11T08:25:33.789Z', environment: 'development' }
+Stripe API connection test successful { timestamp: '2024-12-11T08:25:34.558Z', environment: 'development' }
+08:25:34 AM [express] Server initialization complete
+08:25:34 AM [express] Server Details:
+        Port: 5000
+        Environment: development
+        Node Version: v20.16.0
+        Start Time: 2024-12-11T08:25:34.624Z
+      
+
+ ERROR(TypeScript)  Property 'status' does not exist on type 'CreatePaymentResponse'.
+ FILE  /home/runner/CustomBedtimeStories/client/src/components/CreditPurchaseDialog.tsx:83:26
+
+    81 |       console.log('Payment intent created:', {
+    82 |         amount: response.amount,
+  > 83 |         status: response.status,
+       |                          ^^^^^^
+    84 |         timestamp: new Date().toISOString()
+    85 |       });
+    86 |
+
+ ERROR(TypeScript)  Property 'creditsToAdd' does not exist on type 'CreatePaymentResponse'.
+ FILE  /home/runner/CustomBedtimeStories/client/src/components/CreditPurchaseDialog.tsx:165:32
+
+    163 |         amount: response.amount,
+    164 |         transactionId: response.transactionId,
+  > 165 |         creditsToAdd: response.creditsToAdd,
+        |                                ^^^^^^^^^^^^
+    166 |         currentCredits: response.currentCredits,
+    167 |         projectedTotalCredits: response.projectedTotalCredits
+    168 |       }));
+
+ ERROR(TypeScript)  Property 'currentCredits' does not exist on type 'CreatePaymentResponse'.
+ FILE  /home/runner/CustomBedtimeStories/client/src/components/CreditPurchaseDialog.tsx:166:34
+
+    164 |         transactionId: response.transactionId,
+    165 |         creditsToAdd: response.creditsToAdd,
+  > 166 |         currentCredits: response.currentCredits,
+        |                                  ^^^^^^^^^^^^^^
+    167 |         projectedTotalCredits: response.projectedTotalCredits
+    168 |       }));
+    169 |
+
+ ERROR(TypeScript)  Property 'projectedTotalCredits' does not exist on type 'CreatePaymentResponse'.
+ FILE  /home/runner/CustomBedtimeStories/client/src/components/CreditPurchaseDialog.tsx:167:41
+
+    165 |         creditsToAdd: response.creditsToAdd,
+    166 |         currentCredits: response.currentCredits,
+  > 167 |         projectedTotalCredits: response.projectedTotalCredits
+        |                                         ^^^^^^^^^^^^^^^^^^^^^
+    168 |       }));
+    169 |
+    170 |     } catch (error) {
+
+ ERROR(TypeScript)  'error' is of type 'unknown'.
+ FILE  /home/runner/CustomBedtimeStories/client/src/components/CreditPurchaseDialog.tsx:171:53
+
+    169 |
+    170 |     } catch (error) {
+  > 171 |       const errorMessage = error instanceof Error ? error.message : "Failed to initialize payment";
+        |                                                     ^^^^^
+    172 |       const errorStack = error instanceof Error ? error.stack : undefined;
+    173 |       console.error('Credit purchase initialization failed:', {
+    174 |         error: errorMessage,
+
+ ERROR(TypeScript)  'error' is of type 'unknown'.
+ FILE  /home/runner/CustomBedtimeStories/client/src/components/CreditPurchaseDialog.tsx:172:51
+
+    170 |     } catch (error) {
+    171 |       const errorMessage = error instanceof Error ? error.message : "Failed to initialize payment";
+  > 172 |       const errorStack = error instanceof Error ? error.stack : undefined;
+        |                                                   ^^^^^
+    173 |       console.error('Credit purchase initialization failed:', {
+    174 |         error: errorMessage,
+    175 |         amount,
+
+ ERROR(TypeScript)  'Stripe' only refers to a type, but is being used as a namespace here.
+ FILE  /home/runner/CustomBedtimeStories/client/src/types/payment.ts:13:11
+
+    11 |   amount: number;
+    12 |   currency: string;
+  > 13 |   status: Stripe.PaymentIntent.Status;
+       |           ^^^^^^
+    14 |   creditsToAdd: number;
+    15 |   currentCredits: number;
+    16 |   projectedTotalCredits: number;
+
+[TypeScript] Found 7 errors. Watching for file changes.
+Login successful: { id: 35, email: 'sandeep@asterial.in' }
+08:26:16 AM [express] GET /api/credits/balance 304 in 279ms :: {"credits":1,"isPremium":false}

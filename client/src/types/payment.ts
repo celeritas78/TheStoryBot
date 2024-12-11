@@ -1,20 +1,19 @@
 import type { PaymentIntent, StripeError } from '@stripe/stripe-js';
-import type { Stripe } from '@stripe/stripe-js';
 
 export interface PaymentFormData {
   amount: number;
 }
 
-export interface CreatePaymentResponse extends Omit<PaymentIntent, 'status'> {
+export interface CreatePaymentResponse {
   clientSecret: string;
   paymentIntentId: string;
   amount: number;
   currency: string;
-  status: Stripe.PaymentIntent.Status;
+  status: PaymentIntent['status'];
   creditsToAdd: number;
   currentCredits: number;
   projectedTotalCredits: number;
-  transactionId: number;
+  transactionId: string;
 }
 
 export interface PaymentError {
@@ -48,7 +47,7 @@ export interface PaymentState {
   error: PaymentError | null;
   clientSecret: string | null;
   amount: number | null;
-  transactionId: number | null;
+  transactionId: string | null;
   creditsToAdd: number | null;
   currentCredits: number | null;
   projectedTotalCredits: number | null;

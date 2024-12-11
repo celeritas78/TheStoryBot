@@ -49,7 +49,7 @@ export function CreditPurchaseDialog({
   // Initialize payment when dialog opens
   useEffect(() => {
     if (open && amount > 0 && paymentState.status === 'idle') {
-      initializePayment();
+      void initializePayment();
     }
   }, [open, amount]);
 
@@ -64,15 +64,16 @@ export function CreditPurchaseDialog({
       return;
     }
 
-    try {
-      console.log('Starting payment initialization...', {
-        amount,
-        timestamp: new Date().toISOString()
-      });
+    const startTime = Date.now();
+    console.log('Starting payment initialization...', {
+      amount,
+      timestamp: new Date().toISOString()
+    });
 
+    try {
       setPaymentState(state => ({ ...state, status: 'processing', error: null }));
       
-      const response = await purchaseCredits(amount);
+      const response: CreatePaymentResponse = await purchaseCredits(amount);
       
       if (!response.clientSecret) {
         throw new Error('No client secret received from server');
@@ -80,79 +81,6 @@ export function CreditPurchaseDialog({
 
       console.log('Payment intent created:', {
         amount: response.amount,
-        status: response.status,
-        timestamp: new Date().toISOString()
-      });
-
-      // Set the options for Stripe Elements
-      const updatedOptions: StripeElementsOptions = {
-        clientSecret: response.clientSecret,
-        appearance: {
-          theme: 'stripe',
-          variables: {
-            colorPrimary: '#6366f1',
-            colorBackground: '#ffffff',
-            colorText: '#1f2937',
-          },
-        },
-      };
-
-      setPaymentState(state => ({
-        ...state,
-        status: 'idle',
-        clientSecret: response.clientSecret,
-        amount: response.amount,
-        transactionId: response.transactionId,
-      }));
-
-      return updatedOptions;
-
-    } catch (error) {
-      console.error('Payment initialization failed:', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        timestamp: new Date().toISOString()
-      });
-
-      const errorMessage = error instanceof Error ? error.message : "Failed to initialize payment";
-      
-      toast({
-        title: "Payment Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
-      
-      setPaymentState(state => ({
-        ...state,
-        status: 'failed',
-        error: {
-          message: errorMessage,
-          code: error instanceof Error ? error.name : 'UNKNOWN_ERROR'
-        }
-      }));
-      
-      onOpenChange(false);
-      throw error;
-    }
-
-    const startTime = Date.now();
-    console.log('Initializing credit purchase:', {
-      amount,
-      timestamp: new Date().toISOString(),
-      stripeLoaded: !!stripe,
-      elementsLoaded: !!elements,
-      status: paymentState.status
-    });
-
-    try {
-      setPaymentState(state => ({ ...state, status: 'processing', error: null }));
-      
-      const response = await purchaseCredits(amount);
-      
-      console.log('Credit purchase initialized:', {
-        amount,
-        transactionId: response.transactionId,
-        clientSecret: response.clientSecret ? 'exists' : 'missing',
-        duration: Date.now() - startTime,
         timestamp: new Date().toISOString()
       });
 
@@ -167,9 +95,10 @@ export function CreditPurchaseDialog({
         projectedTotalCredits: response.projectedTotalCredits
       }));
 
-    } catch (error) {
+    } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "Failed to initialize payment";
       const errorStack = error instanceof Error ? error.stack : undefined;
+      
       console.error('Credit purchase initialization failed:', {
         error: errorMessage,
         amount,
@@ -211,26 +140,26 @@ export function CreditPurchaseDialog({
     try {
       setPaymentState(state => ({ ...state, status: 'processing', error: null }));
 
-      const { error: stripeError } = await stripe.confirmPayment({
+      const result = await stripe.confirmPayment({
         elements,
         confirmParams: {
           return_url: `${window.location.origin}/credits/confirm`
         }
       });
 
-      if (stripeError) {
-        console.error('Payment failed:', stripeError);
+      if (result.error) {
+        console.error('Payment failed:', result.error);
         setPaymentState(state => ({
           ...state,
           status: 'failed',
           error: { 
-            message: stripeError.message ?? "Payment failed",
-            code: stripeError.type
+            message: result.error.message ?? "Payment failed",
+            code: result.error.type
           }
         }));
         toast({
           title: "Payment failed",
-          description: stripeError.message,
+          description: result.error.message,
           variant: "destructive",
         });
       } else {
@@ -242,7 +171,7 @@ export function CreditPurchaseDialog({
         onSuccess?.();
         onOpenChange(false);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "Failed to process payment";
       setPaymentState(state => ({
         ...state,
@@ -294,10 +223,10 @@ export function CreditPurchaseDialog({
             </div>
           )}
 
-          {paymentState.status === 'processing' ? (
+          {isProcessing ? (
             <div className="flex items-center justify-center p-4">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
-              <span className="ml-2">Initializing payment...</span>
+              <span className="ml-2">Processing payment...</span>
             </div>
           ) : paymentState.clientSecret ? (
             <>
