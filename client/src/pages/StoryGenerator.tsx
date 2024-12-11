@@ -85,26 +85,14 @@ export default function StoryGenerator() {
   const [showCreditPurchase, setShowCreditPurchase] = useState(false);
   const { toast } = useToast();
   
-  // Initialize Stripe with error handling
-  const [stripePromise, setStripePromise] = useState<Promise<Stripe | null> | null>(null);
-  const [stripeError, setStripeError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const initStripe = async () => {
-      try {
-        setStripeError(null);
-        const promise = initializeStripe();
-        setStripePromise(promise);
-        await promise; // Wait for initialization to catch any errors
-      } catch (error) {
-        console.error('Failed to initialize Stripe:', error);
-        setStripeError(error instanceof Error ? error.message : 'Failed to initialize payment system');
-        setStripePromise(null);
-      }
-    };
-
-    void initStripe();
-  }, []);
+  // Initialize Stripe only once when needed
+  const [stripePromise] = useState(() => {
+    if (!STRIPE_PUBLISHABLE_KEY) {
+      console.error('Stripe publishable key is missing');
+      return null;
+    }
+    return loadStripe(STRIPE_PUBLISHABLE_KEY);
+  });
 
   const { data: creditBalance, refetch: refetchCredits } = useQuery({
     queryKey: ['credits'],
@@ -215,22 +203,25 @@ export default function StoryGenerator() {
           {showCreditPurchase && (
             <ErrorBoundary
               FallbackComponent={({ error }) => (
-                <div className="text-red-500">
-                  Failed to load payment form: {error.message}
+                <div className="text-red-500 p-4 text-center">
+                  <p>Failed to load payment form:</p>
+                  <p>{error.message}</p>
                 </div>
               )}
             >
-              {stripeError ? (
-                <div className="text-red-500">
-                  Failed to initialize payment system: {stripeError}
-                </div>
-              ) : !stripePromise ? (
-                <div className="flex items-center justify-center p-4">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
-                  <span className="ml-2">Initializing payment system...</span>
+              {!stripePromise ? (
+                <div className="text-red-500 p-4 text-center">
+                  <p>Payment system not available</p>
+                  <p>Please try again later</p>
                 </div>
               ) : (
-                <Elements stripe={stripePromise} options={stripeOptions}>
+                <Elements 
+                  stripe={stripePromise} 
+                  options={{
+                    ...defaultStripeOptions,
+                    loader: 'auto',
+                  }}
+                >
                   <CreditPurchaseDialog
                     open={showCreditPurchase}
                     onOpenChange={setShowCreditPurchase}

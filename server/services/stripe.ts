@@ -1,4 +1,5 @@
 import Stripe from 'stripe';
+import type { Stripe as StripeType } from 'stripe';
 import { 
   CREDITS_PER_USD, 
   STRIPE_CURRENCY,
@@ -7,72 +8,96 @@ import {
   STRIPE_API_VERSION
 } from '../config';
 
-// Initialize Stripe with secret key and proper error handling
-async function initializeStripe(): Promise<Stripe | null> {
+// Define TypeScript interfaces for better type safety
+interface StripeError extends Error {
+  type?: string;
+  code?: string;
+  decline_code?: string;
+}
+
+// Initialize Stripe with retries and proper error handling
+async function initializeStripe(retryCount = 3): Promise<Stripe | null> {
   const environment = process.env.NODE_ENV || 'development';
-  let stripe: Stripe | null = null;
   const requestId = Math.random().toString(36).substring(7);
+  let lastError: Error | null = null;
 
-  try {
-    console.log('Initializing Stripe service...', {
-      requestId,
-      timestamp: new Date().toISOString(),
-      environment,
-      apiVersion: STRIPE_API_VERSION,
-      hasSecretKey: !!process.env.STRIPE_SECRET_KEY
-    });
-
-    if (!process.env.STRIPE_SECRET_KEY) {
-      throw new Error('STRIPE_SECRET_KEY environment variable is required');
-    }
-
-    stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: STRIPE_API_VERSION,
-      typescript: true,
-      appInfo: {
-        name: 'Story Credits Purchase',
-        version: '1.0.0'
-      }
-    });
-
-    // Test the Stripe connection immediately
+  for (let attempt = 1; attempt <= retryCount; attempt++) {
     try {
-      await stripe.paymentMethods.list({ limit: 1 });
-      console.log('Stripe API connection test successful', {
+      console.log('Initializing Stripe service...', {
         requestId,
+        attempt,
         timestamp: new Date().toISOString(),
-        environment
+        environment,
+        apiVersion: STRIPE_API_VERSION
       });
+
+      if (!process.env.STRIPE_SECRET_KEY) {
+        throw new Error('STRIPE_SECRET_KEY environment variable is required');
+      }
+
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+        apiVersion: STRIPE_API_VERSION as Stripe.LatestApiVersion,
+        typescript: true,
+        telemetry: false,
+        appInfo: {
+          name: 'Story Credits Purchase',
+          version: '1.0.0',
+          url: process.env.NODE_ENV === 'production' ? process.env.APP_URL : undefined
+        }
+      });
+
+      // Verify the Stripe connection
+      try {
+        await stripe.paymentMethods.list({ limit: 1 });
+        console.log('Stripe API connection verified', {
+          requestId,
+          attempt,
+          timestamp: new Date().toISOString(),
+          environment
+        });
+        
+        return stripe;
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error('Unknown error during Stripe verification');
+        console.error('Stripe API verification failed:', {
+          requestId,
+          attempt,
+          error: lastError.message,
+          type: lastError.constructor.name,
+          environment,
+          timestamp: new Date().toISOString()
+        });
+        
+        if (attempt === retryCount) {
+          throw lastError;
+        }
+        
+        // Wait before retrying (exponential backoff)
+        await new Promise(resolve => setTimeout(resolve, Math.min(1000 * Math.pow(2, attempt - 1), 8000)));
+      }
     } catch (error) {
-      console.error('Stripe API connection test failed:', {
+      lastError = error instanceof Error ? error : new Error('Unknown error during Stripe initialization');
+      console.error('Stripe initialization attempt failed:', {
         requestId,
-        error: error instanceof Error ? error.message : 'Unknown error',
-        type: error instanceof Error ? error.constructor.name : 'Unknown',
+        attempt,
+        error: lastError.message,
+        type: lastError.constructor.name,
+        stack: lastError.stack,
         environment,
         timestamp: new Date().toISOString()
       });
-      return null;
+      
+      if (attempt === retryCount) {
+        console.error('All Stripe initialization attempts failed');
+        return null;
+      }
+      
+      // Wait before retrying (exponential backoff)
+      await new Promise(resolve => setTimeout(resolve, Math.min(1000 * Math.pow(2, attempt - 1), 8000)));
     }
-
-    console.log('Stripe service initialized successfully', {
-      requestId,
-      timestamp: new Date().toISOString(),
-      environment
-    });
-
-    return stripe;
-  } catch (error) {
-    console.error('Failed to initialize Stripe:', {
-      requestId,
-      error: error instanceof Error ? error.message : 'Unknown error',
-      type: error instanceof Error ? error.constructor.name : 'Unknown',
-      stack: error instanceof Error ? error.stack : undefined,
-      environment,
-      timestamp: new Date().toISOString()
-    });
-    
-    return null;
   }
+
+  return null;
 }
 
 // Initialize stripe instance
@@ -85,17 +110,44 @@ export function getStripe(): Stripe | null {
 
 // Initialize Stripe and return promise for server startup
 export async function initializeStripeService(): Promise<void> {
+  const environment = process.env.NODE_ENV || 'development';
+  const startTime = Date.now();
+  
   try {
-    stripeInstance = await initializeStripe();
-    if (!stripeInstance) {
-      throw new Error('Failed to initialize Stripe service');
-    }
-  } catch (error) {
-    console.error('Stripe initialization failed:', {
-      error: error instanceof Error ? error.message : 'Unknown error',
+    console.log('Starting Stripe service initialization...', {
+      environment,
       timestamp: new Date().toISOString()
     });
-    throw error;
+    
+    stripeInstance = await initializeStripe();
+    
+    if (!stripeInstance) {
+      console.warn('Stripe service initialization incomplete - some features will be disabled', {
+        environment,
+        duration: Date.now() - startTime,
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+    
+    console.log('Stripe service initialized successfully', {
+      environment,
+      duration: Date.now() - startTime,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    const duration = Date.now() - startTime;
+    console.error('Stripe service initialization failed:', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      type: error instanceof Error ? error.constructor.name : 'Unknown',
+      stack: error instanceof Error ? error.stack : undefined,
+      environment,
+      duration,
+      timestamp: new Date().toISOString()
+    });
+    
+    // Don't throw - allow the application to start without Stripe
+    return;
   }
 }
 

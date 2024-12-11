@@ -54,19 +54,43 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 // Initialize services before setting up routes
-// Initialize services before setting up routes
-console.log('Starting service initialization...');
-try {
-  await initializeServices();
-  console.log('Services initialized successfully');
-} catch (error) {
-  console.error('Failed to initialize services:', {
-    error: error instanceof Error ? error.message : 'Unknown error',
-    stack: error instanceof Error ? error.stack : undefined,
-    timestamp: new Date().toISOString()
+// Initialize critical services before setting up routes
+async function startServer() {
+  console.log('Starting service initialization...', {
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV
   });
-  process.exit(1);
+
+  let stripeInitialized = false;
+
+  try {
+    await initializeServices();
+    stripeInitialized = true;
+    console.log('Services initialized successfully', {
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV,
+      stripeEnabled: true
+    });
+  } catch (error) {
+    // Log the error but don't exit - payment features will be disabled
+    console.error('Payment services initialization failed:', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      timestamp: new Date().toISOString()
+    });
+    
+    // Continue app startup without Stripe
+    console.log('Continuing without payment services - features will be limited', {
+      timestamp: new Date().toISOString(),
+      stripeEnabled: false
+    });
+  }
+
+  return stripeInitialized;
 }
+
+// Start the server and initialize services
+const stripeEnabled = await startServer();
 
 // Set up error handlers for uncaught exceptions
 process.on('uncaughtException', (error) => {
