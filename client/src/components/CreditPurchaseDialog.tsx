@@ -55,13 +55,54 @@ export function CreditPurchaseDialog({
 
   // Initialize payment when dialog opens or amount changes
   useEffect(() => {
-    if (open && amount > 0 && paymentState.status === 'idle') {
-      const timer = setTimeout(() => {
-        void initializePayment();
-      }, 300); // Add small delay to prevent rapid re-initialization
-      return () => clearTimeout(timer);
-    }
-  }, [open, amount, paymentState.status]);
+    let isActive = true;
+    
+    const initialize = async () => {
+      if (!open || amount <= 0 || paymentState.status !== 'idle') {
+        return;
+      }
+
+      console.log('Starting payment initialization...', {
+        amount,
+        hasStripe: !!stripe,
+        timestamp: new Date().toISOString()
+      });
+
+      try {
+        setPaymentState(state => ({ ...state, status: 'processing', error: null }));
+        
+        // Add small delay to prevent rapid re-initialization
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        if (!isActive) return;
+        
+        await initializePayment();
+      } catch (error) {
+        console.error('Payment initialization failed:', {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          stack: error instanceof Error ? error.stack : undefined,
+          timestamp: new Date().toISOString()
+        });
+        
+        if (!isActive) return;
+        
+        setPaymentState(state => ({
+          ...state,
+          status: 'failed',
+          error: {
+            message: error instanceof Error ? error.message : 'Payment initialization failed',
+            code: error instanceof Error ? error.name : 'UNKNOWN_ERROR'
+          }
+        }));
+      }
+    };
+
+    void initialize();
+
+    return () => {
+      isActive = false;
+    };
+  }, [open, amount, paymentState.status, stripe, initializePayment]);
 
   const initializePayment = async () => {
     if (!stripe) {
@@ -233,13 +274,29 @@ export function CreditPurchaseDialog({
   const isProcessing = paymentState.status === 'processing';
   const showPaymentForm = paymentState.clientSecret && paymentState.status !== 'succeeded';
   
-  // Set up Stripe Elements options
-  const options: StripeElementsOptions = {
-    clientSecret: paymentState.clientSecret || undefined,
+  // Set up Stripe Elements options with proper typing and validation
+  const stripeElementsOptions = useMemo<StripeElementsOptions>(() => ({
+    clientSecret: paymentState.clientSecret || '',
     appearance: {
       theme: 'stripe',
+      variables: {
+        colorPrimary: '#6366f1',
+        colorBackground: '#ffffff',
+        colorText: '#1f2937',
+      },
     },
-  };
+    loader: 'auto',
+  }), [paymentState.clientSecret]);
+
+  // Validate if we can show the payment form
+  const canShowPaymentForm = useMemo(() => {
+    return (
+      stripe && 
+      elements && 
+      paymentState.clientSecret && 
+      paymentState.status !== 'succeeded'
+    );
+  }, [stripe, elements, paymentState.clientSecret, paymentState.status]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -275,37 +332,53 @@ export function CreditPurchaseDialog({
             </div>
           )}
 
-          {isProcessing ? (
+          {isProcessing && (
             <div className="flex items-center justify-center p-4">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
               <span className="ml-2">Processing payment...</span>
             </div>
-          ) : showPaymentForm ? (
-            <>
-              <PaymentElement 
-                options={{
-                  layout: 'tabs',
-                  fields: {
-                    billingDetails: {
-                      name: 'auto',
-                    }
-                  }
-                }}
-              />
-              <Button
-                type="submit"
-                disabled={isProcessing || !stripe}
-                className="w-full"
-              >
-                {isProcessing ? "Processing payment..." : `Pay $${amount}.00`}
-              </Button>
-            </>
-          ) : (
-            <div className="text-center text-gray-500">
-              {paymentState.error ? (
-                <div className="text-red-500">{paymentState.error.message}</div>
+          )}
+
+          {!isProcessing && paymentState.clientSecret && (
+            <Elements stripe={stripe!} options={stripeElementsOptions}>
+              {canShowPaymentForm ? (
+                <>
+                  <PaymentElement 
+                    options={{
+                      layout: 'tabs',
+                      fields: {
+                        billingDetails: {
+                          name: 'auto',
+                        }
+                      }
+                    }}
+                  />
+                  <Button
+                    type="submit"
+                    disabled={isProcessing || !stripe}
+                    className="w-full mt-4"
+                  >
+                    {isProcessing ? "Processing payment..." : `Pay $${amount}.00`}
+                  </Button>
+                </>
               ) : (
-                "Loading payment form..."
+                <div className="text-center p-4">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-2" />
+                  <p className="text-gray-600">Initializing payment form...</p>
+                </div>
+              )}
+            </Elements>
+          )}
+
+          {!isProcessing && !paymentState.clientSecret && (
+            <div className="text-center text-gray-500 p-4">
+              {paymentState.error ? (
+                <div className="text-red-500">
+                  <p className="font-semibold">Error initializing payment:</p>
+                  <p>{paymentState.error.message}</p>
+                </div>
+              ) : (
+                "Loading payment options..."
               )}
             </div>
           )}
