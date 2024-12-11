@@ -78,6 +78,7 @@ export function CreditPurchaseDialog({
       console.log('Payment intent created:', {
         amount: response.amount,
         status: response.status,
+        paymentIntentId: response.paymentIntentId,
         timestamp: new Date().toISOString()
       });
 
@@ -85,7 +86,10 @@ export function CreditPurchaseDialog({
         ...state,
         status: 'idle',
         clientSecret: response.clientSecret,
-        amount: response.amount
+        amount: response.amount,
+        creditsToAdd: amount,
+        currentCredits: undefined,
+        projectedTotalCredits: undefined
       }));
 
     } catch (error: unknown) {

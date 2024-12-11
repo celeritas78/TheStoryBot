@@ -4,7 +4,10 @@ export interface PaymentFormData {
   amount: number;
 }
 
-export interface CreatePaymentResponse {
+export interface CreatePaymentResponse extends PaymentIntentResponse {}
+
+// Server response type that matches the stripe.ts service exactly
+export interface PaymentIntentResponse {
   clientSecret: string;
   paymentIntentId: string;
   amount: number;
