@@ -58,7 +58,7 @@ export const STRIPE_PAYMENT_MODE = 'payment';
 export const STRIPE_STATEMENT_DESCRIPTOR = 'Story Credits';
 export const STRIPE_STATEMENT_DESCRIPTOR_SUFFIX = 'Credits';
 export const STRIPE_TEST_MODE = true;
-export const STRIPE_API_VERSION = '2023-10-16' as const; // Use latest stable API version
+export const STRIPE_API_VERSION = '2024-11-20.acacia' as const; // Latest Stripe API version
 
 // Transaction Status
 export const TRANSACTION_STATUS = {
