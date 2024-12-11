@@ -28,6 +28,25 @@ const initialPaymentState: PaymentState = {
   amount: null,
 };
 
+interface PaymentWrapperProps extends PaymentFormProps {
+  stripe: any;
+  options: StripeElementsOptions;
+}
+
+const PaymentWrapper: React.FC<PaymentWrapperProps> = ({ 
+  stripe, 
+  options, 
+  amount, 
+  isProcessing, 
+  onSubmit 
+}) => {
+  return (
+    <Elements stripe={stripe} options={options}>
+      <PaymentForm amount={amount} isProcessing={isProcessing} onSubmit={onSubmit} />
+    </Elements>
+  );
+};
+
 // Memoized PaymentForm Component
 const PaymentForm: React.FC<PaymentFormProps> = React.memo(function PaymentForm({ amount, isProcessing, onSubmit }) {
   const stripe = useStripe();
@@ -129,8 +148,7 @@ export function CreditPurchaseDialog({ open, onOpenChange, onSuccess }: CreditPu
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
-    const elementsInstance = useElements();
-    if (!stripe || !paymentState.clientSecret || !elementsInstance) {
+    if (!stripe || !paymentState.clientSecret) {
       toast({
         title: "Error",
         description: "Payment system not initialized",
@@ -142,8 +160,13 @@ export function CreditPurchaseDialog({ open, onOpenChange, onSuccess }: CreditPu
     try {
       setPaymentState(state => ({ ...state, status: 'processing', error: null }));
 
+      const elementsInstance = useElements();
+      if (!elementsInstance) {
+        throw new Error('Stripe Elements not initialized');
+      }
+
       const result = await stripe.confirmPayment({
-        elements,
+        elements: elementsInstance,
         confirmParams: {
           return_url: `${window.location.origin}/credits/confirm`,
         },
@@ -233,13 +256,13 @@ export function CreditPurchaseDialog({ open, onOpenChange, onSuccess }: CreditPu
           )}
 
           {!isProcessing && paymentState.clientSecret && stripe && (
-            <Elements stripe={stripe} options={stripeElementsOptions}>
-              <PaymentForm 
-                amount={amount} 
-                isProcessing={isProcessing} 
-                onSubmit={handleSubmit} 
-              />
-            </Elements>
+            <PaymentWrapper
+              stripe={stripe}
+              options={stripeElementsOptions}
+              amount={amount}
+              isProcessing={isProcessing}
+              onSubmit={handleSubmit}
+            />
           )}
 
           {!isProcessing && !paymentState.clientSecret && (
