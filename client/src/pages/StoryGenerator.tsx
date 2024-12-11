@@ -12,11 +12,18 @@ import { CreditPurchaseDialog } from "../components/CreditPurchaseDialog";
 import { Loader2 } from "lucide-react";
 
 // Stripe Promise
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY!);
+// Initialize Stripe with test mode publishable key
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY!, {
+  apiVersion: "2024-11-20.acacia",
+  stripeAccount: undefined,
+});
 
-// Add the console log here to debug the environment variable
-console.log("For testing:");
-console.log("Stripe Publishable Key:", import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
+// Debug logging for Stripe initialization
+console.log("Stripe configuration:", {
+  hasKey: !!import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY,
+  isTestMode: import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY?.startsWith('pk_test_'),
+  timestamp: new Date().toISOString()
+});
 
 stripePromise.then((stripe) => {
   if (!stripe) {

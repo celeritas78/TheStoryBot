@@ -159,9 +159,16 @@ export const CreditPurchaseDialog = ({
       }
 
       console.log("Setting payment state with client secret");
-      const paymentStatus = response.status as PaymentStatus;
-      setPaymentState((state) => ({
-        ...state,
+      // Convert Stripe PaymentIntent status to our PaymentStatus type
+      const paymentStatus = response.status === "requires_payment_method" ? "requires_payment_method" :
+                           response.status === "succeeded" ? "succeeded" :
+                           response.status === "requires_action" ? "requires_action" :
+                           response.status === "requires_confirmation" ? "requires_confirmation" :
+                           response.status === "requires_capture" ? "requires_capture" :
+                           response.status === "canceled" ? "canceled" : "processing";
+                           
+      setPaymentState((prevState) => ({
+        ...prevState,
         status: paymentStatus,
         clientSecret: response.clientSecret,
         amount: response.amount,
