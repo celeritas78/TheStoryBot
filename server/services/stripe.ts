@@ -21,6 +21,17 @@ async function initializeStripe(retryCount = 3): Promise<Stripe | null> {
   const requestId = Math.random().toString(36).substring(7);
   let lastError: Error | null = null;
 
+  if (!process.env.STRIPE_SECRET_KEY) {
+    const error = new Error('STRIPE_SECRET_KEY environment variable is required');
+    console.error('Stripe initialization failed:', {
+      requestId,
+      error: error.message,
+      timestamp: new Date().toISOString(),
+      environment
+    });
+    throw error;
+  }
+
   for (let attempt = 1; attempt <= retryCount; attempt++) {
     try {
       console.log('Initializing Stripe service...', {
@@ -30,10 +41,6 @@ async function initializeStripe(retryCount = 3): Promise<Stripe | null> {
         environment,
         apiVersion: STRIPE_API_VERSION
       });
-
-      if (!process.env.STRIPE_SECRET_KEY) {
-        throw new Error('STRIPE_SECRET_KEY environment variable is required');
-      }
 
       const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
         apiVersion: STRIPE_API_VERSION as Stripe.LatestApiVersion,
@@ -46,34 +53,42 @@ async function initializeStripe(retryCount = 3): Promise<Stripe | null> {
         }
       });
 
-      // Verify the Stripe connection
+      // Verify the Stripe connection with proper error handling
       try {
-        await stripe.paymentMethods.list({ limit: 1 });
-        console.log('Stripe API connection verified', {
+        const testResult = await stripe.paymentMethods.list({ limit: 1 });
+        console.log('Stripe API connection verified successfully', {
           requestId,
           attempt,
           timestamp: new Date().toISOString(),
-          environment
+          environment,
+          hasResults: !!testResult.data
         });
         
         return stripe;
       } catch (error) {
-        lastError = error instanceof Error ? error : new Error('Unknown error during Stripe verification');
+        const verificationError = error instanceof Error ? error : new Error('Unknown error during Stripe verification');
         console.error('Stripe API verification failed:', {
           requestId,
           attempt,
-          error: lastError.message,
-          type: lastError.constructor.name,
+          error: verificationError.message,
+          type: verificationError.constructor.name,
           environment,
           timestamp: new Date().toISOString()
         });
         
         if (attempt === retryCount) {
-          throw lastError;
+          throw verificationError;
         }
         
-        // Wait before retrying (exponential backoff)
-        await new Promise(resolve => setTimeout(resolve, Math.min(1000 * Math.pow(2, attempt - 1), 8000)));
+        const backoffDelay = Math.min(1000 * Math.pow(2, attempt - 1), 8000);
+        console.log(`Retrying Stripe verification in ${backoffDelay}ms...`, {
+          requestId,
+          attempt,
+          nextAttempt: attempt + 1,
+          timestamp: new Date().toISOString()
+        });
+        
+        await new Promise(resolve => setTimeout(resolve, backoffDelay));
       }
     } catch (error) {
       lastError = error instanceof Error ? error : new Error('Unknown error during Stripe initialization');
@@ -88,16 +103,29 @@ async function initializeStripe(retryCount = 3): Promise<Stripe | null> {
       });
       
       if (attempt === retryCount) {
-        console.error('All Stripe initialization attempts failed');
-        return null;
+        const finalError = new Error(`Failed to initialize Stripe after ${retryCount} attempts: ${lastError.message}`);
+        console.error('All Stripe initialization attempts failed:', {
+          requestId,
+          attempts: retryCount,
+          finalError: finalError.message,
+          timestamp: new Date().toISOString()
+        });
+        throw finalError;
       }
       
-      // Wait before retrying (exponential backoff)
-      await new Promise(resolve => setTimeout(resolve, Math.min(1000 * Math.pow(2, attempt - 1), 8000)));
+      const backoffDelay = Math.min(1000 * Math.pow(2, attempt - 1), 8000);
+      console.log(`Retrying Stripe initialization in ${backoffDelay}ms...`, {
+        requestId,
+        attempt,
+        nextAttempt: attempt + 1,
+        timestamp: new Date().toISOString()
+      });
+      
+      await new Promise(resolve => setTimeout(resolve, backoffDelay));
     }
   }
 
-  return null;
+  throw new Error(`Unexpected error: Stripe initialization loop completed without success or error`);
 }
 
 // Initialize stripe instance
