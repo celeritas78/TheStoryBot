@@ -180,42 +180,34 @@ export function CreditPurchaseDialog({
     }
   }, [canShowPaymentForm, stripe, elements, paymentState.clientSecret, paymentState.status]);
 
-  // Initialize payment when dialog opens or amount changes
+  // Initialize payment when dialog opens
   useEffect(() => {
-    let isActive = true;
-    
-    const initialize = async () => {
-      if (!open || amount <= 0 || paymentState.status !== 'idle' || !stripe) {
-        console.log('Skipping payment initialization:', {
-          open,
-          amount,
+    if (!open || !stripe) return;
+
+    const initializePaymentFlow = async () => {
+      // Only initialize if we're in idle state or failed state
+      if (paymentState.status !== 'idle' && paymentState.status !== 'failed') {
+        console.log('Skipping payment initialization - invalid state:', {
           status: paymentState.status,
-          hasStripe: !!stripe,
           timestamp: new Date().toISOString()
         });
         return;
       }
 
+      console.log('Starting payment initialization flow:', {
+        amount,
+        status: paymentState.status,
+        timestamp: new Date().toISOString()
+      });
+
       try {
         setPaymentState(state => ({ ...state, status: 'processing', error: null }));
-        
-        // Add small delay to prevent rapid re-initialization
-        await new Promise(resolve => setTimeout(resolve, 300));
-        
-        if (!isActive) {
-          console.log('Payment initialization cancelled - component unmounted');
-          return;
-        }
-        
         await initializePayment();
       } catch (error) {
-        console.error('Payment initialization effect failed:', {
+        console.error('Payment initialization failed:', {
           error: error instanceof Error ? error.message : 'Unknown error',
-          stack: error instanceof Error ? error.stack : undefined,
           timestamp: new Date().toISOString()
         });
-        
-        if (!isActive) return;
         
         setPaymentState(state => ({
           ...state,
@@ -228,12 +220,8 @@ export function CreditPurchaseDialog({
       }
     };
 
-    void initialize();
-
-    return () => {
-      isActive = false;
-    };
-  }, [open, amount, paymentState.status, stripe, initializePayment]);
+    void initializePaymentFlow();
+  }, [open, stripe, amount, paymentState.status, initializePayment]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -354,53 +342,31 @@ export function CreditPurchaseDialog({
             </div>
           )}
 
-          {!isProcessing && paymentState.clientSecret && (
-            <>
-              {console.log('Initializing Stripe Elements:', {
-                hasClientSecret: !!paymentState.clientSecret,
-                hasStripe: !!stripe,
-                status: paymentState.status,
-                timestamp: new Date().toISOString()
-              })}
-              <Elements stripe={stripe!} options={stripeElementsOptions}>
-                {canShowPaymentForm ? (
-                  <>
-                    {console.log('Rendering payment form:', {
-                      timestamp: new Date().toISOString()
-                    })}
-                    <PaymentElement 
-                      options={{
-                        layout: 'tabs',
-                        fields: {
-                          billingDetails: {
-                            name: 'auto',
-                          }
-                        }
-                      }}
-                      onChange={(event) => {
-                        console.log('Payment element state changed:', {
-                          complete: event.complete,
-                          empty: event.empty,
-                          timestamp: new Date().toISOString()
-                        });
-                      }}
-                    />
-                    <Button
-                      type="submit"
-                      disabled={isProcessing || !stripe}
-                      className="w-full mt-4"
-                    >
-                      {isProcessing ? "Processing payment..." : `Pay $${amount}.00`}
-                    </Button>
-                  </>
-                ) : (
-                  <div className="text-center p-4">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-2" />
-                    <p className="text-gray-600">Initializing payment form...</p>
-                  </div>
-                )}
-              </Elements>
-            </>
+          {!isProcessing && paymentState.clientSecret && stripe && (
+            <Elements stripe={stripe} options={stripeElementsOptions}>
+              <PaymentElement 
+                options={{
+                  layout: 'tabs',
+                  fields: {
+                    billingDetails: {
+                      name: 'auto',
+                    }
+                  }
+                }}
+                onChange={(event) => {
+                  if (event.complete) {
+                    console.log('Payment form is complete');
+                  }
+                }}
+              />
+              <Button
+                type="submit"
+                disabled={isProcessing}
+                className="w-full mt-4"
+              >
+                {isProcessing ? "Processing payment..." : `Pay $${amount}.00`}
+              </Button>
+            </Elements>
           )}
 
           {!isProcessing && !paymentState.clientSecret && (

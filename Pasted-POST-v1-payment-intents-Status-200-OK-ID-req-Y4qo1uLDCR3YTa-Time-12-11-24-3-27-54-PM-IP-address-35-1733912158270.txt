@@ -1,0 +1,100 @@
+POST /v1/payment_intents
+Status
+200 OK
+ID
+req_Y4qo1uLDCR3YTa
+Time
+12/11/24, 3:27:54 PM
+IP address
+35.244.32.45
+API version
+2024-11-20.acacia
+Source
+Stripe/v1 NodeBindings/17.4.0 Story Credits Purchase/1.0.0
+Idempotency
+Key — stripe-node-retry-a7f8fea4-acbc-4a85-a843-4d41642d31a3
+
+Response body
+{
+  "id": "pi_3QUmg2SBc9gulaWv1KRpA4Aw",
+  "object": "payment_intent",
+  "amount": 1000,
+  "amount_capturable": 0,
+  "amount_details": {
+    "tip": {
+    }
+  },
+  "amount_received": 0,
+  "application": null,
+  "application_fee_amount": null,
+  "automatic_payment_methods": {
+    "allow_redirects": "never",
+    "enabled": true
+  },
+  "canceled_at": null,
+  "cancellation_reason": null,
+  "capture_method": "automatic_async",
+  "client_secret": "pi_3Q**********************_******_*********************lQdo",
+  "confirmation_method": "automatic",
+  "created": 1733911074,
+  "currency": "usd",
+  "customer": null,
+  "description": "Purchase 10 story credits",
+  "invoice": null,
+  "last_payment_error": null,
+  "latest_charge": null,
+  "livemode": true,
+  "metadata": {
+    "credits": "10",
+    "purpose": "story_credits",
+    "userId": "35"
+  },
+  "next_action": null,
+  "on_behalf_of": null,
+  "payment_method": null,
+  "payment_method_configuration_details": {
+    "id": "pmc_1NibfqSBc9gulaWvmdNwkKqz",
+    "parent": null
+  },
+  "payment_method_options": {
+    "card": {
+      "installments": null,
+      "mandate_options": null,
+      "network": null,
+      "request_three_d_secure": "automatic"
+    }
+  },
+  "payment_method_types": [
+    "card"
+  ],
+  "processing": null,
+  "receipt_email": "sandeep@asterial.in",
+  "review": null,
+  "setup_future_usage": null,
+  "shipping": null,
+  "source": null,
+  "statement_descriptor": "Story Credits",
+  "statement_descriptor_suffix": "Credits",
+  "status": "requires_payment_method",
+  "transfer_data": null,
+  "transfer_group": null
+}
+Request POST body
+{
+  "amount": "1000",
+  "automatic_payment_methods": {
+    "allow_redirects": "never",
+    "enabled": "true"
+  },
+  "confirm": "false",
+  "currency": "usd",
+  "description": "Purchase 10 story credits",
+  "metadata": {
+    "credits": "10",
+    "purpose": "story_credits",
+    "userId": "35"
+  },
+  "receipt_email": "sandeep@asterial.in",
+  "statement_descriptor": "Story Credits",
+  "statement_descriptor_suffix": "Credits"
+}
