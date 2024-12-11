@@ -16,35 +16,49 @@ import { Loader2 } from "lucide-react";
 // Get Stripe publishable key from environment
 const STRIPE_PUBLISHABLE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
 
-// Initialize Stripe outside component
-const initializeStripe = () => {
+// Initialize Stripe with proper error handling
+const initializeStripe = async () => {
+  const requestId = Math.random().toString(36).substring(7);
   console.log('Starting Stripe initialization...', {
+    requestId,
     hasKey: !!STRIPE_PUBLISHABLE_KEY,
     keyPrefix: STRIPE_PUBLISHABLE_KEY ? STRIPE_PUBLISHABLE_KEY.substring(0, 8) : 'missing',
     timestamp: new Date().toISOString()
   });
 
   if (!STRIPE_PUBLISHABLE_KEY) {
-    console.error('Missing Stripe publishable key');
-    return Promise.reject(new Error('Missing Stripe publishable key'));
+    const error = new Error('Stripe publishable key is missing');
+    console.error('Stripe initialization failed:', {
+      requestId,
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+    throw error;
   }
 
-  return loadStripe(STRIPE_PUBLISHABLE_KEY)
-    .then(stripe => {
-      console.log('Stripe initialized successfully:', {
-        stripeInstance: !!stripe,
-        timestamp: new Date().toISOString()
-      });
-      return stripe;
-    })
-    .catch(error => {
-      console.error('Failed to initialize Stripe:', {
-        error: error.message,
-        type: error.type,
-        timestamp: new Date().toISOString()
-      });
-      throw error;
+  try {
+    const stripe = await loadStripe(STRIPE_PUBLISHABLE_KEY);
+    if (!stripe) {
+      throw new Error('Failed to initialize Stripe instance');
+    }
+
+    console.log('Stripe initialized successfully:', {
+      requestId,
+      stripeInstance: !!stripe,
+      timestamp: new Date().toISOString()
     });
+
+    return stripe;
+  } catch (error) {
+    console.error('Stripe initialization failed:', {
+      requestId,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      type: error instanceof Error ? error.constructor.name : 'Unknown',
+      stack: error instanceof Error ? error.stack : undefined,
+      timestamp: new Date().toISOString()
+    });
+    throw error instanceof Error ? error : new Error('Failed to initialize Stripe');
+  }
 };
 
 interface ErrorFallbackProps {
@@ -71,8 +85,26 @@ export default function StoryGenerator() {
   const [showCreditPurchase, setShowCreditPurchase] = useState(false);
   const { toast } = useToast();
   
-  // Initialize Stripe
-  const stripePromise = useMemo(() => initializeStripe(), []);
+  // Initialize Stripe with error handling
+  const [stripePromise, setStripePromise] = useState<Promise<Stripe | null> | null>(null);
+  const [stripeError, setStripeError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const initStripe = async () => {
+      try {
+        setStripeError(null);
+        const promise = initializeStripe();
+        setStripePromise(promise);
+        await promise; // Wait for initialization to catch any errors
+      } catch (error) {
+        console.error('Failed to initialize Stripe:', error);
+        setStripeError(error instanceof Error ? error.message : 'Failed to initialize payment system');
+        setStripePromise(null);
+      }
+    };
+
+    void initStripe();
+  }, []);
 
   const { data: creditBalance, refetch: refetchCredits } = useQuery({
     queryKey: ['credits'],
@@ -180,7 +212,7 @@ export default function StoryGenerator() {
             </div>
           </header>
           
-          {showCreditPurchase && stripePromise && (
+          {showCreditPurchase && (
             <ErrorBoundary
               FallbackComponent={({ error }) => (
                 <div className="text-red-500">
@@ -188,16 +220,27 @@ export default function StoryGenerator() {
                 </div>
               )}
             >
-              <Elements stripe={stripePromise} options={stripeOptions}>
-                <CreditPurchaseDialog
-                  open={showCreditPurchase}
-                  onOpenChange={setShowCreditPurchase}
-                  onSuccess={() => {
-                    refetchCredits();
-                    setShowCreditPurchase(false);
-                  }}
-                />
-              </Elements>
+              {stripeError ? (
+                <div className="text-red-500">
+                  Failed to initialize payment system: {stripeError}
+                </div>
+              ) : !stripePromise ? (
+                <div className="flex items-center justify-center p-4">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
+                  <span className="ml-2">Initializing payment system...</span>
+                </div>
+              ) : (
+                <Elements stripe={stripePromise} options={stripeOptions}>
+                  <CreditPurchaseDialog
+                    open={showCreditPurchase}
+                    onOpenChange={setShowCreditPurchase}
+                    onSuccess={() => {
+                      refetchCredits();
+                      setShowCreditPurchase(false);
+                    }}
+                  />
+                </Elements>
+              )}
             </ErrorBoundary>
           )}
 
