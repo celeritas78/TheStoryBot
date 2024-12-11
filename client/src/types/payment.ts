@@ -68,6 +68,14 @@ export interface PaymentState extends PaymentStateDetails {
   amount: number | null;
 }
 
+export interface StripePaymentElementOptions {
+  clientSecret: string;
+  appearance?: {
+    theme: 'stripe' | 'night' | 'flat';
+    variables?: Record<string, string>;
+  };
+}
+
 export interface StripePaymentResult {
   error?: StripeError;
   paymentIntent?: PaymentIntent | null;

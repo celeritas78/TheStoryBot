@@ -112,16 +112,16 @@ export default function StoryGenerator() {
 
         {showCreditPurchase && (
           <div>
-            <Elements stripe={stripePromise} options={stripeOptions}>
-              <CreditPurchaseDialog
-                open={showCreditPurchase}
-                onOpenChange={setShowCreditPurchase}
-                onSuccess={() => {
-                  refetchCredits();
-                  setShowCreditPurchase(false);
-                }}
-              />
-            </Elements>
+            <CreditPurchaseDialog
+              open={showCreditPurchase}
+              onOpenChange={setShowCreditPurchase}
+              onSuccess={() => {
+                refetchCredits();
+                setShowCreditPurchase(false);
+              }}
+              stripePromise={stripePromise}
+              stripeOptions={stripeOptions}
+            />
           </div>
         )}
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, FormEvent } from "react";
-import { useStripe, useElements, PaymentElement } from "@stripe/react-stripe-js";
+import { Elements, useStripe, useElements, PaymentElement } from "@stripe/react-stripe-js";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "./ui/dialog";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -7,6 +7,7 @@ import { Label } from "./ui/label";
 import { purchaseCredits } from "../lib/api";
 import { useToast } from "@/hooks/use-toast";
 import type { PaymentState, PaymentStatus } from "../types/payment";
+import type { Stripe, StripeElementsOptions } from '@stripe/stripe-js';
 
 const initialPaymentState: PaymentState = {
   status: "idle",
@@ -15,14 +16,69 @@ const initialPaymentState: PaymentState = {
   amount: null,
 };
 
+const PaymentForm = ({
+  clientSecret,
+  amount,
+  onSuccess,
+}: {
+  clientSecret: string;
+  amount: number;
+  onSuccess?: () => void;
+}) => {
+  const stripe = useStripe();
+  const elements = useElements();
+  const { toast } = useToast();
+
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    if (!stripe || !elements) {
+      toast({ title: "Error", description: "Payment system not initialized", variant: "destructive" });
+      return;
+    }
+
+    try {
+      const { error } = await stripe.confirmPayment({
+        elements,
+        confirmParams: { return_url: `${window.location.origin}/credits/confirm` },
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      toast({ title: "Payment successful", description: `Added ${amount} credits to your account` });
+      onSuccess?.();
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Payment failed";
+      toast({ title: "Payment Error", description: errorMessage, variant: "destructive" });
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <div className="space-y-4 mt-4">
+        <PaymentElement key={clientSecret} />
+        <Button type="submit" className="w-full mt-4">
+          Pay ${amount}
+        </Button>
+      </div>
+    </form>
+  );
+};
+
 export const CreditPurchaseDialog = ({
   open,
   onOpenChange,
   onSuccess,
+  stripePromise,
+  stripeOptions,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
+  stripePromise: Promise<Stripe | null>;
+  stripeOptions?: StripeElementsOptions;
 }) => {
   const [amount, setAmount] = useState(10);
   const [paymentState, setPaymentState] = useState<PaymentState>(initialPaymentState);
@@ -140,14 +196,19 @@ export const CreditPurchaseDialog = ({
           ) : paymentState.status === "failed" ? (
             <div>Failed to load payment options. Please try again.</div>
           ) : paymentState.clientSecret ? (
-            <form onSubmit={handleSubmit}>
-              <div className="space-y-4 mt-4">
-                <PaymentElement key={paymentState.clientSecret} />
-                <Button type="submit" className="w-full mt-4">
-                  Pay ${amount}
-                </Button>
-              </div>
-            </form>
+            <Elements 
+              stripe={stripePromise} 
+              options={{
+                clientSecret: paymentState.clientSecret!,
+                appearance: stripeOptions?.appearance,
+              }}
+            >
+              <PaymentForm 
+                clientSecret={paymentState.clientSecret}
+                amount={amount}
+                onSuccess={onSuccess}
+              />
+            </Elements>
           ) : (
             <div>Initializing payment...</div>
           )}

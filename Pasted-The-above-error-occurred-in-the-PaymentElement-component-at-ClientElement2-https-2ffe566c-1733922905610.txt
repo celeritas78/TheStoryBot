@@ -1,0 +1,45 @@
+The above error occurred in the <PaymentElement> component:
+
+    at ClientElement2 (https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/@fs/home/runner/CustomBedtimeStories/node_modules/.vite/deps/@stripe_react-stripe-js.js?v=be72a1c9:1283:19)
+    at div
+    at form
+    at div
+    at div
+    at https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/@fs/home/runner/CustomBedtimeStories/node_modules/.vite/deps/chunk-AYSQM7VZ.js?v=be72a1c9:41:13
+    at https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/@fs/home/runner/CustomBedtimeStories/node_modules/.vite/deps/chunk-QJWIQYY7.js?v=be72a1c9:61:7
+    at https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/@fs/home/runner/CustomBedtimeStories/node_modules/.vite/deps/chunk-4WIT4MX7.js?v=be72a1c9:52:11
+    at https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/@fs/home/runner/CustomBedtimeStories/node_modules/.vite/deps/chunk-4WIT4MX7.js?v=be72a1c9:33:11
+    at https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/@fs/home/runner/CustomBedtimeStories/node_modules/.vite/deps/chunk-AYSQM7VZ.js?v=be72a1c9:41:13
+    at https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/@fs/home/runner/CustomBedtimeStories/node_modules/.vite/deps/chunk-XOFXANL6.js?v=be72a1c9:29:5
+    at https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/@fs/home/runner/CustomBedtimeStories/node_modules/.vite/deps/@radix-ui_react-dialog.js?v=be72a1c9:234:13
+    at https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/@fs/home/runner/CustomBedtimeStories/node_modules/.vite/deps/@radix-ui_react-dialog.js?v=be72a1c9:157:58
+    at Presence (https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/@fs/home/runner/CustomBedtimeStories/node_modules/.vite/deps/chunk-Q6UFC6W2.js?v=be72a1c9:24:11)
+    at https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/@fs/home/runner/CustomBedtimeStories/node_modules/.vite/deps/@radix-ui_react-dialog.js?v=be72a1c9:148:64
+    at https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/@fs/home/runner/CustomBedtimeStories/node_modules/.vite/deps/chunk-4WIT4MX7.js?v=be72a1c9:52:11
+    at https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/@fs/home/runner/CustomBedtimeStories/node_modules/.vite/deps/chunk-4WIT4MX7.js?v=be72a1c9:33:11
+    at https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/@fs/home/runner/CustomBedtimeStories/node_modules/.vite/deps/chunk-AYSQM7VZ.js?v=be72a1c9:41:13
+    at https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/@fs/home/runner/CustomBedtimeStories/node_modules/.vite/deps/chunk-QJWIQYY7.js?v=be72a1c9:260:22
+    at Presence (https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/@fs/home/runner/CustomBedtimeStories/node_modules/.vite/deps/chunk-Q6UFC6W2.js?v=be72a1c9:24:11)
+    at Provider (https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/@fs/home/runner/CustomBedtimeStories/node_modules/.vite/deps/chunk-AFJ6VPUJ.js?v=be72a1c9:38:15)
+    at DialogPortal (https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/@fs/home/runner/CustomBedtimeStories/node_modules/.vite/deps/@radix-ui_react-dialog.js?v=be72a1c9:111:11)
+    at _c3 (https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/src/components/ui/dialog.tsx:49:12)
+    at Provider (https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/@fs/home/runner/CustomBedtimeStories/node_modules/.vite/deps/chunk-AFJ6VPUJ.js?v=be72a1c9:38:15)
+    at Dialog (https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/@fs/home/runner/CustomBedtimeStories/node_modules/.vite/deps/@radix-ui_react-dialog.js?v=be72a1c9:52:5)
+    at CreditPurchaseDialog (https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/src/components/CreditPurchaseDialog.tsx:33:3)
+    at Elements2 (https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/@fs/home/runner/CustomBedtimeStories/node_modules/.vite/deps/@stripe_react-stripe-js.js?v=be72a1c9:1059:28)
+    at div
+    at div
+    at div
+    at StoryGenerator (https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/src/pages/StoryGenerator.tsx:42:29)
+    at ProtectedRoute (https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/src/main.tsx:64:38)
+    at Route (https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/@fs/home/runner/CustomBedtimeStories/node_modules/.vite/deps/wouter.js?v=be72a1c9:265:16)
+    at Switch…
+Credit purchase response received: 
+Object {requestId: "c45xfp", responseData: {…}, timestamp: "2024-12-11T13:14:37.965Z"}
+Credit purchase response validated: 
+Object {requestId: "c45xfp", amount: 1000, creditsToAdd: 10, status: "requires_payment_method", timestamp: "2024-12-11T13:14:37.966Z"}
+Credit purchase response received: 
+Object {requestId: "c45xfp", amount: 1000, creditsToAdd: 10, status: "requires_payment_method", timestamp: "2024-12-11T13:14:37.966Z"}
+Credit purchase response: 
+Object {hasClientSecret: true, status: "requires_payment_method", amount: 1000, timestamp: "2024-12-11T13:14:37.966Z"}
+Setting payment state with client secret
