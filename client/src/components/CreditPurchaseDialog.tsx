@@ -44,6 +44,27 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(function PaymentForm(
 
   const handleFormSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    
+    try {
+      const { error } = await stripe.confirmPayment({
+        elements,
+        confirmParams: {
+          return_url: `${window.location.origin}/credits/confirm`,
+          payment_method_data: {
+            billing_details: {
+              email: window.localStorage.getItem('userEmail') || undefined,
+            },
+          },
+        },
+      });
+
+      if (error) {
+        throw error;
+      }
+    } catch (error) {
+      console.error('Payment error:', error);
+    }
+    
     onSubmit(e);
   };
 
@@ -85,7 +106,7 @@ export function CreditPurchaseDialog({ open, onOpenChange, onSuccess }: CreditPu
   const { toast } = useToast();
 
   const initializePayment = useCallback(async () => {
-    if (!stripe || paymentState.clientSecret) return;
+    if (paymentState.clientSecret) return;
 
     try {
       setPaymentState(state => ({ ...state, status: 'processing', error: null }));
@@ -140,34 +161,12 @@ export function CreditPurchaseDialog({ open, onOpenChange, onSuccess }: CreditPu
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
-    if (!stripe || !paymentState.clientSecret) {
-      toast({
-        title: "Error",
-        description: "Payment system not initialized",
-        variant: "destructive",
-      });
-      return;
-    }
-
     try {
       setPaymentState(state => ({ ...state, status: 'processing', error: null }));
 
-      const elements = useElements();
-      if (!elements) {
-        throw new Error('Stripe Elements not initialized');
-      }
-
-      const { error } = await stripe.confirmPayment({
-        elements,
-        confirmParams: {
-          return_url: `${window.location.origin}/credits/confirm`,
-          payment_method_data: {
-            billing_details: {
-              email: window.localStorage.getItem('userEmail') || undefined,
-            },
-          },
-        },
-      });
+      // The actual payment confirmation is handled in the PaymentForm component
+      // This component only needs to handle the state updates and UI feedback
+      setPaymentState(state => ({ ...state, status: 'processing' }));
 
       if (error) {
         setPaymentState(state => ({
