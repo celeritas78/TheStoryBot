@@ -120,7 +120,7 @@ export default function StoryGenerator() {
   // Define Stripe Elements options
   const stripeOptions = useMemo(() => ({
     appearance: {
-      theme: 'stripe' as const,
+      theme: 'stripe',
       variables: {
         colorPrimary: '#6366f1',
         colorBackground: '#ffffff',
@@ -128,7 +128,7 @@ export default function StoryGenerator() {
       },
     },
     currency: 'usd',
-    paymentMethodTypes: ['card'] as const,
+    mode: 'payment',
   }), []);
 
   return (

@@ -225,11 +225,19 @@ export function CreditPurchaseDialog({
               <PaymentElement 
                 options={{
                   layout: 'tabs',
-                  defaultValues: {
+                  fields: {
                     billingDetails: {
-                      name: 'auto'
+                      name: 'auto',
                     }
                   }
+                }}
+                onLoadError={(error) => {
+                  console.error('Payment form load error:', error);
+                  toast({
+                    title: "Payment Error",
+                    description: "Failed to load payment form. Please try again.",
+                    variant: "destructive",
+                  });
                 }}
               />
               <Button

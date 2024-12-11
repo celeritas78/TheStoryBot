@@ -1,0 +1,37 @@
+The above error occurred in the <Elements2> component:
+
+    at Elements2 (https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/@fs/home/runner/CustomBedtimeStories/node_modules/.vite/deps/@stripe_react-stripe-js.js?v=d6a2ae22:1059:28)
+    at div
+    at div
+    at ErrorBoundary (https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/@fs/home/runner/CustomBedtimeStories/node_modules/.vite/deps/react-error-boundary.js?v=d6a2ae22:18:5)
+    at StoryGenerator (https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/src/pages/StoryGenerator.tsx:73:29)
+    at ProtectedRoute (https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/src/main.tsx:64:38)
+    at Route (https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/@fs/home/runner/CustomBedtimeStories/node_modules/.vite/deps/wouter.js?v=d6a2ae22:323:16)
+    at Switch (https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/@fs/home/runner/CustomBedtimeStories/node_modules/.vite/deps/wouter.js?v=d6a2ae22:379:17)
+    at ErrorBoundary (https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/src/components/ErrorBoundary.tsx:7:8)
+    at AppRoutes
+    at ErrorBoundary (https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/src/components/ErrorBoundary.tsx:7:8)
+    at QueryClientProvider (https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/@fs/home/runner/CustomBedtimeStories/node_modules/.vite/deps/@tanstack_react-query.js?v=d6a2ae22:2805:3)
+    at App
+
+React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.
+
+at Elements2 (https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/@fs/home/runner/CustomBedtimeStories/node_modules/.vite/deps/@stripe_react-stripe-js.js?v=d6a2ae22:1059:28)
+at div
+at div
+at ErrorBoundary (https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/@fs/home/runner/CustomBedtimeStories/node_modules/.vite/deps/react-error-boundary.js?v=d6a2ae22:18:5)
+at StoryGenerator (https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/src/pages/StoryGenerator.tsx:73:29)
+at ProtectedRoute (https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/src/main.tsx:64:38)
+at Route (https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/@fs/home/runner/CustomBedtimeStories/node_modules/.vite/deps/wouter.js?v=d6a2ae22:323:16)
+at Switch (https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/@fs/home/runner/CustomBedtimeStories/node_modules/.vite/deps/wouter.js?v=d6a2ae22:379:17)
+at ErrorBoundary (https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/src/components/ErrorBoundary.tsx:7:8)
+at AppRoutes
+at ErrorBoundary (https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/src/components/ErrorBoundary.tsx:7:8)
+at QueryClientProvider (https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/@fs/home/runner/CustomBedtimeStories/node_modules/.vite/deps/@tanstack_react-query.js?v=d6a2ae22:2805:3)
+at App
+
+React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.
+at t.value (https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400
