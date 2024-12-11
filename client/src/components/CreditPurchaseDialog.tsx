@@ -28,25 +28,6 @@ const initialPaymentState: PaymentState = {
   amount: null,
 };
 
-interface PaymentWrapperProps extends PaymentFormProps {
-  stripe: any;
-  options: StripeElementsOptions;
-}
-
-const PaymentWrapper: React.FC<PaymentWrapperProps> = ({ 
-  stripe, 
-  options, 
-  amount, 
-  isProcessing, 
-  onSubmit 
-}) => {
-  return (
-    <Elements stripe={stripe} options={options}>
-      <PaymentForm amount={amount} isProcessing={isProcessing} onSubmit={onSubmit} />
-    </Elements>
-  );
-};
-
 // Memoized PaymentForm Component
 const PaymentForm: React.FC<PaymentFormProps> = React.memo(function PaymentForm({ amount, isProcessing, onSubmit }) {
   const stripe = useStripe();
@@ -101,7 +82,6 @@ export function CreditPurchaseDialog({ open, onOpenChange, onSuccess }: CreditPu
   const MIN_CREDITS = 1;
   const MAX_CREDITS = 100;
   const [paymentState, setPaymentState] = useState<PaymentState>(initialPaymentState);
-  const stripe = useStripe();
   const { toast } = useToast();
 
   const initializePayment = useCallback(async () => {
@@ -272,17 +252,15 @@ export function CreditPurchaseDialog({ open, onOpenChange, onSuccess }: CreditPu
             <div className="text-red-500 text-sm mb-4">{paymentState.error.message}</div>
           )}
 
-          {!isProcessing && paymentState.clientSecret && stripe && (
-            <PaymentWrapper
-              stripe={stripe}
-              options={stripeElementsOptions}
-              amount={amount}
-              isProcessing={isProcessing}
-              onSubmit={handleSubmit}
-            />
-          )}
-
-          {!isProcessing && !paymentState.clientSecret && (
+          {paymentState.clientSecret ? (
+            <Elements stripe={window.Stripe?.(import.meta.env.VITE_STRIPE_PUBLIC_KEY)} options={stripeElementsOptions}>
+              <PaymentForm
+                amount={amount}
+                isProcessing={isProcessing}
+                onSubmit={handleSubmit}
+              />
+            </Elements>
+          ) : (
             <div className="text-center text-gray-500 p-4">
               {paymentState.error ? (
                 <div className="text-red-500">
