@@ -189,18 +189,18 @@ export function CreditPurchaseDialog({ open, onOpenChange, onSuccess }: CreditPu
         },
       });
 
-      if (result.error) {
+      if (error) {
         setPaymentState(state => ({
           ...state,
           status: 'failed',
           error: {
-            message: result.error.message ?? "Payment failed",
-            code: result.error.type,
+            message: error.message ?? "Payment failed",
+            code: error.type,
           },
         }));
         toast({
           title: "Payment failed",
-          description: result.error.message,
+          description: error.message ?? "Payment failed",
           variant: "destructive",
         });
       } else {
