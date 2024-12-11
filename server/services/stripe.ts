@@ -124,6 +124,9 @@ export async function createPaymentIntent({
       receipt_email: receiptEmail,
       statement_descriptor: STRIPE_STATEMENT_DESCRIPTOR?.substring(0, 22), // Stripe limit
       statement_descriptor_suffix: STRIPE_STATEMENT_DESCRIPTOR_SUFFIX?.substring(0, 22), // Stripe limit
+      confirm: false,
+      setup_future_usage: 'off_session',
+      capture_method: 'automatic',
     });
 
     console.log('Payment intent created:', {

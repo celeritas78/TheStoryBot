@@ -216,7 +216,12 @@ export function CreditPurchaseDialog({
             <>
               <PaymentElement 
                 options={{
-                  layout: 'tabs'
+                  layout: 'tabs',
+                  defaultValues: {
+                    billingDetails: {
+                      email: window.localStorage.getItem('userEmail') || undefined
+                    }
+                  }
                 }}
               />
               <Button
