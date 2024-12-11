@@ -56,8 +56,20 @@ export function CreditPurchaseDialog({
     const startTime = Date.now();
     console.log('Initializing credit purchase:', {
       amount,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      stripeLoaded: !!stripe,
+      elementsLoaded: !!elements
     });
+
+    if (!stripe || !elements) {
+      console.error('Stripe not initialized:', { stripe: !!stripe, elements: !!elements });
+      toast({
+        title: "Payment Error",
+        description: "Payment system not initialized properly",
+        variant: "destructive",
+      });
+      return;
+    }
 
     try {
       setPaymentState(state => ({ ...state, status: 'processing', error: null }));
@@ -67,6 +79,7 @@ export function CreditPurchaseDialog({
       console.log('Credit purchase initialized:', {
         amount,
         transactionId: response.transactionId,
+        clientSecret: response.clientSecret ? 'exists' : 'missing',
         duration: Date.now() - startTime,
         timestamp: new Date().toISOString()
       });
@@ -214,19 +227,29 @@ export function CreditPurchaseDialog({
 
           {showPaymentForm ? (
             <>
+              {console.log('Rendering PaymentElement with clientSecret:', paymentState.clientSecret)}
               <PaymentElement 
                 options={{
                   layout: 'tabs',
+                  paymentMethodOrder: ['card'],
                   defaultValues: {
                     billingDetails: {
                       email: window.localStorage.getItem('userEmail') || undefined
                     }
                   }
                 }}
+                onLoadError={(error) => {
+                  console.error('PaymentElement load error:', error);
+                  toast({
+                    title: "Payment Error",
+                    description: error.message,
+                    variant: "destructive",
+                  });
+                }}
               />
               <Button
                 type="submit"
-                disabled={isProcessing}
+                disabled={isProcessing || !stripe || !elements}
                 className="w-full"
               >
                 {isProcessing ? "Processing payment..." : `Pay $${amount}.00`}

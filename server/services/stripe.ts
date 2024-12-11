@@ -114,7 +114,9 @@ export async function createPaymentIntent({
     const paymentIntent = await stripe.paymentIntents.create({
       amount: amountInCents,
       currency: STRIPE_CURRENCY,
-      payment_method_types: ['card'],
+      automatic_payment_methods: {
+        enabled: true,
+      },
       metadata: {
         userId: userId.toString(),
         credits: credits.toString(),
@@ -125,7 +127,8 @@ export async function createPaymentIntent({
       statement_descriptor: STRIPE_STATEMENT_DESCRIPTOR?.substring(0, 22), // Stripe limit
       statement_descriptor_suffix: STRIPE_STATEMENT_DESCRIPTOR_SUFFIX?.substring(0, 22), // Stripe limit
       confirm: false,
-      setup_future_usage: 'off_session',
+      payment_method_types: ['card'],
+      mode: STRIPE_PAYMENT_MODE,
       capture_method: 'automatic',
     });
 

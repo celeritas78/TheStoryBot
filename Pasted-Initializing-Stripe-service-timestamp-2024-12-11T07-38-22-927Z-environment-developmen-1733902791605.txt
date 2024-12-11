@@ -1,0 +1,111 @@
+Initializing Stripe service... {
+  timestamp: '2024-12-11T07:38:22.927Z',
+  environment: 'development',
+  apiVersion: '2024-11-20.acacia',
+  hasSecretKey: true
+}
+Stripe service initialized successfully { timestamp: '2024-12-11T07:38:22.941Z', environment: 'development' }
+Stripe API connection test successful { timestamp: '2024-12-11T07:38:23.711Z', environment: 'development' }
+07:38:23 AM [express] Server initialization complete
+07:38:23 AM [express] Server Details:
+        Port: 5000
+        Environment: development
+        Node Version: v20.16.0
+        Start Time: 2024-12-11T07:38:23.788Z
+      
+
+[TypeScript] Found 0 errors. Watching for file changes.
+Login successful: { id: 35, email: 'sandeep@asterial.in' }
+07:38:55 AM [express] GET /api/credits/balance 304 in 280ms :: {"credits":1,"isPremium":false}
+Credit purchase request: {
+  requestId: 'e7d3e1d955619259d94942c34ba259ea50a0cddf1d751b35ce84543fd4f67ebe',
+  userId: 35,
+  userEmail: 'sandeep@asterial.in',
+  currentCredits: 1,
+  isPremium: false,
+  requestedAmount: 10,
+  timestamp: '2024-12-11T07:39:04.599Z'
+}
+Credit purchase request: {
+  requestId: '6a4baf358726b759bbd94f27714f9d92b705d11545ea2f551237d5eb68c80082',
+  userId: 35,
+  userEmail: 'sandeep@asterial.in',
+  currentCredits: 1,
+  isPremium: false,
+  requestedAmount: 10,
+  timestamp: '2024-12-11T07:39:04.610Z'
+}
+Creating payment intent: {
+  amount: 10,
+  userId: 35,
+  amountInCents: 1000,
+  creditsToAdd: 10,
+  timestamp: '2024-12-11T07:39:04.837Z',
+  environment: 'development',
+  stripeMode: 'payment'
+}
+Creating payment intent: {
+  amount: 10,
+  userId: 35,
+  amountInCents: 1000,
+  creditsToAdd: 10,
+  timestamp: '2024-12-11T07:39:04.849Z',
+  environment: 'development',
+  stripeMode: 'payment'
+}
+Payment intent created: {
+  paymentIntentId: 'pi_3QUkVhSBc9gulaWv0TYvJOGT',
+  amount: 1000,
+  credits: 10,
+  status: 'requires_payment_method',
+  timestamp: '2024-12-11T07:39:05.294Z'
+}
+Stripe payment intent created: {
+  requestId: 'e7d3e1d955619259d94942c34ba259ea50a0cddf1d751b35ce84543fd4f67ebe',
+  userId: 35,
+  amount: 10,
+  creditsToAdd: 10,
+  paymentIntentId: 'pi_3QUkVhSBc9gulaWv0TYvJOGT',
+  status: 'requires_payment_method',
+  timestamp: '2024-12-11T07:39:05.294Z'
+}
+Payment intent created: {
+  paymentIntentId: 'pi_3QUkVhSBc9gulaWv1cGcuNLZ',
+  amount: 1000,
+  credits: 10,
+  status: 'requires_payment_method',
+  timestamp: '2024-12-11T07:39:05.372Z'
+}
+Stripe payment intent created: {
+  requestId: '6a4baf358726b759bbd94f27714f9d92b705d11545ea2f551237d5eb68c80082',
+  userId: 35,
+  amount: 10,
+  creditsToAdd: 10,
+  paymentIntentId: 'pi_3QUkVhSBc9gulaWv1cGcuNLZ',
+  status: 'requires_payment_method',
+  timestamp: '2024-12-11T07:39:05.372Z'
+}
+Credit transaction created: {
+  requestId: 'e7d3e1d955619259d94942c34ba259ea50a0cddf1d751b35ce84543fd4f67ebe',
+  userId: 35,
+  transactionId: 17,
+  amount: 1000,
+  creditsToAdd: 10,
+  projectedTotalCredits: 11,
+  status: 'pending',
+  duration: '1547ms',
+  timestamp: '2024-12-11T07:39:05.583Z'
+}
+Credit transaction created: {
+  requestId: '6a4baf358726b759bbd94f27714f9d92b705d11545ea2f551237d5eb68c80082',
+  userId: 35,
+  transactionId: 18,
+  amount: 1000,
+  creditsToAdd: 10,
+  projectedTotalCredits: 11,
+  status: 'pending',
+  duration: '1618ms',
+  timestamp: '2024-12-11T07:39:05.660Z'
+}
+07:39:05 AM [express] POST /api/credits/purchase 200 in 1786ms :: {"clientSecret":"pi_3QUkVhSBc9gulaW…
+07:39:05 AM [express] POST /api/credits/purchase 200 in 1859ms :: {"clientSecret":"pi_3QUkVhSBc9gulaW…
