@@ -53,18 +53,84 @@ export function CreditPurchaseDialog({
   }, [open, amount]);
 
   const initializePayment = async () => {
-    if (!stripe || !elements) {
-      console.error('Stripe not initialized:', {
-        stripe: !!stripe,
-        elements: !!elements,
-        timestamp: new Date().toISOString()
-      });
+    if (!stripe) {
+      console.error('Stripe not initialized');
       toast({
         title: "Payment Error",
         description: "Payment system not initialized properly",
         variant: "destructive",
       });
       return;
+    }
+
+    try {
+      console.log('Starting payment initialization...', {
+        amount,
+        timestamp: new Date().toISOString()
+      });
+
+      setPaymentState(state => ({ ...state, status: 'processing', error: null }));
+      
+      const response = await purchaseCredits(amount);
+      
+      if (!response.clientSecret) {
+        throw new Error('No client secret received from server');
+      }
+
+      console.log('Payment intent created:', {
+        amount: response.amount,
+        status: response.status,
+        timestamp: new Date().toISOString()
+      });
+
+      // Set the options for Stripe Elements
+      const updatedOptions: StripeElementsOptions = {
+        clientSecret: response.clientSecret,
+        appearance: {
+          theme: 'stripe',
+          variables: {
+            colorPrimary: '#6366f1',
+            colorBackground: '#ffffff',
+            colorText: '#1f2937',
+          },
+        },
+      };
+
+      setPaymentState(state => ({
+        ...state,
+        status: 'idle',
+        clientSecret: response.clientSecret,
+        amount: response.amount,
+        transactionId: response.transactionId,
+      }));
+
+      return updatedOptions;
+
+    } catch (error) {
+      console.error('Payment initialization failed:', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      });
+
+      const errorMessage = error instanceof Error ? error.message : "Failed to initialize payment";
+      
+      toast({
+        title: "Payment Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+      
+      setPaymentState(state => ({
+        ...state,
+        status: 'failed',
+        error: {
+          message: errorMessage,
+          code: error instanceof Error ? error.name : 'UNKNOWN_ERROR'
+        }
+      }));
+      
+      onOpenChange(false);
+      throw error;
     }
 
     const startTime = Date.now();
@@ -226,7 +292,12 @@ export function CreditPurchaseDialog({
             </div>
           )}
 
-          {showPaymentForm ? (
+          {paymentState.status === 'processing' ? (
+            <div className="flex items-center justify-center p-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
+              <span className="ml-2">Initializing payment...</span>
+            </div>
+          ) : paymentState.clientSecret ? (
             <>
               <PaymentElement 
                 options={{
@@ -240,15 +311,19 @@ export function CreditPurchaseDialog({
               />
               <Button
                 type="submit"
-                disabled={isProcessing || !stripe || !elements}
+                disabled={isProcessing || !stripe}
                 className="w-full"
               >
                 {isProcessing ? "Processing payment..." : `Pay $${amount}.00`}
               </Button>
             </>
           ) : (
-            <div className="flex items-center justify-center p-4">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
+            <div className="text-center text-gray-500">
+              {paymentState.error ? (
+                <div className="text-red-500">{paymentState.error.message}</div>
+              ) : (
+                "Loading payment form..."
+              )}
             </div>
           )}
         </form>

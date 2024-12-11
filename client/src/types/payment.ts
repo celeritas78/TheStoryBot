@@ -9,7 +9,7 @@ export interface CreatePaymentResponse {
   paymentIntentId: string;
   amount: number;
   currency: string;
-  status: string;
+  status: Stripe.PaymentIntent.Status;
   creditsToAdd: number;
   currentCredits: number;
   projectedTotalCredits: number;

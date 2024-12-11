@@ -134,8 +134,8 @@ export default function StoryGenerator() {
     setStory(null);
   };
 
-  // Define Stripe Elements options with proper TypeScript types
-  const stripeOptions: StripeElementsOptions = {
+  // Stripe Elements options with proper typing
+  const defaultStripeOptions: StripeElementsOptions = {
     appearance: {
       theme: 'stripe',
       variables: {
