@@ -4,9 +4,7 @@ export interface PaymentFormData {
   amount: number;
 }
 
-export interface CreatePaymentResponse extends PaymentIntentResponse {}
-
-// Server response type that matches the stripe.ts service exactly
+// Define the base response type from server's Stripe service
 export interface PaymentIntentResponse {
   clientSecret: string;
   paymentIntentId: string;
@@ -14,6 +12,9 @@ export interface PaymentIntentResponse {
   currency: string;
   status: PaymentIntent['status'];
 }
+
+// CreatePaymentResponse inherits all properties from PaymentIntentResponse
+export type CreatePaymentResponse = PaymentIntentResponse;
 
 export interface PaymentStateDetails {
   creditsToAdd?: number;
