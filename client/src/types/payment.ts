@@ -10,10 +10,13 @@ export interface CreatePaymentResponse {
   amount: number;
   currency: string;
   status: PaymentIntent['status'];
-  creditsToAdd: number;
-  currentCredits: number;
-  projectedTotalCredits: number;
-  transactionId: string;
+}
+
+export interface PaymentStateDetails {
+  creditsToAdd?: number;
+  currentCredits?: number;
+  projectedTotalCredits?: number;
+  transactionId?: string;
 }
 
 export interface PaymentError {
@@ -42,15 +45,11 @@ export type PaymentStatus =
   | 'requires_confirmation'
   | 'requires_action';
 
-export interface PaymentState {
+export interface PaymentState extends PaymentStateDetails {
   status: PaymentStatus;
   error: PaymentError | null;
   clientSecret: string | null;
   amount: number | null;
-  transactionId: string | null;
-  creditsToAdd: number | null;
-  currentCredits: number | null;
-  projectedTotalCredits: number | null;
 }
 
 export interface StripePaymentResult {

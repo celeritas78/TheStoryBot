@@ -1,0 +1,30 @@
+Processed user data: 
+Object {id: 35, email: "sandeep@asterial.in", isPremium: false, storyCredits: 1, timestamp: "2024-12-11T08:39:37.931Z"}
+Fetching user data...
+User data received: 
+Object {id: 35, email: "sandeep@asterial.in", provider: "local", providerId: null, displayName: null, …}
+Processed user data: 
+Object {id: 35, email: "sandeep@asterial.in", isPremium: false, storyCredits: 1, timestamp: "2024-12-11T08:39:38.245Z"}
+Fetching user data...
+User data received: 
+Object {id: 35, email: "sandeep@asterial.in", provider: "local", providerId: null, displayName: null, …}
+Processed user data: 
+Object {id: 35, email: "sandeep@asterial.in", isPremium: false, storyCredits: 1, timestamp: "2024-12-11T08:39:38.652Z"}
+Starting Stripe initialization... 
+Object {hasKey: true, keyPrefix: "pk_live_", timestamp: "2024-12-11T08:39:40.090Z"}
+Starting Stripe initialization... 
+Object {hasKey: true, keyPrefix: "pk_live_", timestamp: "2024-12-11T08:39:40.091Z"}
+Fetching user data...
+Stripe initialized successfully: 
+Object {stripeInstance: true, timestamp: "2024-12-11T08:39:40.543Z"}
+Stripe initialized successfully: 
+Object {stripeInstance: true, timestamp: "2024-12-11T08:39:40.543Z"}
+User data received: 
+Object {id: 35, email: "sandeep@asterial.in", provider: "local", providerId: null, displayName: null, …}
+Processed user data: 
+Object {id: 35, email: "sandeep@asterial.in", isPremium: false, storyCredits: 1, timestamp: "2024-12-11T08:39:42.030Z"}
+Stripe not initialized
+at t.value (https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400

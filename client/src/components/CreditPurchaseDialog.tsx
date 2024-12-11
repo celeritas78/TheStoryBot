@@ -20,10 +20,6 @@ const initialPaymentState: PaymentState = {
   error: null,
   clientSecret: null,
   amount: null,
-  transactionId: null,
-  creditsToAdd: null,
-  currentCredits: null,
-  projectedTotalCredits: null,
 };
 
 export function CreditPurchaseDialog({
@@ -73,7 +69,7 @@ export function CreditPurchaseDialog({
     try {
       setPaymentState(state => ({ ...state, status: 'processing', error: null }));
       
-      const response: CreatePaymentResponse = await purchaseCredits(amount);
+      const response = await purchaseCredits(amount);
       
       if (!response.clientSecret) {
         throw new Error('No client secret received from server');
@@ -81,6 +77,7 @@ export function CreditPurchaseDialog({
 
       console.log('Payment intent created:', {
         amount: response.amount,
+        status: response.status,
         timestamp: new Date().toISOString()
       });
 
@@ -88,11 +85,7 @@ export function CreditPurchaseDialog({
         ...state,
         status: 'idle',
         clientSecret: response.clientSecret,
-        amount: response.amount,
-        transactionId: response.transactionId,
-        creditsToAdd: response.creditsToAdd,
-        currentCredits: response.currentCredits,
-        projectedTotalCredits: response.projectedTotalCredits
+        amount: response.amount
       }));
 
     } catch (error: unknown) {
@@ -228,7 +221,7 @@ export function CreditPurchaseDialog({
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
               <span className="ml-2">Processing payment...</span>
             </div>
-          ) : paymentState.clientSecret ? (
+          ) : showPaymentForm ? (
             <>
               <PaymentElement 
                 options={{
