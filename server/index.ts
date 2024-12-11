@@ -4,7 +4,7 @@ import { setupVite, serveStatic } from "./vite";
 import { createServer } from "http";
 import { setupAuth } from "./auth";
 // Import required services
-import { stripe } from './services/stripe';
+import { getStripe } from './services/stripe';
 
 function log(message: string) {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
@@ -25,10 +25,29 @@ process.on('unhandledRejection', (reason, promise) => {
   });
 });
 
-// Check if critical services are available
-if (!stripe) {
-  console.warn('Stripe service is not initialized. Payment features will be disabled.');
+// Initialize and verify critical services
+async function initializeServices() {
+  const stripe = getStripe();
+  if (!stripe) {
+    console.warn('Stripe service is not initialized. Payment features will be disabled.');
+  } else {
+    try {
+      // Test Stripe connection
+      await stripe.paymentMethods.list({ limit: 1 });
+      console.log('Stripe service verified and ready', {
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Failed to verify Stripe service:', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      });
+    }
+  }
 }
+
+// Initialize services
+void initializeServices();
 
 const app = express();
 app.use(express.json());

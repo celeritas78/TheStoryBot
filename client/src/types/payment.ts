@@ -15,6 +15,10 @@ export interface PaymentIntentResponse {
   projectedTotalCredits: number;
   transactionId: number;
   stripePaymentId?: string;
+  error?: {
+    message: string;
+    code?: string;
+  };
 }
 
 // CreatePaymentResponse is the same as PaymentIntentResponse

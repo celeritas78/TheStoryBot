@@ -157,9 +157,13 @@ export interface CreditBalance {
 // Import types from payment.ts
 import type { 
   PaymentIntentResponse,
+  PaymentError,
   CreditBalanceResponse,
   PaymentStateDetails
 } from '../types/payment';
+
+// Export for use in components
+export type { PaymentIntentResponse, PaymentError };
 
 export async function getCreditBalance(): Promise<CreditBalance> {
   const response = await fetch(`${API_BASE}/credits/balance`, {
@@ -227,7 +231,11 @@ export async function purchaseCredits(amount: number): Promise<PaymentIntentResp
       timestamp: new Date().toISOString()
     });
 
-    return data as CreatePaymentResponse;
+    // Validate the response against our expected schema
+  if (!data?.clientSecret || !data?.amount) {
+    throw new Error('Invalid response format from server');
+  }
+  return data as PaymentIntentResponse;
   } catch (error) {
     console.error('Credit purchase failed:', {
       requestId,

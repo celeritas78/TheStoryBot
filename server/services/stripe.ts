@@ -8,12 +8,14 @@ import {
 } from '../config';
 
 // Initialize Stripe with secret key and proper error handling
-function initializeStripe() {
+async function initializeStripe(): Promise<Stripe | null> {
   const environment = process.env.NODE_ENV || 'development';
   let stripe: Stripe | null = null;
+  const requestId = Math.random().toString(36).substring(7);
 
   try {
     console.log('Initializing Stripe service...', {
+      requestId,
       timestamp: new Date().toISOString(),
       environment,
       apiVersion: STRIPE_API_VERSION,
@@ -33,29 +35,27 @@ function initializeStripe() {
       }
     });
 
-    // Test the Stripe connection synchronously to ensure it's working
-    const testConnection = async () => {
-      try {
-        await stripe!.paymentMethods.list({ limit: 1 });
-        console.log('Stripe API connection test successful', {
-          timestamp: new Date().toISOString(),
-          environment
-        });
-      } catch (error) {
-        console.error('Stripe API connection test failed:', {
-          error: error instanceof Error ? error.message : 'Unknown error',
-          type: error instanceof Error ? error.constructor.name : 'Unknown',
-          environment,
-          timestamp: new Date().toISOString()
-        });
-        // Don't throw here, just log the error
-      }
-    };
-
-    // Execute the test but don't wait for it
-    void testConnection();
+    // Test the Stripe connection immediately
+    try {
+      await stripe.paymentMethods.list({ limit: 1 });
+      console.log('Stripe API connection test successful', {
+        requestId,
+        timestamp: new Date().toISOString(),
+        environment
+      });
+    } catch (error) {
+      console.error('Stripe API connection test failed:', {
+        requestId,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        type: error instanceof Error ? error.constructor.name : 'Unknown',
+        environment,
+        timestamp: new Date().toISOString()
+      });
+      return null;
+    }
 
     console.log('Stripe service initialized successfully', {
+      requestId,
       timestamp: new Date().toISOString(),
       environment
     });
@@ -63,6 +63,7 @@ function initializeStripe() {
     return stripe;
   } catch (error) {
     console.error('Failed to initialize Stripe:', {
+      requestId,
       error: error instanceof Error ? error.message : 'Unknown error',
       type: error instanceof Error ? error.constructor.name : 'Unknown',
       stack: error instanceof Error ? error.stack : undefined,
@@ -70,19 +71,28 @@ function initializeStripe() {
       timestamp: new Date().toISOString()
     });
     
-    // Instead of throwing, return null and handle the error gracefully
     return null;
   }
 }
 
 // Initialize stripe and handle potential initialization failure
-const stripeInstance = initializeStripe();
-if (!stripeInstance) {
-  console.error('Failed to initialize Stripe service, some payment features may be unavailable');
+let stripeInstance: Stripe | null = null;
+
+// Initialize Stripe immediately but don't block
+void (async () => {
+  stripeInstance = await initializeStripe();
+  if (!stripeInstance) {
+    console.error('Failed to initialize Stripe service, payment features will be unavailable');
+  }
+})();
+
+// Export getter for stripe instance to ensure proper initialization check
+export function getStripe(): Stripe | null {
+  return stripeInstance;
 }
 
-// Export the stripe instance with type assertion
-export const stripe: Stripe | null = stripeInstance;
+// Export for backward compatibility
+export const stripe: Stripe | null = null;
 
 export interface CreatePaymentIntentParams {
   amount: number; // Amount in USD
@@ -106,6 +116,7 @@ export async function createPaymentIntent({
   receiptEmail 
 }: CreatePaymentIntentParams): Promise<PaymentIntentResponse> {
   try {
+    const stripe = getStripe();
     if (!stripe) {
       throw new Error('Stripe service not initialized');
     }

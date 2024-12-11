@@ -1,6 +1,6 @@
 import express from 'express';
 import fs from 'fs';
-import { stripe, createPaymentIntent, confirmPaymentIntent } from './services/stripe';
+import { getStripe, createPaymentIntent, confirmPaymentIntent } from './services/stripe';
 import { eq, sql, and, desc } from 'drizzle-orm';
 import { crypto } from './auth';
 import { z } from 'zod';
@@ -530,6 +530,12 @@ export function setupRoutes(app: express.Application) {
             return res.status(400).json({ error: "Invalid payment transaction" });
           }
           
+          const stripe = getStripe();
+          if (!stripe) {
+            console.error('Stripe service not initialized or unavailable');
+            return res.status(503).json({ error: "Payment service temporarily unavailable" });
+          }
+
           const paymentIntent = await stripe.paymentIntents.retrieve(transaction.stripePaymentId);
           
           return res.json({

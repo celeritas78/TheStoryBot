@@ -86,6 +86,10 @@ export function CreditPurchaseDialog({
       
       const response = await purchaseCredits(amount);
       
+      if (response.error) {
+        throw new Error(response.error.message || 'Failed to initialize payment');
+      }
+      
       if (!response?.clientSecret) {
         throw new Error('No client secret received from server');
       }
