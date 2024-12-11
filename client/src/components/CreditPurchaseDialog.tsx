@@ -61,8 +61,13 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(function PaymentForm(
     );
   }
 
+  const handleFormSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    onSubmit(e);
+  };
+
   return (
-    <form onSubmit={onSubmit} className="space-y-4">
+    <form onSubmit={handleFormSubmit} className="space-y-4">
       <PaymentElement
         options={{
           layout: 'tabs',
@@ -73,6 +78,13 @@ const PaymentForm: React.FC<PaymentFormProps> = React.memo(function PaymentForm(
           },
         }}
       />
+      {/* Test card numbers for development:
+          4242 4242 4242 4242 (Visa - Success)
+          4000 0000 0000 9995 (Visa - Declined)
+          Exp: Any future date, CVC: Any 3 digits */}
+      <div className="text-sm text-gray-500 mb-2">
+        For testing, use card number: 4242 4242 4242 4242
+      </div>
       <Button
         type="submit"
         disabled={isProcessing}
@@ -160,15 +172,20 @@ export function CreditPurchaseDialog({ open, onOpenChange, onSuccess }: CreditPu
     try {
       setPaymentState(state => ({ ...state, status: 'processing', error: null }));
 
-      const elementsInstance = useElements();
-      if (!elementsInstance) {
+      const elements = useElements();
+      if (!elements) {
         throw new Error('Stripe Elements not initialized');
       }
 
-      const result = await stripe.confirmPayment({
-        elements: elementsInstance,
+      const { error } = await stripe.confirmPayment({
+        elements,
         confirmParams: {
           return_url: `${window.location.origin}/credits/confirm`,
+          payment_method_data: {
+            billing_details: {
+              email: window.localStorage.getItem('userEmail') || undefined,
+            },
+          },
         },
       });
 
