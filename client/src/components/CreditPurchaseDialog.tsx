@@ -39,6 +39,16 @@ export function CreditPurchaseDialog({
   const elements = useElements();
   const { toast } = useToast();
 
+  // Update Elements configuration when amount changes
+  useEffect(() => {
+    if (elements) {
+      elements.update({
+        amount: amount * 100, // Convert to cents
+        currency: 'usd'
+      });
+    }
+  }, [amount, elements]);
+
   // Reset payment state when dialog closes
   useEffect(() => {
     if (!open) {

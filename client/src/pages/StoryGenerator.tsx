@@ -128,7 +128,9 @@ export default function StoryGenerator() {
         colorText: '#1f2937',
       },
     } as Appearance,
+    currency: 'usd',
     mode: 'payment',
+    amount: 1000, // Default amount in cents
   }), []);
 
   return (
