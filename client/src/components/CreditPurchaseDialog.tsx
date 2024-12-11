@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useStripe, useElements, PaymentElement, Elements } from "@stripe/react-stripe-js";
-import type { StripeElementsOptions } from "@stripe/stripe-js";
+import type { StripeElementsOptions, Stripe, StripeElements } from "@stripe/stripe-js";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "./ui/dialog";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -23,16 +23,29 @@ const initialPaymentState: PaymentState = {
 };
 
 // Separate component for payment form to prevent re-renders
-function PaymentForm({ amount, isProcessing }: { amount: number; isProcessing: boolean }) {
+function PaymentForm({ 
+  amount, 
+  isProcessing,
+  onSubmit
+}: { 
+  amount: number; 
+  isProcessing: boolean;
+  onSubmit: (e: React.FormEvent<HTMLFormElement>) => Promise<void>;
+}) {
   const stripe = useStripe();
   const elements = useElements();
 
   if (!stripe || !elements) {
-    return null;
+    return (
+      <div className="text-center p-4">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-2" />
+        <p className="text-gray-600">Loading payment form...</p>
+      </div>
+    );
   }
 
   return (
-    <>
+    <form onSubmit={onSubmit} className="space-y-4">
       <PaymentElement 
         options={{
           layout: 'tabs',
@@ -50,7 +63,7 @@ function PaymentForm({ amount, isProcessing }: { amount: number; isProcessing: b
       >
         {isProcessing ? "Processing payment..." : `Pay $${amount}.00`}
       </Button>
-    </>
+    </form>
   );
 }
 
@@ -141,13 +154,23 @@ export function CreditPurchaseDialog({
     initializePayment();
   }, [open, stripe, initializePayment, paymentState.status]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (!stripe || !elements || !paymentState.clientSecret) {
+    if (!stripe || !paymentState.clientSecret) {
       toast({
         title: "Error",
         description: "Payment system not initialized",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const elements = useElements();
+    if (!elements) {
+      toast({
+        title: "Error",
+        description: "Payment form not initialized",
         variant: "destructive",
       });
       return;
@@ -227,7 +250,7 @@ export function CreditPurchaseDialog({
           </DialogDescription>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-4">
           <div className="grid w-full items-center gap-1.5">
             <Label htmlFor="amount">Number of Credits</Label>
             <Input
@@ -260,7 +283,11 @@ export function CreditPurchaseDialog({
 
           {!isProcessing && paymentState.clientSecret && stripe && (
             <Elements stripe={stripe} options={stripeElementsOptions}>
-              <PaymentForm amount={amount} isProcessing={isProcessing} />
+              <PaymentForm 
+                amount={amount} 
+                isProcessing={isProcessing} 
+                onSubmit={handleSubmit}
+              />
             </Elements>
           )}
 
@@ -276,7 +303,7 @@ export function CreditPurchaseDialog({
               )}
             </div>
           )}
-        </form>
+        </div>
       </DialogContent>
     </Dialog>
   );
