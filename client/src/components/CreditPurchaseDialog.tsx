@@ -66,9 +66,10 @@ export const CreditPurchaseDialog = ({
       }
 
       console.log("Setting payment state with client secret");
+      const paymentStatus = response.status as PaymentStatus;
       setPaymentState((state) => ({
         ...state,
-        status: response.status,
+        status: paymentStatus,
         clientSecret: response.clientSecret,
         amount: response.amount,
       }));

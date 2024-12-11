@@ -55,7 +55,11 @@ export type PaymentStatus =
   | 'failed' 
   | 'requires_payment_method'
   | 'requires_confirmation'
-  | 'requires_action';
+  | 'requires_action'
+  | 'canceled'
+  | 'processing'
+  | 'requires_capture'
+  | 'canceled';
 
 export interface PaymentState extends PaymentStateDetails {
   status: PaymentStatus;
