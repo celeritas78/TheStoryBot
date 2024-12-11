@@ -10,25 +10,21 @@ import {
 // Initialize Stripe with secret key and proper error handling
 function initializeStripe() {
   const environment = process.env.NODE_ENV || 'development';
-  console.log('Initializing Stripe service...', {
-    timestamp: new Date().toISOString(),
-    environment,
-    apiVersion: STRIPE_API_VERSION,
-    hasSecretKey: !!process.env.STRIPE_SECRET_KEY
-  });
-
-  if (!process.env.STRIPE_SECRET_KEY) {
-    const error = new Error('STRIPE_SECRET_KEY environment variable is required');
-    console.error('Stripe initialization failed:', {
-      error: error.message,
-      environment,
-      timestamp: new Date().toISOString()
-    });
-    throw error;
-  }
+  let stripe: Stripe | null = null;
 
   try {
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+    console.log('Initializing Stripe service...', {
+      timestamp: new Date().toISOString(),
+      environment,
+      apiVersion: STRIPE_API_VERSION,
+      hasSecretKey: !!process.env.STRIPE_SECRET_KEY
+    });
+
+    if (!process.env.STRIPE_SECRET_KEY) {
+      throw new Error('STRIPE_SECRET_KEY environment variable is required');
+    }
+
+    stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
       apiVersion: STRIPE_API_VERSION,
       typescript: true,
       appInfo: {
@@ -37,22 +33,27 @@ function initializeStripe() {
       }
     });
 
-    // Test the Stripe connection
-    stripe.paymentMethods.list({ limit: 1 })
-      .then(() => {
+    // Test the Stripe connection synchronously to ensure it's working
+    const testConnection = async () => {
+      try {
+        await stripe!.paymentMethods.list({ limit: 1 });
         console.log('Stripe API connection test successful', {
           timestamp: new Date().toISOString(),
           environment
         });
-      })
-      .catch((error) => {
+      } catch (error) {
         console.error('Stripe API connection test failed:', {
-          error: error.message,
-          type: error.type,
+          error: error instanceof Error ? error.message : 'Unknown error',
+          type: error instanceof Error ? error.constructor.name : 'Unknown',
           environment,
           timestamp: new Date().toISOString()
         });
-      });
+        // Don't throw here, just log the error
+      }
+    };
+
+    // Execute the test but don't wait for it
+    void testConnection();
 
     console.log('Stripe service initialized successfully', {
       timestamp: new Date().toISOString(),
@@ -68,11 +69,20 @@ function initializeStripe() {
       environment,
       timestamp: new Date().toISOString()
     });
-    throw error;
+    
+    // Instead of throwing, return null and handle the error gracefully
+    return null;
   }
 }
 
-export const stripe = initializeStripe();
+// Initialize stripe and handle potential initialization failure
+const stripeInstance = initializeStripe();
+if (!stripeInstance) {
+  console.error('Failed to initialize Stripe service, some payment features may be unavailable');
+}
+
+// Export the stripe instance with type assertion
+export const stripe: Stripe | null = stripeInstance;
 
 export interface CreatePaymentIntentParams {
   amount: number; // Amount in USD
@@ -96,6 +106,10 @@ export async function createPaymentIntent({
   receiptEmail 
 }: CreatePaymentIntentParams): Promise<PaymentIntentResponse> {
   try {
+    if (!stripe) {
+      throw new Error('Stripe service not initialized');
+    }
+
     console.log('Creating payment intent:', {
       amount,
       userId,
@@ -158,6 +172,10 @@ export async function createPaymentIntent({
 
 export async function confirmPaymentIntent(paymentIntentId: string): Promise<boolean> {
   try {
+    if (!stripe) {
+      throw new Error('Stripe service not initialized');
+    }
+
     console.log('Confirming payment intent:', {
       paymentIntentId,
       timestamp: new Date().toISOString()

@@ -218,6 +218,14 @@ export function CreditPurchaseDialog({
 
   const isProcessing = paymentState.status === 'processing';
   const showPaymentForm = paymentState.clientSecret && paymentState.status !== 'succeeded';
+  
+  // Set up Stripe Elements options
+  const options: StripeElementsOptions = {
+    clientSecret: paymentState.clientSecret || undefined,
+    appearance: {
+      theme: 'stripe',
+    },
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

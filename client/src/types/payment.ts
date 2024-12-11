@@ -14,18 +14,17 @@ export interface PaymentIntentResponse {
   currentCredits: number;
   projectedTotalCredits: number;
   transactionId: number;
-}
-
-// CreatePaymentResponse extends PaymentIntentResponse with additional fields
-export interface CreatePaymentResponse extends PaymentIntentResponse {
   stripePaymentId?: string;
 }
+
+// CreatePaymentResponse is the same as PaymentIntentResponse
+export type CreatePaymentResponse = PaymentIntentResponse;
 
 export interface PaymentStateDetails {
   creditsToAdd?: number;
   currentCredits?: number;
   projectedTotalCredits?: number;
-  transactionId?: string;
+  transactionId?: number;
 }
 
 export interface PaymentError {

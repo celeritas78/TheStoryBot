@@ -154,8 +154,12 @@ export interface CreditBalance {
   isPremium: boolean;
 }
 
-// Import the response type from payment.ts
-export type { CreatePaymentResponse } from '../types/payment';
+// Import types from payment.ts
+import type { 
+  PaymentIntentResponse,
+  CreditBalanceResponse,
+  PaymentStateDetails
+} from '../types/payment';
 
 export async function getCreditBalance(): Promise<CreditBalance> {
   const response = await fetch(`${API_BASE}/credits/balance`, {
@@ -172,22 +176,67 @@ export async function getCreditBalance(): Promise<CreditBalance> {
   return response.json();
 }
 
-export async function purchaseCredits(amount: number): Promise<CreatePaymentResponse> {
-  const response = await fetch(`${API_BASE}/credits/purchase`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Accept": "application/json",
-    },
-    credentials: 'include',
-    body: JSON.stringify({ amount }),
+export async function purchaseCredits(amount: number): Promise<PaymentIntentResponse> {
+  const requestId = Math.random().toString(36).substring(7);
+  console.log('Initiating credit purchase:', {
+    requestId,
+    amount,
+    timestamp: new Date().toISOString()
   });
 
-  if (!response.ok) {
-    await handleApiError(response);
-  }
+  try {
+    const response = await fetch(`${API_BASE}/credits/purchase`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+      },
+      credentials: 'include',
+      body: JSON.stringify({ amount }),
+    });
 
-  return response.json();
+    if (!response.ok) {
+      await handleApiError(response);
+    }
+
+    const data = await response.json();
+    
+    // Validate the response structure
+    if (!data || typeof data !== 'object') {
+      throw new Error('Invalid response format from server');
+    }
+
+    // Required fields validation
+    const requiredFields = ['clientSecret', 'amount', 'currency', 'status', 'creditsToAdd', 'currentCredits', 'projectedTotalCredits', 'transactionId'];
+    const missingFields = requiredFields.filter(field => !(field in data));
+    
+    if (missingFields.length > 0) {
+      console.error('Missing required fields in response:', {
+        requestId,
+        missingFields,
+        timestamp: new Date().toISOString()
+      });
+      throw new Error(`Invalid response: missing ${missingFields.join(', ')}`);
+    }
+
+    console.log('Credit purchase response received:', {
+      requestId,
+      amount: data.amount,
+      creditsToAdd: data.creditsToAdd,
+      status: data.status,
+      timestamp: new Date().toISOString()
+    });
+
+    return data as CreatePaymentResponse;
+  } catch (error) {
+    console.error('Credit purchase failed:', {
+      requestId,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      timestamp: new Date().toISOString()
+    });
+    throw error instanceof Error ? error : new Error('Failed to process credit purchase');
+  }
 }
 
 export async function confirmCreditPurchase(paymentIntentId: string): Promise<CreditBalance> {

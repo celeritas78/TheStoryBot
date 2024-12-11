@@ -3,6 +3,8 @@ import { setupRoutes } from "./routes";
 import { setupVite, serveStatic } from "./vite";
 import { createServer } from "http";
 import { setupAuth } from "./auth";
+// Import required services
+import { stripe } from './services/stripe';
 
 function log(message: string) {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
@@ -13,6 +15,19 @@ function log(message: string) {
   });
 
   console.log(`${formattedTime} [express] ${message}`);
+}
+// Global error handler for unhandled promise rejections
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection:', {
+    reason,
+    promise,
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Check if critical services are available
+if (!stripe) {
+  console.warn('Stripe service is not initialized. Payment features will be disabled.');
 }
 
 const app = express();
