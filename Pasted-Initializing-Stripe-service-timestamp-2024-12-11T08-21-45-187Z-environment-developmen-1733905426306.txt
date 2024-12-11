@@ -1,0 +1,130 @@
+Initializing Stripe service... {
+  timestamp: '2024-12-11T08:21:45.187Z',
+  environment: 'development',
+  apiVersion: '2024-11-20.acacia',
+  hasSecretKey: true
+}
+Stripe service initialized successfully { timestamp: '2024-12-11T08:21:45.199Z', environment: 'development' }
+Stripe API connection test successful { timestamp: '2024-12-11T08:21:45.948Z', environment: 'development' }
+08:21:46 AM [express] Server initialization complete
+08:21:46 AM [express] Server Details:
+        Port: 5000
+        Environment: development
+        Node Version: v20.16.0
+        Start Time: 2024-12-11T08:21:46.035Z
+      
+
+ ERROR(TypeScript)  Property 'status' does not exist on type 'CreatePaymentResponse'.
+ FILE  /home/runner/CustomBedtimeStories/client/src/components/CreditPurchaseDialog.tsx:82:26
+
+    80 |       console.log('Payment intent created:', {
+    81 |         amount: response.amount,
+  > 82 |         status: response.status,
+       |                          ^^^^^^
+    83 |         timestamp: new Date().toISOString()
+    84 |       });
+    85 |
+
+ ERROR(TypeScript)  Cannot find name 'StripeElementsOptions'.
+ FILE  /home/runner/CustomBedtimeStories/client/src/components/CreditPurchaseDialog.tsx:87:29
+
+    85 |
+    86 |       // Set the options for Stripe Elements
+  > 87 |       const updatedOptions: StripeElementsOptions = {
+       |                             ^^^^^^^^^^^^^^^^^^^^^
+    88 |         clientSecret: response.clientSecret,
+    89 |         appearance: {
+    90 |           theme: 'stripe',
+
+ ERROR(TypeScript)  Property 'creditsToAdd' does not exist on type 'CreatePaymentResponse'.
+ FILE  /home/runner/CustomBedtimeStories/client/src/components/CreditPurchaseDialog.tsx:164:32
+
+    162 |         amount: response.amount,
+    163 |         transactionId: response.transactionId,
+  > 164 |         creditsToAdd: response.creditsToAdd,
+        |                                ^^^^^^^^^^^^
+    165 |         currentCredits: response.currentCredits,
+    166 |         projectedTotalCredits: response.projectedTotalCredits
+    167 |       }));
+
+ ERROR(TypeScript)  Property 'currentCredits' does not exist on type 'CreatePaymentResponse'.
+ FILE  /home/runner/CustomBedtimeStories/client/src/components/CreditPurchaseDialog.tsx:165:34
+
+    163 |         transactionId: response.transactionId,
+    164 |         creditsToAdd: response.creditsToAdd,
+  > 165 |         currentCredits: response.currentCredits,
+        |                                  ^^^^^^^^^^^^^^
+    166 |         projectedTotalCredits: response.projectedTotalCredits
+    167 |       }));
+    168 |
+
+ ERROR(TypeScript)  Property 'projectedTotalCredits' does not exist on type 'CreatePaymentResponse'.
+ FILE  /home/runner/CustomBedtimeStories/client/src/components/CreditPurchaseDialog.tsx:166:41
+
+    164 |         creditsToAdd: response.creditsToAdd,
+    165 |         currentCredits: response.currentCredits,
+  > 166 |         projectedTotalCredits: response.projectedTotalCredits
+        |                                         ^^^^^^^^^^^^^^^^^^^^^
+    167 |       }));
+    168 |
+    169 |     } catch (error) {
+
+ ERROR(TypeScript)  'error' is of type 'unknown'.
+ FILE  /home/runner/CustomBedtimeStories/client/src/components/CreditPurchaseDialog.tsx:170:53
+
+    168 |
+    169 |     } catch (error) {
+  > 170 |       const errorMessage = error instanceof Error ? error.message : "Failed to initialize payment";
+        |                                                     ^^^^^
+    171 |       console.error('Credit purchase initialization failed:', {
+    172 |         error: errorMessage,
+    173 |         amount,
+
+ ERROR(TypeScript)  'error' is of type 'unknown'.
+ FILE  /home/runner/CustomBedtimeStories/client/src/components/CreditPurchaseDialog.tsx:176:41
+
+    174 |         duration: Date.now() - startTime,
+    175 |         timestamp: new Date().toISOString(),
+  > 176 |         stack: error instanceof Error ? error.stack : undefined
+        |                                         ^^^^^
+    177 |       });
+    178 |
+    179 |       setPaymentState(state => ({
+
+ ERROR(TypeScript)  Type 'boolean | "" | null' is not assignable to type 'boolean | undefined'.
+  Type 'null' is not assignable to type 'boolean | undefined'.
+ FILE  /home/runner/CustomBedtimeStories/client/src/components/CreditPurchaseDialog.tsx:282:15
+
+    280 |               max={MAX_CREDITS}
+    281 |               step={1}
+  > 282 |               disabled={isProcessing || showPaymentForm}
+        |               ^^^^^^^^
+    283 |             />
+    284 |             <p className="text-sm text-gray-500">
+    285 |               Total: ${amount}.00 USD
+
+ ERROR(TypeScript)  Cannot find name 'stripeOptions'.
+ FILE  /home/runner/CustomBedtimeStories/client/src/pages/StoryGenerator.tsx:180:57
+
+    178 |               )}
+    179 |             >
+  > 180 |               <Elements stripe={stripePromise} options={stripeOptions}>
+        |                                                         ^^^^^^^^^^^^^
+    181 |                 <CreditPurchaseDialog
+    182 |                   open={showCreditPurchase}
+    183 |                   onOpenChange={setShowCreditPurchase}
+
+ ERROR(TypeScript)  Cannot find namespace 'Stripe'.
+ FILE  /home/runner/CustomBedtimeStories/client/src/types/payment.ts:12:11
+
+    10 |   amount: number;
+    11 |   currency: string;
+  > 12 |   status: Stripe.PaymentIntent.Status;
+       |           ^^^^^^
+    13 |   creditsToAdd: number;
+    14 |   currentCredits: number;
+    15 |   projectedTotalCredits: number;
+
+[TypeScript] Found 10 errors. Watching for file changes.
+Login successful: { id: 35, email: 'sandeep@asterial.in' }
+08:22:29 AM [express] GET /api/credits/balance 304 in 284ms :: {"credits":1,"isPremium":false}
