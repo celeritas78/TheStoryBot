@@ -10,23 +10,27 @@ import {
 
 // Initialize Stripe with secret key and proper error handling
 function initializeStripe() {
+  const environment = process.env.NODE_ENV || 'development';
   console.log('Initializing Stripe service...', {
     timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV,
-    apiVersion: STRIPE_API_VERSION
+    environment,
+    apiVersion: STRIPE_API_VERSION,
+    hasSecretKey: !!process.env.STRIPE_SECRET_KEY
   });
 
   if (!process.env.STRIPE_SECRET_KEY) {
-    console.error('Missing Stripe secret key', {
-      timestamp: new Date().toISOString(),
-      environment: process.env.NODE_ENV
+    const error = new Error('STRIPE_SECRET_KEY environment variable is required');
+    console.error('Stripe initialization failed:', {
+      error: error.message,
+      environment,
+      timestamp: new Date().toISOString()
     });
-    throw new Error('STRIPE_SECRET_KEY is required');
+    throw error;
   }
 
   try {
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: STRIPE_API_VERSION as any,
+      apiVersion: STRIPE_API_VERSION,
       typescript: true,
       appInfo: {
         name: 'Story Credits Purchase',
@@ -34,16 +38,35 @@ function initializeStripe() {
       }
     });
 
+    // Test the Stripe connection
+    stripe.paymentMethods.list({ limit: 1 })
+      .then(() => {
+        console.log('Stripe API connection test successful', {
+          timestamp: new Date().toISOString(),
+          environment
+        });
+      })
+      .catch((error) => {
+        console.error('Stripe API connection test failed:', {
+          error: error.message,
+          type: error.type,
+          environment,
+          timestamp: new Date().toISOString()
+        });
+      });
+
     console.log('Stripe service initialized successfully', {
       timestamp: new Date().toISOString(),
-      environment: process.env.NODE_ENV
+      environment
     });
 
     return stripe;
   } catch (error) {
     console.error('Failed to initialize Stripe:', {
       error: error instanceof Error ? error.message : 'Unknown error',
+      type: error instanceof Error ? error.constructor.name : 'Unknown',
       stack: error instanceof Error ? error.stack : undefined,
+      environment,
       timestamp: new Date().toISOString()
     });
     throw error;
