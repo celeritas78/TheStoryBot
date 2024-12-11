@@ -475,7 +475,7 @@ export function setupRoutes(app: express.Application) {
   // Credit management endpoints
   app.post("/api/credits/purchase", async (req: Request, res: Response) => {
     const startTime = Date.now();
-    const requestId = crypto.randomUUID(); // Add unique request ID for tracking
+    const requestId = crypto.generateVerificationToken(); // Use our custom token generator for request tracking
 
     try {
       if (!req.isAuthenticated || !req.isAuthenticated()) {
