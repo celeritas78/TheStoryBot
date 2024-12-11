@@ -19,7 +19,7 @@ const STRIPE_PUBLISHABLE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
 
 // Initialize Stripe in test mode
 const stripePromise = loadStripe(STRIPE_PUBLISHABLE_KEY, {
-  apiVersion: '2024-11-20',
+  apiVersion: '2023-10-16',
 });
 
 // Validate Stripe initialization

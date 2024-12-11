@@ -1,7 +1,12 @@
 import { db } from '../../db';
 import { users, stories, creditTransactions } from '../../db/schema';
 import { eq, sql, and } from 'drizzle-orm';
-import { MAX_FREE_STORIES, FREE_CREDITS } from '../config';
+import { 
+  MAX_FREE_STORIES, 
+  FREE_CREDITS, 
+  PLANS,
+  TRANSACTION_TYPES 
+} from '../config';
 
 interface SubscriptionStatus {
   isEligible: boolean;
@@ -9,6 +14,7 @@ interface SubscriptionStatus {
   isPremium: boolean;
   totalStories: number;
   message: string;
+  plan?: typeof PLANS.FREE | typeof PLANS.PREMIUM;
 }
 
 // Enhanced Logger utility for subscription operations
@@ -22,7 +28,7 @@ const subscriptionLogger = {
       ...data,
     }));
   },
-  error: (message: string, error: any) => {
+  error: (message: string, error: Error | unknown) => {
     console.error(JSON.stringify({
       timestamp: new Date().toISOString(),
       level: 'ERROR',
@@ -66,6 +72,7 @@ export async function checkStoryCreationEligibility(userId: number): Promise<Sub
       isPremium: user.isPremium,
       totalStories: Number(user.totalStories) || 0,
       message: '',
+      plan: user.isPremium ? PLANS.PREMIUM : PLANS.FREE
     };
 
     // Check eligibility based on plan type
