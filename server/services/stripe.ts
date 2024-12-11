@@ -249,13 +249,27 @@ export async function createPaymentIntent({
       timestamp: new Date().toISOString()
     });
 
-    return {
+    const response = {
       clientSecret: paymentIntent.client_secret!,
       paymentIntentId: paymentIntent.id,
       amount: amountInCents,
       currency: paymentIntent.currency,
       status: paymentIntent.status,
+      creditsToAdd: credits,
+      currentCredits: 0, // This will be set by the credits service
+      projectedTotalCredits: 0, // This will be set by the credits service
+      transactionId: 0, // This will be set by the credits service
+      stripePaymentId: paymentIntent.id
     };
+
+    console.log('Payment intent response created:', {
+      paymentIntentId: paymentIntent.id,
+      amount: amountInCents,
+      status: paymentIntent.status,
+      timestamp: new Date().toISOString()
+    });
+
+    return response;
   } catch (error) {
     console.error('Error creating payment intent:', {
       error: error instanceof Error ? error.message : 'Unknown error',

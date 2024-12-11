@@ -205,8 +205,19 @@ export async function purchaseCredits(amount: number): Promise<PaymentIntentResp
 
     const data = await response.json();
     
+    console.log('Credit purchase response received:', {
+      requestId,
+      responseData: data,
+      timestamp: new Date().toISOString()
+    });
+    
     // Validate the response structure
     if (!data || typeof data !== 'object') {
+      console.error('Invalid response format:', {
+        requestId,
+        receivedData: data,
+        timestamp: new Date().toISOString()
+      });
       throw new Error('Invalid response format from server');
     }
 
@@ -218,10 +229,25 @@ export async function purchaseCredits(amount: number): Promise<PaymentIntentResp
       console.error('Missing required fields in response:', {
         requestId,
         missingFields,
+        receivedFields: Object.keys(data),
+        partialData: {
+          clientSecret: !!data.clientSecret,
+          amount: !!data.amount,
+          status: !!data.status,
+          otherFields: Object.keys(data).filter(k => !requiredFields.includes(k))
+        },
         timestamp: new Date().toISOString()
       });
       throw new Error(`Invalid response: missing ${missingFields.join(', ')}`);
     }
+
+    console.log('Credit purchase response validated:', {
+      requestId,
+      amount: data.amount,
+      creditsToAdd: data.creditsToAdd,
+      status: data.status,
+      timestamp: new Date().toISOString()
+    });
 
     console.log('Credit purchase response received:', {
       requestId,
