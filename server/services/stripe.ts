@@ -14,7 +14,7 @@ if (!process.env.STRIPE_SECRET_KEY) {
 }
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: STRIPE_API_VERSION,
+  apiVersion: STRIPE_API_VERSION as any,
   typescript: true,
   appInfo: {
     name: 'Story Credits Purchase',

@@ -28,16 +28,16 @@ const subscriptionLogger = {
       ...data,
     }));
   },
-  error: (message: string, error: Error | unknown) => {
+  error: (message: string, error: unknown) => {
     console.error(JSON.stringify({
       timestamp: new Date().toISOString(),
       level: 'ERROR',
       service: 'subscription',
       message,
-      error: {
-        message: error.message || error,
-        stack: error.stack,
-      },
+      error: error instanceof Error ? {
+        message: error.message,
+        stack: error.stack
+      } : String(error)
     }));
   }
 };

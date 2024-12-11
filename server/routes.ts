@@ -9,7 +9,11 @@ import multer from 'multer';
 import { saveImageFile } from './services/image-storage';
 import { createPaymentIntent, confirmPaymentIntent } from './services/stripe';
 import bcrypt from 'bcryptjs';
-import { MAX_FREE_STORIES } from './config';
+import { 
+  MAX_FREE_STORIES,
+  PLANS,
+  CREDITS_PER_USD,
+} from './config';
 
 interface UserWithStoryCount {
   credits: number;
@@ -665,7 +669,21 @@ export function setupRoutes(app: express.Application) {
   });
 
   
-      // Credit balance endpoint
+      // Get available plans
+  app.get("/api/subscription/plans", async (req, res) => {
+    try {
+      res.json({
+        plans: PLANS,
+        maxFreeStories: MAX_FREE_STORIES,
+        creditsPerUSD: CREDITS_PER_USD
+      });
+    } catch (error) {
+      console.error('Error fetching subscription plans:', error);
+      res.status(500).json({ error: 'Failed to fetch subscription plans' });
+    }
+  });
+
+  // Credit balance endpoint
   app.get("/api/credits/balance", async (req, res) => {
     try {
       if (!req.isAuthenticated || !req.isAuthenticated()) {
@@ -733,15 +751,17 @@ export function setupRoutes(app: express.Application) {
         return res.status(500).json({ error: 'Failed to check subscription status' });
       }
 
-      // Already checked eligibility above, so if we're here we can proceed
+      // Check eligibility and get subscription status
+      const eligibilityStatus = await subscriptionService.checkStoryCreationEligibility(userId);
+      
       console.log('Story generation request:', {
         userId,
         childName,
         childAge,
         mainCharacter,
         theme,
-        creditsBeforeDeduction: subscriptionStatus.currentCredits,
-        isPremium: subscriptionStatus.isPremium,
+        creditsBeforeDeduction: eligibilityStatus.currentCredits,
+        isPremium: eligibilityStatus.isPremium,
         timestamp: new Date().toISOString()
       });
 
