@@ -146,6 +146,17 @@ export default function StoryGenerator() {
     },
   };
 
+  const stripeOptions: StripeElementsOptions = useMemo(() => ({
+    appearance: {
+      theme: 'stripe',
+      variables: {
+        colorPrimary: '#6366f1',
+        colorBackground: '#ffffff',
+        colorText: '#1f2937',
+      },
+    },
+  }), []);
+
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback} onReset={() => setStory(null)}>
       <div className="min-h-screen bg-gradient-to-b from-purple-50 to-purple-100 p-8">

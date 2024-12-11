@@ -1,4 +1,5 @@
 import { useStripe, useElements, PaymentElement } from "@stripe/react-stripe-js";
+import type { StripeElementsOptions } from "@stripe/stripe-js";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "./ui/dialog";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -6,7 +7,7 @@ import { Label } from "./ui/label";
 import { purchaseCredits } from "../lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
-import type { PaymentState } from "../types/payment";
+import type { PaymentState, CreatePaymentResponse } from "../types/payment";
 
 interface CreditPurchaseDialogProps {
   open: boolean;
@@ -168,12 +169,13 @@ export function CreditPurchaseDialog({
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Failed to initialize payment";
+      const errorStack = error instanceof Error ? error.stack : undefined;
       console.error('Credit purchase initialization failed:', {
         error: errorMessage,
         amount,
         duration: Date.now() - startTime,
         timestamp: new Date().toISOString(),
-        stack: error instanceof Error ? error.stack : undefined
+        stack: errorStack
       });
 
       setPaymentState(state => ({
@@ -279,7 +281,7 @@ export function CreditPurchaseDialog({
               min={MIN_CREDITS}
               max={MAX_CREDITS}
               step={1}
-              disabled={isProcessing || showPaymentForm}
+              disabled={isProcessing || !!showPaymentForm}
             />
             <p className="text-sm text-gray-500">
               Total: ${amount}.00 USD

@@ -1,10 +1,11 @@
 import type { PaymentIntent, StripeError } from '@stripe/stripe-js';
+import type { Stripe } from '@stripe/stripe-js';
 
 export interface PaymentFormData {
   amount: number;
 }
 
-export interface CreatePaymentResponse {
+export interface CreatePaymentResponse extends Omit<PaymentIntent, 'status'> {
   clientSecret: string;
   paymentIntentId: string;
   amount: number;
