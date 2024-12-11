@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useStripe, useElements, PaymentElement, Elements } from "@stripe/react-stripe-js";
-import type { StripeElementsOptions, Stripe, StripeElements } from "@stripe/stripe-js";
+import type { StripeElementsOptions } from "@stripe/stripe-js";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "./ui/dialog";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -22,16 +22,8 @@ const initialPaymentState: PaymentState = {
   amount: null,
 };
 
-// Separate component for payment form to prevent re-renders
-function PaymentForm({ 
-  amount, 
-  isProcessing,
-  onSubmit
-}: { 
-  amount: number; 
-  isProcessing: boolean;
-  onSubmit: (e: React.FormEvent<HTMLFormElement>) => Promise<void>;
-}) {
+// Memoized PaymentForm Component
+const PaymentForm = React.memo(function PaymentForm({ amount, isProcessing, onSubmit }) {
   const stripe = useStripe();
   const elements = useElements();
 
@@ -46,14 +38,14 @@ function PaymentForm({
 
   return (
     <form onSubmit={onSubmit} className="space-y-4">
-      <PaymentElement 
+      <PaymentElement
         options={{
           layout: 'tabs',
           fields: {
             billingDetails: {
               name: 'auto',
-            }
-          }
+            },
+          },
         }}
       />
       <Button
@@ -65,13 +57,9 @@ function PaymentForm({
       </Button>
     </form>
   );
-}
+});
 
-export function CreditPurchaseDialog({
-  open,
-  onOpenChange,
-  onSuccess
-}: CreditPurchaseDialogProps) {
+export function CreditPurchaseDialog({ open, onOpenChange, onSuccess }: CreditPurchaseDialogProps) {
   const [amount, setAmount] = useState(10);
   const MIN_CREDITS = 1;
   const MAX_CREDITS = 100;
@@ -80,29 +68,12 @@ export function CreditPurchaseDialog({
   const { toast } = useToast();
 
   const initializePayment = useCallback(async () => {
-    if (!stripe) {
-      toast({
-        title: "Payment Error",
-        description: "Payment system not initialized properly. Please try again later.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (amount < MIN_CREDITS || amount > MAX_CREDITS) {
-      toast({
-        title: "Invalid Amount",
-        description: `Please choose between ${MIN_CREDITS} and ${MAX_CREDITS} credits`,
-        variant: "destructive",
-      });
-      return;
-    }
+    if (!stripe || paymentState.clientSecret) return;
 
     try {
       setPaymentState(state => ({ ...state, status: 'processing', error: null }));
-      
+
       const response = await purchaseCredits(amount);
-      
       if (!response?.clientSecret || !response?.status) {
         throw new Error('Invalid response from server');
       }
@@ -115,17 +86,16 @@ export function CreditPurchaseDialog({
         creditsToAdd: response.creditsToAdd,
         currentCredits: response.currentCredits,
         projectedTotalCredits: response.projectedTotalCredits,
-        transactionId: response.transactionId
+        transactionId: response.transactionId,
       }));
-
     } catch (error) {
       setPaymentState(state => ({
         ...state,
         status: 'failed',
-        error: { 
+        error: {
           message: error instanceof Error ? error.message : 'Failed to initialize payment',
-          code: error instanceof Error ? error.name : 'UNKNOWN_ERROR'
-        }
+          code: error instanceof Error ? error.name : 'UNKNOWN_ERROR',
+        },
       }));
 
       toast({
@@ -134,43 +104,30 @@ export function CreditPurchaseDialog({
         variant: "destructive",
       });
     }
-  }, [amount, stripe, toast, MIN_CREDITS, MAX_CREDITS]);
+  }, [amount, stripe, paymentState.clientSecret, toast]);
 
-  // Reset state when dialog closes
+  useEffect(() => {
+    if (!open || paymentState.status !== 'idle') return;
+    initializePayment();
+  }, [open, initializePayment, paymentState.status]);
+
   useEffect(() => {
     if (!open) {
-      setPaymentState(initialPaymentState);
-      setAmount(10);
+      setTimeout(() => {
+        setPaymentState(initialPaymentState);
+        setAmount(10);
+      }, 300); // Add delay to prevent immediate state reset
     }
   }, [open]);
-
-  // Single initialization effect
-  useEffect(() => {
-    if (!open || !stripe) return;
-
-    // Only initialize if we're in idle or failed state
-    if (paymentState.status !== 'idle' && paymentState.status !== 'failed') return;
-
-    initializePayment();
-  }, [open, stripe, initializePayment, paymentState.status]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (!stripe || !paymentState.clientSecret) {
+    const elements = useElements();
+    if (!stripe || !paymentState.clientSecret || !elements) {
       toast({
         title: "Error",
         description: "Payment system not initialized",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const elements = useElements();
-    if (!elements) {
-      toast({
-        title: "Error",
-        description: "Payment form not initialized",
         variant: "destructive",
       });
       return;
@@ -182,18 +139,18 @@ export function CreditPurchaseDialog({
       const result = await stripe.confirmPayment({
         elements,
         confirmParams: {
-          return_url: `${window.location.origin}/credits/confirm`
-        }
+          return_url: `${window.location.origin}/credits/confirm`,
+        },
       });
 
       if (result.error) {
         setPaymentState(state => ({
           ...state,
           status: 'failed',
-          error: { 
+          error: {
             message: result.error.message ?? "Payment failed",
-            code: result.error.type
-          }
+            code: result.error.type,
+          },
         }));
         toast({
           title: "Payment failed",
@@ -214,7 +171,7 @@ export function CreditPurchaseDialog({
       setPaymentState(state => ({
         ...state,
         status: 'failed',
-        error: { message: errorMessage }
+        error: { message: errorMessage },
       }));
       toast({
         title: "Error",
@@ -225,8 +182,7 @@ export function CreditPurchaseDialog({
   };
 
   const isProcessing = paymentState.status === 'processing';
-  
-  // Set up Stripe Elements options
+
   const stripeElementsOptions: StripeElementsOptions = {
     clientSecret: paymentState.clientSecret || '',
     appearance: {
@@ -249,7 +205,7 @@ export function CreditPurchaseDialog({
             Add more credits to your account. Each credit allows you to create one story.
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="space-y-4">
           <div className="grid w-full items-center gap-1.5">
             <Label htmlFor="amount">Number of Credits</Label>
@@ -263,31 +219,16 @@ export function CreditPurchaseDialog({
               step={1}
               disabled={isProcessing || !!paymentState.clientSecret}
             />
-            <p className="text-sm text-gray-500">
-              Total: ${amount}.00 USD
-            </p>
+            <p className="text-sm text-gray-500">Total: ${amount}.00 USD</p>
           </div>
-          
-          {paymentState.error && (
-            <div className="text-red-500 text-sm mb-4">
-              {paymentState.error.message}
-            </div>
-          )}
 
-          {isProcessing && (
-            <div className="flex items-center justify-center p-4">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
-              <span className="ml-2">Processing payment...</span>
-            </div>
+          {paymentState.error && (
+            <div className="text-red-500 text-sm mb-4">{paymentState.error.message}</div>
           )}
 
           {!isProcessing && paymentState.clientSecret && stripe && (
             <Elements stripe={stripe} options={stripeElementsOptions}>
-              <PaymentForm 
-                amount={amount} 
-                isProcessing={isProcessing} 
-                onSubmit={handleSubmit}
-              />
+              <PaymentForm amount={amount} isProcessing={isProcessing} onSubmit={handleSubmit} />
             </Elements>
           )}
 
