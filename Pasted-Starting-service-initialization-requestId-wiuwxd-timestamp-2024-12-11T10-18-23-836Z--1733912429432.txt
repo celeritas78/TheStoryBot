@@ -1,0 +1,496 @@
+Starting service initialization... {
+  requestId: 'wiuwxd',
+  timestamp: '2024-12-11T10:18:23.836Z',
+  environment: 'development',
+  hasStripeKey: true
+}
+Starting Stripe service initialization... { environment: 'development', timestamp: '2024-12-11T10:18:23.838Z' }
+Initializing Stripe service... {
+  requestId: 'apebuq',
+  attempt: 1,
+  timestamp: '2024-12-11T10:18:23.839Z',
+  environment: 'development',
+  apiVersion: '2024-11-20.acacia'
+}
+Stripe API connection verified successfully {
+  requestId: 'apebuq',
+  attempt: 1,
+  timestamp: '2024-12-11T10:18:24.175Z',
+  environment: 'development',
+  hasResults: true
+}
+Stripe service initialized successfully {
+  environment: 'development',
+  duration: 337,
+  timestamp: '2024-12-11T10:18:24.175Z'
+}
+Stripe service verified and ready { timestamp: '2024-12-11T10:18:24.362Z' }
+Services initialized successfully {
+  requestId: 'wiuwxd',
+  duration: 526,
+  timestamp: '2024-12-11T10:18:24.362Z',
+  environment: 'development',
+  stripeEnabled: true
+}
+10:18:24 AM [express] Server initialization complete
+10:18:24 AM [express] Server Details:
+          Port: 5000
+          Environment: development
+          Node Version: v20.16.0
+          Start Time: 2024-12-11T10:18:24.917Z
+        
+
+[TypeScript] Found 0 errors. Watching for file changes.
+Login successful: { id: 35, email: 'sandeep@asterial.in' }
+10:18:59 AM [express] GET /api/credits/balance 304 in 285ms :: {"credits":1,"isPremium":false}
+Credit purchase request: {
+  requestId: '5f35a56d3224aceb926a1228c391d93cf210e477226a717b636ae9a21b3a4ee3',
+  userId: 35,
+  userEmail: 'sandeep@asterial.in',
+  currentCredits: 1,
+  isPremium: false,
+  requestedAmount: 10,
+  timestamp: '2024-12-11T10:19:03.170Z'
+}
+Credit purchase request: {
+  requestId: '591b55a34366a292e142e0ebadac6b6e6c45a1793ac349fb6bc82c2eaec2eef9',
+  userId: 35,
+  userEmail: 'sandeep@asterial.in',
+  currentCredits: 1,
+  isPremium: false,
+  requestedAmount: 10,
+  timestamp: '2024-12-11T10:19:03.223Z'
+}
+Creating payment intent: {
+  amount: 10,
+  userId: 35,
+  amountInCents: 1000,
+  creditsToAdd: 10,
+  timestamp: '2024-12-11T10:19:03.402Z',
+  environment: 'development'
+}
+Creating payment intent: {
+  amount: 10,
+  userId: 35,
+  amountInCents: 1000,
+  creditsToAdd: 10,
+  timestamp: '2024-12-11T10:19:03.461Z',
+  environment: 'development'
+}
+Payment intent created: {
+  paymentIntentId: 'pi_3QUn0VSBc9gulaWv05ZDha3Y',
+  amount: 1000,
+  credits: 10,
+  status: 'requires_payment_method',
+  timestamp: '2024-12-11T10:19:03.846Z'
+}
+Payment intent response created: {
+  paymentIntentId: 'pi_3QUn0VSBc9gulaWv05ZDha3Y',
+  amount: 1000,
+  status: 'requires_payment_method',
+  timestamp: '2024-12-11T10:19:03.846Z'
+}
+Stripe payment intent created: {
+  requestId: '5f35a56d3224aceb926a1228c391d93cf210e477226a717b636ae9a21b3a4ee3',
+  userId: 35,
+  amount: 10,
+  creditsToAdd: 10,
+  paymentIntentId: 'pi_3QUn0VSBc9gulaWv05ZDha3Y',
+  status: 'requires_payment_method',
+  timestamp: '2024-12-11T10:19:03.846Z'
+}
+Payment intent created: {
+  paymentIntentId: 'pi_3QUn0VSBc9gulaWv1CcnOjLH',
+  amount: 1000,
+  credits: 10,
+  status: 'requires_payment_method',
+  timestamp: '2024-12-11T10:19:03.876Z'
+}
+Payment intent response created: {
+  paymentIntentId: 'pi_3QUn0VSBc9gulaWv1CcnOjLH',
+  amount: 1000,
+  status: 'requires_payment_method',
+  timestamp: '2024-12-11T10:19:03.877Z'
+}
+Stripe payment intent created: {
+  requestId: '591b55a34366a292e142e0ebadac6b6e6c45a1793ac349fb6bc82c2eaec2eef9',
+  userId: 35,
+  amount: 10,
+  creditsToAdd: 10,
+  paymentIntentId: 'pi_3QUn0VSBc9gulaWv1CcnOjLH',
+  status: 'requires_payment_method',
+  timestamp: '2024-12-11T10:19:03.877Z'
+}
+Credit transaction created: {
+  requestId: '5f35a56d3224aceb926a1228c391d93cf210e477226a717b636ae9a21b3a4ee3',
+  userId: 35,
+  transactionId: 25,
+  amount: 1000,
+  creditsToAdd: 10,
+  projectedTotalCredits: 11,
+  status: 'pending',
+  duration: '1499ms',
+  timestamp: '2024-12-11T10:19:04.123Z'
+}
+Credit transaction created: {
+  requestId: '591b55a34366a292e142e0ebadac6b6e6c45a1793ac349fb6bc82c2eaec2eef9',
+  userId: 35,
+  transactionId: 26,
+  amount: 1000,
+  creditsToAdd: 10,
+  projectedTotalCredits: 11,
+  status: 'pending',
+  duration: '1506ms',
+  timestamp: '2024-12-11T10:19:04.166Z'
+}
+Creating response data: {
+  requestId: '5f35a56d3224aceb926a1228c391d93cf210e477226a717b636ae9a21b3a4ee3',
+  transactionId: 25,
+  status: 'requires_payment_method',
+  timestamp: '2024-12-11T10:19:04.354Z'
+}
+Response data created: {
+  requestId: '5f35a56d3224aceb926a1228c391d93cf210e477226a717b636ae9a21b3a4ee3',
+  hasClientSecret: true,
+  hasStatus: true,
+  status: 'requires_payment_method',
+  timestamp: '2024-12-11T10:19:04.354Z'
+}
+Sending new credit purchase response: {
+  requestId: '5f35a56d3224aceb926a1228c391d93cf210e477226a717b636ae9a21b3a4ee3',
+  transactionId: 25,
+  amount: 1000,
+  status: 'requires_payment_method',
+  creditsToAdd: 10,
+  timestamp: '2024-12-11T10:19:04.354Z'
+}
+10:19:04 AM [express] POST /api/credits/purchase 200 in 1731ms :: {"clientSecret":"pi_3QUn0VSBc9gulaW…
+Creating response data: {
+  requestId: '591b55a34366a292e142e0ebadac6b6e6c45a1793ac349fb6bc82c2eaec2eef9',
+  transactionId: 26,
+  status: 'requires_payment_method',
+  timestamp: '2024-12-11T10:19:04.404Z'
+}
+Response data created: {
+  requestId: '591b55a34366a292e142e0ebadac6b6e6c45a1793ac349fb6bc82c2eaec2eef9',
+  hasClientSecret: true,
+  hasStatus: true,
+  status: 'requires_payment_method',
+  timestamp: '2024-12-11T10:19:04.404Z'
+}
+Sending new credit purchase response: {
+  requestId: '591b55a34366a292e142e0ebadac6b6e6c45a1793ac349fb6bc82c2eaec2eef9',
+  transactionId: 26,
+  amount: 1000,
+  status: 'requires_payment_method',
+  creditsToAdd: 10,
+  timestamp: '2024-12-11T10:19:04.404Z'
+}
+10:19:04 AM [express] POST /api/credits/purchase 200 in 1745ms :: {"clientSecret":"pi_3QUn0VSBc9gulaW…
+Returning existing pending transaction: {
+  requestId: '9470643bf7057fa30ae646c2198a03a785e14b7e3faa048c8209462af0a7cbfa',
+  userId: 35,
+  transactionId: 26,
+  amount: 10,
+  timestamp: '2024-12-11T10:19:05.011Z'
+}
+Retrieved payment intent: {
+  requestId: '9470643bf7057fa30ae646c2198a03a785e14b7e3faa048c8209462af0a7cbfa',
+  paymentIntentId: 'pi_3QUn0VSBc9gulaWv1CcnOjLH',
+  status: 'requires_payment_method',
+  timestamp: '2024-12-11T10:19:05.237Z'
+}
+Sending credit purchase response: {
+  requestId: '9470643bf7057fa30ae646c2198a03a785e14b7e3faa048c8209462af0a7cbfa',
+  transactionId: 26,
+  amount: 1000,
+  status: 'requires_payment_method',
+  creditsToAdd: 10,
+  timestamp: '2024-12-11T10:19:05.237Z'
+}
+10:19:05 AM [express] POST /api/credits/purchase 200 in 508ms :: {"clientSecret":"pi_3QUn0VSBc9gulaWv…
+Returning existing pending transaction: {
+  requestId: 'ad4920c623f2378d2a22612fc02f28beac539cee32cdefcb70e4f05575c8bc3f',
+  userId: 35,
+  transactionId: 26,
+  amount: 10,
+  timestamp: '2024-12-11T10:19:05.375Z'
+}
+Retrieved payment intent: {
+  requestId: 'ad4920c623f2378d2a22612fc02f28beac539cee32cdefcb70e4f05575c8bc3f',
+  paymentIntentId: 'pi_3QUn0VSBc9gulaWv1CcnOjLH',
+  status: 'requires_payment_method',
+  timestamp: '2024-12-11T10:19:05.598Z'
+}
+Sending credit purchase response: {
+  requestId: 'ad4920c623f2378d2a22612fc02f28beac539cee32cdefcb70e4f05575c8bc3f',
+  transactionId: 26,
+  amount: 1000,
+  status: 'requires_payment_method',
+  creditsToAdd: 10,
+  timestamp: '2024-12-11T10:19:05.598Z'
+}
+10:19:05 AM [express] POST /api/credits/purchase 200 in 496ms :: {"clientSecret":"pi_3QUn0VSBc9gulaWv…
+Returning existing pending transaction: {
+  requestId: '9ca41e9c5c266faef8a33be130e3b12c2fdfcfebd7b6d1766ce06fa468f13bd4',
+  userId: 35,
+  transactionId: 26,
+  amount: 10,
+  timestamp: '2024-12-11T10:19:05.823Z'
+}
+Retrieved payment intent: {
+  requestId: '9ca41e9c5c266faef8a33be130e3b12c2fdfcfebd7b6d1766ce06fa468f13bd4',
+  paymentIntentId: 'pi_3QUn0VSBc9gulaWv1CcnOjLH',
+  status: 'requires_payment_method',
+  timestamp: '2024-12-11T10:19:06.049Z'
+}
+Sending credit purchase response: {
+  requestId: '9ca41e9c5c266faef8a33be130e3b12c2fdfcfebd7b6d1766ce06fa468f13bd4',
+  transactionId: 26,
+  amount: 1000,
+  status: 'requires_payment_method',
+  creditsToAdd: 10,
+  timestamp: '2024-12-11T10:19:06.049Z'
+}
+10:19:06 AM [express] POST /api/credits/purchase 200 in 466ms :: {"clientSecret":"pi_3QUn0VSBc9gulaWv…
+Returning existing pending transaction: {
+  requestId: '0da181580612372f66253c6eb1c6ead10808007ac16701c93285f6cacbe1d563',
+  userId: 35,
+  transactionId: 26,
+  amount: 10,
+  timestamp: '2024-12-11T10:19:06.316Z'
+}
+Retrieved payment intent: {
+  requestId: '0da181580612372f66253c6eb1c6ead10808007ac16701c93285f6cacbe1d563',
+  paymentIntentId: 'pi_3QUn0VSBc9gulaWv1CcnOjLH',
+  status: 'requires_payment_method',
+  timestamp: '2024-12-11T10:19:06.545Z'
+}
+Sending credit purchase response: {
+  requestId: '0da181580612372f66253c6eb1c6ead10808007ac16701c93285f6cacbe1d563',
+  transactionId: 26,
+  amount: 1000,
+  status: 'requires_payment_method',
+  creditsToAdd: 10,
+  timestamp: '2024-12-11T10:19:06.545Z'
+}
+10:19:06 AM [express] POST /api/credits/purchase 200 in 504ms :: {"clientSecret":"pi_3QUn0VSBc9gulaWv…
+Returning existing pending transaction: {
+  requestId: 'c66a56862f52d307308ab4e580d6ff617f7e7b81aeab217668570350e995283a',
+  userId: 35,
+  transactionId: 26,
+  amount: 10,
+  timestamp: '2024-12-11T10:19:06.736Z'
+}
+Retrieved payment intent: {
+  requestId: 'c66a56862f52d307308ab4e580d6ff617f7e7b81aeab217668570350e995283a',
+  paymentIntentId: 'pi_3QUn0VSBc9gulaWv1CcnOjLH',
+  status: 'requires_payment_method',
+  timestamp: '2024-12-11T10:19:06.966Z'
+}
+Sending credit purchase response: {
+  requestId: 'c66a56862f52d307308ab4e580d6ff617f7e7b81aeab217668570350e995283a',
+  transactionId: 26,
+  amount: 1000,
+  status: 'requires_payment_method',
+  creditsToAdd: 10,
+  timestamp: '2024-12-11T10:19:06.966Z'
+}
+10:19:06 AM [express] POST /api/credits/purchase 200 in 511ms :: {"clientSecret":"pi_3QUn0VSBc9gulaWv…
+Returning existing pending transaction: {
+  requestId: '31f8039fa3ce7fae478d5fab2fa1d339ffe2d90eef27d733d32d0d831679b63f',
+  userId: 35,
+  transactionId: 26,
+  amount: 10,
+  timestamp: '2024-12-11T10:19:07.539Z'
+}
+Retrieved payment intent: {
+  requestId: '31f8039fa3ce7fae478d5fab2fa1d339ffe2d90eef27d733d32d0d831679b63f',
+  paymentIntentId: 'pi_3QUn0VSBc9gulaWv1CcnOjLH',
+  status: 'requires_payment_method',
+  timestamp: '2024-12-11T10:19:07.764Z'
+}
+Sending credit purchase response: {
+  requestId: '31f8039fa3ce7fae478d5fab2fa1d339ffe2d90eef27d733d32d0d831679b63f',
+  transactionId: 26,
+  amount: 1000,
+  status: 'requires_payment_method',
+  creditsToAdd: 10,
+  timestamp: '2024-12-11T10:19:07.764Z'
+}
+10:19:07 AM [express] POST /api/credits/purchase 200 in 506ms :: {"clientSecret":"pi_3QUn0VSBc9gulaWv…
+Returning existing pending transaction: {
+  requestId: '12b49f18b9ac44177e5cb48a5a4e33cf104158714eec2df81761b2985504ca5c',
+  userId: 35,
+  transactionId: 26,
+  amount: 10,
+  timestamp: '2024-12-11T10:19:07.886Z'
+}
+Retrieved payment intent: {
+  requestId: '12b49f18b9ac44177e5cb48a5a4e33cf104158714eec2df81761b2985504ca5c',
+  paymentIntentId: 'pi_3QUn0VSBc9gulaWv1CcnOjLH',
+  status: 'requires_payment_method',
+  timestamp: '2024-12-11T10:19:08.109Z'
+}
+Sending credit purchase response: {
+  requestId: '12b49f18b9ac44177e5cb48a5a4e33cf104158714eec2df81761b2985504ca5c',
+  transactionId: 26,
+  amount: 1000,
+  status: 'requires_payment_method',
+  creditsToAdd: 10,
+  timestamp: '2024-12-11T10:19:08.110Z'
+}
+10:19:08 AM [express] POST /api/credits/purchase 200 in 495ms :: {"clientSecret":"pi_3QUn0VSBc9gulaWv…
+Returning existing pending transaction: {
+  requestId: '65eedf48b269bc79b5a7cbe18d27a932802f9a056da26ec5ccab62df372780c6',
+  userId: 35,
+  transactionId: 26,
+  amount: 10,
+  timestamp: '2024-12-11T10:19:08.379Z'
+}
+Retrieved payment intent: {
+  requestId: '65eedf48b269bc79b5a7cbe18d27a932802f9a056da26ec5ccab62df372780c6',
+  paymentIntentId: 'pi_3QUn0VSBc9gulaWv1CcnOjLH',
+  status: 'requires_payment_method',
+  timestamp: '2024-12-11T10:19:08.600Z'
+}
+Sending credit purchase response: {
+  requestId: '65eedf48b269bc79b5a7cbe18d27a932802f9a056da26ec5ccab62df372780c6',
+  transactionId: 26,
+  amount: 1000,
+  status: 'requires_payment_method',
+  creditsToAdd: 10,
+  timestamp: '2024-12-11T10:19:08.600Z'
+}
+10:19:08 AM [express] POST /api/credits/purchase 200 in 502ms :: {"clientSecret":"pi_3QUn0VSBc9gulaWv…
+Returning existing pending transaction: {
+  requestId: '6353dfaa3ce82b50320ed17731506af97de8b829d066ffebb491733426658df6',
+  userId: 35,
+  transactionId: 26,
+  amount: 10,
+  timestamp: '2024-12-11T10:19:08.829Z'
+}
+Retrieved payment intent: {
+  requestId: '6353dfaa3ce82b50320ed17731506af97de8b829d066ffebb491733426658df6',
+  paymentIntentId: 'pi_3QUn0VSBc9gulaWv1CcnOjLH',
+  status: 'requires_payment_method',
+  timestamp: '2024-12-11T10:19:09.171Z'
+}
+Sending credit purchase response: {
+  requestId: '6353dfaa3ce82b50320ed17731506af97de8b829d066ffebb491733426658df6',
+  transactionId: 26,
+  amount: 1000,
+  status: 'requires_payment_method',
+  creditsToAdd: 10,
+  timestamp: '2024-12-11T10:19:09.171Z'
+}
+10:19:09 AM [express] POST /api/credits/purchase 200 in 617ms :: {"clientSecret":"pi_3QUn0VSBc9gulaWv…
+Returning existing pending transaction: {
+  requestId: 'ae24c1db5503f47ffe186c19f8933043dd6d62295dc5e190ea70768f1349ebd3',
+  userId: 35,
+  transactionId: 26,
+  amount: 10,
+  timestamp: '2024-12-11T10:19:09.224Z'
+}
+Retrieved payment intent: {
+  requestId: 'ae24c1db5503f47ffe186c19f8933043dd6d62295dc5e190ea70768f1349ebd3',
+  paymentIntentId: 'pi_3QUn0VSBc9gulaWv1CcnOjLH',
+  status: 'requires_payment_method',
+  timestamp: '2024-12-11T10:19:09.441Z'
+}
+Sending credit purchase response: {
+  requestId: 'ae24c1db5503f47ffe186c19f8933043dd6d62295dc5e190ea70768f1349ebd3',
+  transactionId: 26,
+  amount: 1000,
+  status: 'requires_payment_method',
+  creditsToAdd: 10,
+  timestamp: '2024-12-11T10:19:09.441Z'
+}
+10:19:09 AM [express] POST /api/credits/purchase 200 in 502ms :: {"clientSecret":"pi_3QUn0VSBc9gulaWv…
+Returning existing pending transaction: {
+  requestId: '5ab573aa86a06d3cf775329878118488085e18957e9ce100e568303e76bc4ef2',
+  userId: 35,
+  transactionId: 26,
+  amount: 10,
+  timestamp: '2024-12-11T10:19:09.783Z'
+}
+Retrieved payment intent: {
+  requestId: '5ab573aa86a06d3cf775329878118488085e18957e9ce100e568303e76bc4ef2',
+  paymentIntentId: 'pi_3QUn0VSBc9gulaWv1CcnOjLH',
+  status: 'requires_payment_method',
+  timestamp: '2024-12-11T10:19:10.005Z'
+}
+Sending credit purchase response: {
+  requestId: '5ab573aa86a06d3cf775329878118488085e18957e9ce100e568303e76bc4ef2',
+  transactionId: 26,
+  amount: 1000,
+  status: 'requires_payment_method',
+  creditsToAdd: 10,
+  timestamp: '2024-12-11T10:19:10.005Z'
+}
+10:19:10 AM [express] POST /api/credits/purchase 200 in 463ms :: {"clientSecret":"pi_3QUn0VSBc9gulaWv…
+Returning existing pending transaction: {
+  requestId: '85aff462193cf69613e4d649d8352939d66ca7406aa3d4504c26b9059ec6911e',
+  userId: 35,
+  transactionId: 26,
+  amount: 10,
+  timestamp: '2024-12-11T10:19:10.455Z'
+}
+Retrieved payment intent: {
+  requestId: '85aff462193cf69613e4d649d8352939d66ca7406aa3d4504c26b9059ec6911e',
+  paymentIntentId: 'pi_3QUn0VSBc9gulaWv1CcnOjLH',
+  status: 'requires_payment_method',
+  timestamp: '2024-12-11T10:19:10.682Z'
+}
+Sending credit purchase response: {
+  requestId: '85aff462193cf69613e4d649d8352939d66ca7406aa3d4504c26b9059ec6911e',
+  transactionId: 26,
+  amount: 1000,
+  status: 'requires_payment_method',
+  creditsToAdd: 10,
+  timestamp: '2024-12-11T10:19:10.682Z'
+}
+10:19:10 AM [express] POST /api/credits/purchase 200 in 506ms :: {"clientSecret":"pi_3QUn0VSBc9gulaWv…
+Returning existing pending transaction: {
+  requestId: '1bdb5750213bf65ec00f54c872a248f714479280fbac5ebbfebd6dd4f89e27ab',
+  userId: 35,
+  transactionId: 26,
+  amount: 10,
+  timestamp: '2024-12-11T10:19:12.088Z'
+}
+Retrieved payment intent: {
+  requestId: '1bdb5750213bf65ec00f54c872a248f714479280fbac5ebbfebd6dd4f89e27ab',
+  paymentIntentId: 'pi_3QUn0VSBc9gulaWv1CcnOjLH',
+  status: 'requires_payment_method',
+  timestamp: '2024-12-11T10:19:12.305Z'
+}
+Sending credit purchase response: {
+  requestId: '1bdb5750213bf65ec00f54c872a248f714479280fbac5ebbfebd6dd4f89e27ab',
+  transactionId: 26,
+  amount: 1000,
+  status: 'requires_payment_method',
+  creditsToAdd: 10,
+  timestamp: '2024-12-11T10:19:12.306Z'
+}
+10:19:12 AM [express] POST /api/credits/purchase 200 in 499ms :: {"clientSecret":"pi_3QUn0VSBc9gulaWv…
+Returning existing pending transaction: {
+  requestId: '152635c8b0dae40a0cc6f39f1059e9b79836cff2aed3c84e9c0b48c1644935d8',
+  userId: 35,
+  transactionId: 26,
+  amount: 10,
+  timestamp: '2024-12-11T10:19:12.935Z'
+}
+Retrieved payment intent: {
+  requestId: '152635c8b0dae40a0cc6f39f1059e9b79836cff2aed3c84e9c0b48c1644935d8',
+  paymentIntentId: 'pi_3QUn0VSBc9gulaWv1CcnOjLH',
+  status: 'requires_payment_method',
+  timestamp: '2024-12-11T10:19:13.156Z'
+}
+Sending credit purchase response: {
+  requestId: '152635c8b0dae40a0cc6f39f1059e9b79836cff2aed3c84e9c0b48c1644935d8',
+  transactionId: 26,
+  amount: 1000,
+  status: 'requires_payment_method',
+  creditsToAdd: 10,
+  timestamp: '2024-12-11T10:19:13.156Z'
+}
