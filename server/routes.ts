@@ -3,7 +3,6 @@ import fs from 'fs';
 import { stripe, createPaymentIntent, confirmPaymentIntent } from './services/stripe';
 import { eq, sql, and, desc } from 'drizzle-orm';
 import { crypto } from './auth';
-import { CREDITS_PER_USD, MIN_CREDITS_PURCHASE, MAX_CREDITS_PURCHASE, STRIPE_CURRENCY } from './config';
 import { z } from 'zod';
 import { db } from '../db';
 import { stories, storySegments, users, creditTransactions } from '../db/schema';
@@ -14,6 +13,14 @@ import bcrypt from 'bcryptjs';
 import { 
   MAX_FREE_STORIES,
   PLANS,
+  CREDITS_PER_USD,
+  MAX_CREDITS_PURCHASE,
+  MIN_CREDITS_PURCHASE,
+  FREE_CREDITS,
+  STRIPE_CURRENCY,
+  STRIPE_PAYMENT_MODE,
+  STRIPE_STATEMENT_DESCRIPTOR,
+  STRIPE_STATEMENT_DESCRIPTOR_SUFFIX
 } from './config';
 
 interface UserWithStoryCount {
@@ -38,16 +45,6 @@ import {
 } from './services/openai';
 import { sendErrorResponse } from './utils/error';
 import { subscriptionService } from './services/subscription';
-import { 
-  CREDITS_PER_USD, 
-  MAX_CREDITS_PURCHASE, 
-  MIN_CREDITS_PURCHASE,
-  FREE_CREDITS,
-  STRIPE_CURRENCY,
-  STRIPE_PAYMENT_MODE,
-  STRIPE_STATEMENT_DESCRIPTOR,
-  STRIPE_STATEMENT_DESCRIPTOR_SUFFIX
-} from './config';
 import { 
   getAudioFilePath, 
   audioFileExists, 
@@ -529,6 +526,11 @@ export function setupRoutes(app: express.Application) {
           });
           
           // Get payment intent from Stripe
+          if (!transaction.stripePaymentId) {
+            console.error('Missing stripePaymentId for transaction:', transaction.id);
+            return res.status(400).json({ error: "Invalid payment transaction" });
+          }
+          
           const paymentIntent = await stripe.paymentIntents.retrieve(transaction.stripePaymentId);
           
           return res.json({

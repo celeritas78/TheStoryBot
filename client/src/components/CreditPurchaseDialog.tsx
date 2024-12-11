@@ -20,6 +20,9 @@ const initialPaymentState: PaymentState = {
   clientSecret: null,
   amount: null,
   transactionId: null,
+  creditsToAdd: null,
+  currentCredits: null,
+  projectedTotalCredits: null,
 };
 
 export function CreditPurchaseDialog({
