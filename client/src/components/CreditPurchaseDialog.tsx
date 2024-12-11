@@ -38,20 +38,57 @@ const PaymentForm = ({
     }
 
     try {
-      const { error } = await stripe.confirmPayment({
+      const { error, paymentIntent } = await stripe.confirmPayment({
         elements,
-        confirmParams: { return_url: `${window.location.origin}/credits/confirm` },
+        confirmParams: { 
+          return_url: `${window.location.origin}/credits/confirm`,
+          payment_method_data: {
+            billing_details: {
+              email: window.localStorage.getItem('userEmail') || undefined,
+            },
+          },
+        },
+        redirect: 'if_required',
       });
 
       if (error) {
-        throw error;
+        if (error.type === 'card_error' || error.type === 'validation_error') {
+          toast({ 
+            title: "Payment Error", 
+            description: error.message || "Your card was declined", 
+            variant: "destructive" 
+          });
+        } else {
+          toast({ 
+            title: "Payment Error", 
+            description: "An unexpected error occurred", 
+            variant: "destructive" 
+          });
+        }
+        return;
       }
 
-      toast({ title: "Payment successful", description: `Added ${amount} credits to your account` });
-      onSuccess?.();
+      if (paymentIntent?.status === 'succeeded') {
+        toast({ 
+          title: "Payment Successful", 
+          description: `Added ${amount} credits to your account`, 
+        });
+        onSuccess?.();
+      } else if (paymentIntent?.status === 'requires_action') {
+        toast({ 
+          title: "Authentication Required", 
+          description: "Please complete the authentication process", 
+        });
+        // The payment requires additional authentication steps
+        // The stripe.confirmPayment will handle the redirect automatically
+      }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Payment failed";
-      toast({ title: "Payment Error", description: errorMessage, variant: "destructive" });
+      console.error('Payment confirmation error:', error);
+      toast({ 
+        title: "Payment Error", 
+        description: "An unexpected error occurred while processing your payment", 
+        variant: "destructive" 
+      });
     }
   };
 
