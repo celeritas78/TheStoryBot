@@ -9,6 +9,9 @@ export interface CreatePaymentResponse {
   transactionId: number;
   amount: number;
   currency: string;
+  creditsToAdd: number;
+  currentCredits: number;
+  projectedTotalCredits: number;
 }
 
 export interface PaymentError {
@@ -16,6 +19,10 @@ export interface PaymentError {
   code?: string;
   decline_code?: string;
   type?: string;
+  details?: string;
+  min?: number;
+  max?: number;
+  requested?: number;
 }
 
 export interface PaymentConfirmationResponse {
@@ -24,7 +31,14 @@ export interface PaymentConfirmationResponse {
   isPremium: boolean;
 }
 
-export type PaymentStatus = 'idle' | 'processing' | 'succeeded' | 'failed' | 'requires_action';
+export type PaymentStatus = 
+  | 'idle' 
+  | 'processing' 
+  | 'succeeded' 
+  | 'failed' 
+  | 'requires_payment_method'
+  | 'requires_confirmation'
+  | 'requires_action';
 
 export interface PaymentState {
   status: PaymentStatus;
@@ -32,6 +46,9 @@ export interface PaymentState {
   clientSecret: string | null;
   amount: number | null;
   transactionId: number | null;
+  creditsToAdd: number | null;
+  currentCredits: number | null;
+  projectedTotalCredits: number | null;
 }
 
 export interface StripePaymentResult {
@@ -41,4 +58,18 @@ export interface StripePaymentResult {
 
 export interface StripePaymentConfirmation {
   error?: StripeError;
+  paymentIntent?: PaymentIntent;
+}
+
+export interface CreditPurchaseError {
+  error: string;
+  details?: string;
+  min?: number;
+  max?: number;
+  requested?: number;
+}
+
+export interface CreditBalanceResponse {
+  credits: number;
+  isPremium: boolean;
 }

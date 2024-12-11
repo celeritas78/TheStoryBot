@@ -473,9 +473,12 @@ export function setupRoutes(app: express.Application) {
   // Credit management endpoints
   app.post("/api/credits/purchase", async (req: Request, res: Response) => {
     const startTime = Date.now();
+    const requestId = crypto.randomUUID(); // Add unique request ID for tracking
+
     try {
       if (!req.isAuthenticated || !req.isAuthenticated()) {
         console.log('Unauthorized credit purchase attempt', {
+          requestId,
           timestamp: new Date().toISOString(),
           ip: req.ip,
           path: req.path
@@ -489,11 +492,53 @@ export function setupRoutes(app: express.Application) {
 
       if (!userId) {
         console.error('User ID missing in authenticated request', {
+          requestId,
           timestamp: new Date().toISOString(),
           session: req.session.id,
           path: req.path
         });
         return res.status(401).json({ error: "Invalid user session" });
+      }
+
+      // Check for existing pending transaction
+      const existingTransaction = await db
+        .select()
+        .from(creditTransactions)
+        .where(and(
+          eq(creditTransactions.userId, userId),
+          eq(creditTransactions.status, 'pending'),
+          eq(creditTransactions.amount, amount * 100) // amount in cents
+        ))
+        .orderBy(desc(creditTransactions.createdAt))
+        .limit(1);
+
+      if (existingTransaction.length > 0) {
+        const transaction = existingTransaction[0];
+        const timeSinceCreation = Date.now() - transaction.createdAt.getTime();
+        
+        // If transaction is less than 5 minutes old, return the same response
+        if (timeSinceCreation < 5 * 60 * 1000) {
+          console.log('Returning existing pending transaction:', {
+            requestId,
+            userId,
+            transactionId: transaction.id,
+            amount,
+            timestamp: new Date().toISOString()
+          });
+          
+          // Get payment intent from Stripe
+          const paymentIntent = await stripe.paymentIntents.retrieve(transaction.stripePaymentId);
+          
+          return res.json({
+            clientSecret: paymentIntent.client_secret,
+            transactionId: transaction.id,
+            amount: transaction.amount,
+            currency: STRIPE_CURRENCY,
+            creditsToAdd: transaction.credits,
+            currentCredits: req.user?.storyCredits || 0,
+            projectedTotalCredits: (req.user?.storyCredits || 0) + transaction.credits
+          });
+        }
       }
 
       // Get current user credits before purchase
@@ -507,6 +552,7 @@ export function setupRoutes(app: express.Application) {
         .limit(1);
 
       console.log('Credit purchase request:', {
+        requestId,
         userId,
         userEmail,
         currentCredits: currentUser?.credits,
@@ -518,6 +564,7 @@ export function setupRoutes(app: express.Application) {
       // Enhanced amount validation
       if (typeof amount !== 'number' || isNaN(amount)) {
         console.error('Invalid amount type:', {
+          requestId,
           userId,
           amount,
           type: typeof amount,
@@ -528,6 +575,7 @@ export function setupRoutes(app: express.Application) {
 
       if (amount < MIN_CREDITS_PURCHASE || amount > MAX_CREDITS_PURCHASE) {
         console.log('Invalid credit purchase amount:', {
+          requestId,
           userId,
           amount,
           min: MIN_CREDITS_PURCHASE,
@@ -546,10 +594,10 @@ export function setupRoutes(app: express.Application) {
       const creditsToAdd = amount * CREDITS_PER_USD;
       const projectedTotalCredits = (currentUser?.credits || 0) + creditsToAdd;
 
-      // Create Stripe payment intent with better error handling
-      let paymentResponse;
-      try {
-        paymentResponse = await createPaymentIntent({
+      // Create payment intent and transaction in a transaction to ensure atomicity
+      const result = await db.transaction(async (tx) => {
+        // Create Stripe payment intent
+        const paymentResponse = await createPaymentIntent({
           amount,
           userId,
           description: `Purchase ${creditsToAdd} story credits`,
@@ -557,6 +605,7 @@ export function setupRoutes(app: express.Application) {
         });
 
         console.log('Stripe payment intent created:', {
+          requestId,
           userId,
           amount,
           creditsToAdd,
@@ -564,23 +613,10 @@ export function setupRoutes(app: express.Application) {
           status: paymentResponse.status,
           timestamp: new Date().toISOString()
         });
-      } catch (error) {
-        console.error('Failed to create Stripe payment intent:', {
-          error: error instanceof Error ? error.message : 'Unknown error',
-          userId,
-          amount,
-          timestamp: new Date().toISOString()
-        });
-        return res.status(500).json({ 
-          error: "Failed to initialize payment",
-          details: error instanceof Error ? error.message : 'Payment processing error'
-        });
-      }
 
-      // Create pending transaction with better error handling
-      let transaction;
-      try {
-        [transaction] = await db.insert(creditTransactions)
+        // Create pending transaction
+        const [transaction] = await tx
+          .insert(creditTransactions)
           .values({
             userId,
             amount: paymentResponse.amount,
@@ -592,6 +628,7 @@ export function setupRoutes(app: express.Application) {
           .returning();
 
         console.log('Credit transaction created:', {
+          requestId,
           userId,
           transactionId: transaction.id,
           amount: paymentResponse.amount,
@@ -601,29 +638,24 @@ export function setupRoutes(app: express.Application) {
           duration: `${Date.now() - startTime}ms`,
           timestamp: new Date().toISOString()
         });
-      } catch (error) {
-        console.error('Failed to create credit transaction:', {
-          error: error instanceof Error ? error.message : 'Unknown error',
-          userId,
-          amount,
-          paymentIntentId: paymentResponse.paymentIntentId,
-          timestamp: new Date().toISOString()
-        });
-        return res.status(500).json({ error: 'Failed to create transaction record' });
-      }
+
+        return { transaction, paymentResponse };
+      });
 
       res.json({
-        clientSecret: paymentResponse.clientSecret,
-        transactionId: transaction.id,
-        amount: paymentResponse.amount,
-        currency: paymentResponse.currency,
+        clientSecret: result.paymentResponse.clientSecret,
+        transactionId: result.transaction.id,
+        amount: result.paymentResponse.amount,
+        currency: result.paymentResponse.currency,
         creditsToAdd,
         currentCredits: currentUser?.credits || 0,
         projectedTotalCredits
       });
     } catch (error) {
       console.error('Error creating payment intent:', {
-        error,
+        requestId,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        type: error instanceof Error ? error.constructor.name : 'Unknown',
         userId: req.user?.id,
         amount: req.body.amount,
         timestamp: new Date().toISOString(),
