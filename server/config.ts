@@ -56,7 +56,7 @@ export const TRANSACTION_TYPES = {
 export const STRIPE_CURRENCY = 'usd';
 export const STRIPE_STATEMENT_DESCRIPTOR = 'Story Credits';
 export const STRIPE_STATEMENT_DESCRIPTOR_SUFFIX = 'Credits';
-export const STRIPE_API_VERSION = '2024-11-20.acacia' as const;
+export const STRIPE_API_VERSION = '2023-10-16' as const;
 
 // Transaction Status
 export const TRANSACTION_STATUS = {
