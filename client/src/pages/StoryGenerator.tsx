@@ -9,8 +9,7 @@ import { generateStory, getCreditBalance, type Story, type StoryFormData } from 
 import { Link } from "wouter";
 import { CreditPurchaseDialog } from "../components/CreditPurchaseDialog";
 import { Elements } from "@stripe/react-stripe-js";
-import { loadStripe, type Appearance, type StripeElementsOptions } from "@stripe/stripe-js";
-
+import { loadStripe, type Stripe, type StripeElementsOptions } from "@stripe/stripe-js";
 import { ErrorBoundary } from "react-error-boundary";
 import { Loader2 } from "lucide-react";
 
@@ -21,7 +20,8 @@ const STRIPE_PUBLISHABLE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
 const initializeStripe = () => {
   console.log('Starting Stripe initialization...', {
     hasKey: !!STRIPE_PUBLISHABLE_KEY,
-    keyPrefix: STRIPE_PUBLISHABLE_KEY ? STRIPE_PUBLISHABLE_KEY.substring(0, 8) : 'missing'
+    keyPrefix: STRIPE_PUBLISHABLE_KEY ? STRIPE_PUBLISHABLE_KEY.substring(0, 8) : 'missing',
+    timestamp: new Date().toISOString()
   });
 
   if (!STRIPE_PUBLISHABLE_KEY) {
@@ -29,24 +29,22 @@ const initializeStripe = () => {
     return Promise.reject(new Error('Missing Stripe publishable key'));
   }
 
-  return loadStripe(STRIPE_PUBLISHABLE_KEY, {
-    apiVersion: '2024-11-20.acacia',
-  })
-  .then(stripe => {
-    console.log('Stripe initialized successfully:', {
-      stripeInstance: !!stripe,
-      timestamp: new Date().toISOString()
+  return loadStripe(STRIPE_PUBLISHABLE_KEY)
+    .then(stripe => {
+      console.log('Stripe initialized successfully:', {
+        stripeInstance: !!stripe,
+        timestamp: new Date().toISOString()
+      });
+      return stripe;
+    })
+    .catch(error => {
+      console.error('Failed to initialize Stripe:', {
+        error: error.message,
+        type: error.type,
+        timestamp: new Date().toISOString()
+      });
+      throw error;
     });
-    return stripe;
-  })
-  .catch(error => {
-    console.error('Failed to initialize Stripe:', {
-      error: error.message,
-      type: error.type,
-      timestamp: new Date().toISOString()
-    });
-    return null;
-  });
 };
 
 interface ErrorFallbackProps {
@@ -58,7 +56,9 @@ function ErrorFallback({ error, resetErrorBoundary }: ErrorFallbackProps) {
   return (
     <div className="min-h-screen bg-gradient-to-b from-purple-50 to-purple-100 p-4">
       <div className="container mx-auto max-w-4xl text-center">
-        <h2 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 text-transparent bg-clip-text mb-4">Something went wrong</h2>
+        <h2 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 text-transparent bg-clip-text mb-4">
+          Something went wrong
+        </h2>
         <pre className="text-red-500 mb-4">{error.message}</pre>
         <Button onClick={resetErrorBoundary}>Try again</Button>
       </div>
@@ -71,7 +71,7 @@ export default function StoryGenerator() {
   const [showCreditPurchase, setShowCreditPurchase] = useState(false);
   const { toast } = useToast();
   
-  // Initialize Stripe inside component
+  // Initialize Stripe
   const stripePromise = useMemo(() => initializeStripe(), []);
 
   const { data: creditBalance, refetch: refetchCredits } = useQuery({
@@ -100,7 +100,6 @@ export default function StoryGenerator() {
         stack: error.stack,
       });
       
-      // Check if error is due to insufficient credits
       if (error.message.includes("Insufficient credits")) {
         setShowCreditPurchase(true);
         toast({
@@ -135,19 +134,17 @@ export default function StoryGenerator() {
     setStory(null);
   };
 
-  // Define Stripe Elements options
-  const stripeOptions = useMemo<StripeElementsOptions>(() => ({
+  // Define Stripe Elements options with proper TypeScript types
+  const stripeOptions: StripeElementsOptions = {
     appearance: {
-      theme: 'stripe' as const,
+      theme: 'stripe',
       variables: {
         colorPrimary: '#6366f1',
         colorBackground: '#ffffff',
         colorText: '#1f2937',
       },
     },
-    clientSecret: '', // Will be set when payment is initialized
-    mode: 'payment' as const,
-  }), []);
+  };
 
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback} onReset={() => setStory(null)}>
@@ -198,10 +195,11 @@ export default function StoryGenerator() {
               <div className="bg-white p-4 rounded-lg flex items-center space-x-2">
                 <Loader2 className="h-6 w-6 animate-spin" />
                 <span>Generating your story...</span>
-                <span>Will take upto a minute...</span>
+                <span>Will take up to a minute...</span>
               </div>
             </div>
           )}
+
           {!story ? (
             <StoryForm onSubmit={handleSubmit} isLoading={mutation.isPending} />
           ) : (

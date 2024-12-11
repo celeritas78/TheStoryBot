@@ -7,7 +7,6 @@ import { purchaseCredits } from "../lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
 import type { PaymentState } from "../types/payment";
-import type { StripeError } from "@stripe/stripe-js";
 
 interface CreditPurchaseDialogProps {
   open: boolean;
@@ -31,23 +30,13 @@ export function CreditPurchaseDialog({
   onOpenChange,
   onSuccess
 }: CreditPurchaseDialogProps) {
-  const [amount, setAmount] = useState(10); // Default to 10 credits
+  const [amount, setAmount] = useState(10);
   const MIN_CREDITS = 1;
   const MAX_CREDITS = 100;
   const [paymentState, setPaymentState] = useState<PaymentState>(initialPaymentState);
   const stripe = useStripe();
   const elements = useElements();
   const { toast } = useToast();
-
-  // Update Elements configuration when amount changes
-  useEffect(() => {
-    if (elements) {
-      elements.update({
-        amount: amount * 100, // Convert to cents
-        currency: 'usd'
-      });
-    }
-  }, [amount, elements]);
 
   // Reset payment state when dialog closes
   useEffect(() => {
@@ -64,6 +53,21 @@ export function CreditPurchaseDialog({
   }, [open, amount]);
 
   const initializePayment = async () => {
+    if (!stripe || !elements) {
+      console.error('Stripe not initialized:', {
+        stripe: !!stripe,
+        elements: !!elements,
+        timestamp: new Date().toISOString()
+      });
+      toast({
+        title: "Payment Error",
+        description: "Payment system not initialized properly",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const startTime = Date.now();
     console.log('Initializing credit purchase:', {
       amount,
       timestamp: new Date().toISOString(),
@@ -81,6 +85,7 @@ export function CreditPurchaseDialog({
         amount,
         transactionId: response.transactionId,
         clientSecret: response.clientSecret ? 'exists' : 'missing',
+        duration: Date.now() - startTime,
         timestamp: new Date().toISOString()
       });
 
@@ -95,17 +100,12 @@ export function CreditPurchaseDialog({
         projectedTotalCredits: response.projectedTotalCredits
       }));
 
-      if (elements) {
-        elements.update({ 
-          amount: response.amount * 100,
-          currency: 'usd'
-        });
-      }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Failed to initialize payment";
       console.error('Credit purchase initialization failed:', {
         error: errorMessage,
         amount,
+        duration: Date.now() - startTime,
         timestamp: new Date().toISOString(),
         stack: error instanceof Error ? error.stack : undefined
       });
@@ -192,14 +192,6 @@ export function CreditPurchaseDialog({
   const isProcessing = paymentState.status === 'processing';
   const showPaymentForm = paymentState.clientSecret && paymentState.status !== 'succeeded';
 
-  console.log('Rendering CreditPurchaseDialog:', {
-    stripeLoaded: !!stripe,
-    elementsLoaded: !!elements,
-    amount,
-    paymentState,
-    timestamp: new Date().toISOString()
-  });
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
@@ -210,63 +202,56 @@ export function CreditPurchaseDialog({
           </DialogDescription>
         </DialogHeader>
         
-        {!stripe || !elements ? (
-          <div className="p-4 text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-2" />
-            <p className="text-sm text-gray-600">Initializing payment system...</p>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid w-full items-center gap-1.5">
+            <Label htmlFor="amount">Number of Credits</Label>
+            <Input
+              type="number"
+              id="amount"
+              value={amount}
+              onChange={(e) => setAmount(Number(e.target.value))}
+              min={MIN_CREDITS}
+              max={MAX_CREDITS}
+              step={1}
+              disabled={isProcessing || showPaymentForm}
+            />
+            <p className="text-sm text-gray-500">
+              Total: ${amount}.00 USD
+            </p>
           </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid w-full items-center gap-1.5">
-              <Label htmlFor="amount">Number of Credits</Label>
-              <Input
-                type="number"
-                id="amount"
-                value={amount}
-                onChange={(e) => setAmount(Number(e.target.value))}
-                min={MIN_CREDITS}
-                max={MAX_CREDITS}
-                step={1}
-                disabled={isProcessing || !!showPaymentForm}
-              />
-              <p className="text-sm text-gray-500">
-                Total: ${amount}.00 USD
-              </p>
+          
+          {paymentState.error && (
+            <div className="text-red-500 text-sm mb-4">
+              {paymentState.error.message}
             </div>
-            
-            {paymentState.error && (
-              <div className="text-red-500 text-sm mb-4">
-                {paymentState.error.message}
-              </div>
-            )}
+          )}
 
-            {showPaymentForm ? (
-              <>
-                <PaymentElement 
-                  options={{
-                    layout: 'tabs',
-                    fields: {
-                      billingDetails: {
-                        name: 'auto',
-                      }
+          {showPaymentForm ? (
+            <>
+              <PaymentElement 
+                options={{
+                  layout: 'tabs',
+                  fields: {
+                    billingDetails: {
+                      name: 'auto',
                     }
-                  }}
-                />
-                <Button
-                  type="submit"
-                  disabled={isProcessing || !stripe || !elements}
-                  className="w-full"
-                >
-                  {isProcessing ? "Processing payment..." : `Pay $${amount}.00`}
-                </Button>
-              </>
-            ) : (
-              <div className="flex items-center justify-center p-4">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
-              </div>
-            )}
-          </form>
-        )}
+                  }
+                }}
+              />
+              <Button
+                type="submit"
+                disabled={isProcessing || !stripe || !elements}
+                className="w-full"
+              >
+                {isProcessing ? "Processing payment..." : `Pay $${amount}.00`}
+              </Button>
+            </>
+          ) : (
+            <div className="flex items-center justify-center p-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
+            </div>
+          )}
+        </form>
       </DialogContent>
     </Dialog>
   );

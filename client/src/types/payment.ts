@@ -6,12 +6,14 @@ export interface PaymentFormData {
 
 export interface CreatePaymentResponse {
   clientSecret: string;
-  transactionId: number;
+  paymentIntentId: string;
   amount: number;
   currency: string;
+  status: string;
   creditsToAdd: number;
   currentCredits: number;
   projectedTotalCredits: number;
+  transactionId: number;
 }
 
 export interface PaymentError {
