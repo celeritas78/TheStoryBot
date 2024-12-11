@@ -14,25 +14,23 @@ import { loadStripe, type Appearance, type StripeElementsOptions } from "@stripe
 import { ErrorBoundary } from "react-error-boundary";
 import { Loader2 } from "lucide-react";
 
-// Initialize Stripe outside of component to avoid re-initialization
+// Get Stripe publishable key from environment
 const STRIPE_PUBLISHABLE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
 
-// Validate Stripe initialization
-if (!STRIPE_PUBLISHABLE_KEY) {
-  console.error('Missing Stripe publishable key. Please ensure VITE_STRIPE_PUBLISHABLE_KEY is set in the environment.');
-  throw new Error('Stripe configuration missing. Contact support if this persists.');
-}
+// Initialize Stripe outside component
+const initializeStripe = () => {
+  if (!STRIPE_PUBLISHABLE_KEY) {
+    console.error('Missing Stripe publishable key');
+    return null;
+  }
 
-// Initialize Stripe in test mode with error handling
-const stripePromise = loadStripe(STRIPE_PUBLISHABLE_KEY, {
-  apiVersion: '2023-10-16',
-}).catch(error => {
-  console.error('Failed to initialize Stripe:', error);
-  throw new Error('Payment system initialization failed. Please try again later.');
-});
-
-// Log successful initialization
-console.log('Stripe initialization started with key prefix:', STRIPE_PUBLISHABLE_KEY.substring(0, 8));
+  return loadStripe(STRIPE_PUBLISHABLE_KEY, {
+    apiVersion: '2024-11-20.acacia',
+  }).catch(error => {
+    console.error('Failed to initialize Stripe:', error);
+    return null;
+  });
+};
 
 interface ErrorFallbackProps {
   error: Error;
@@ -55,6 +53,9 @@ export default function StoryGenerator() {
   const [story, setStory] = useState<Story | null>(null);
   const [showCreditPurchase, setShowCreditPurchase] = useState(false);
   const { toast } = useToast();
+  
+  // Initialize Stripe inside component
+  const stripePromise = useMemo(() => initializeStripe(), []);
 
   const { data: creditBalance, refetch: refetchCredits } = useQuery({
     queryKey: ['credits'],
@@ -153,17 +154,25 @@ export default function StoryGenerator() {
             </div>
           </header>
           
-          {showCreditPurchase && (
-            <Elements stripe={stripePromise} options={stripeOptions}>
-              <CreditPurchaseDialog
-                open={showCreditPurchase}
-                onOpenChange={setShowCreditPurchase}
-                onSuccess={() => {
-                  refetchCredits();
-                  setShowCreditPurchase(false);
-                }}
-              />
-            </Elements>
+          {showCreditPurchase && stripePromise && (
+            <ErrorBoundary
+              FallbackComponent={({ error }) => (
+                <div className="text-red-500">
+                  Failed to load payment form: {error.message}
+                </div>
+              )}
+            >
+              <Elements stripe={stripePromise} options={stripeOptions}>
+                <CreditPurchaseDialog
+                  open={showCreditPurchase}
+                  onOpenChange={setShowCreditPurchase}
+                  onSuccess={() => {
+                    refetchCredits();
+                    setShowCreditPurchase(false);
+                  }}
+                />
+              </Elements>
+            </ErrorBoundary>
           )}
 
           {mutation.isPending && (
