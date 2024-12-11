@@ -36,23 +36,50 @@ export const CreditPurchaseDialog = ({
   console.log("Elements instance:", elements);
 
   const initializePayment = useCallback(async () => {
-    if (paymentState.clientSecret) return;
+    console.log("Initializing payment with state:", {
+      hasClientSecret: !!paymentState.clientSecret,
+      amount,
+      status: paymentState.status,
+      timestamp: new Date().toISOString()
+    });
+
+    if (paymentState.clientSecret) {
+      console.log("Payment already initialized, skipping");
+      return;
+    }
 
     try {
       setPaymentState((state) => ({ ...state, status: "processing", error: null }));
+      console.log("Requesting credit purchase from server...");
 
       const response = await purchaseCredits(amount);
+      console.log("Credit purchase response:", {
+        hasClientSecret: !!response?.clientSecret,
+        status: response?.status,
+        amount: response?.amount,
+        timestamp: new Date().toISOString()
+      });
+
       if (!response?.clientSecret || !response?.status) {
+        console.error("Invalid server response:", response);
         throw new Error("Invalid response from server");
       }
 
+      console.log("Setting payment state with client secret");
       setPaymentState((state) => ({
         ...state,
-        status: "idle",
+        status: response.status,
         clientSecret: response.clientSecret,
+        amount: response.amount,
       }));
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Failed to initialize payment";
+      console.error("Payment initialization failed:", {
+        error: errorMessage,
+        stack: error instanceof Error ? error.stack : undefined,
+        timestamp: new Date().toISOString()
+      });
+      
       setPaymentState((state) => ({
         ...state,
         status: "failed",
@@ -107,13 +134,21 @@ export const CreditPurchaseDialog = ({
             value={amount}
             onChange={(e) => setAmount(Number(e.target.value))}
           />
-          {paymentState.clientSecret ? (
+          {paymentState.status === "processing" ? (
+            <div>Loading payment options...</div>
+          ) : paymentState.status === "failed" ? (
+            <div>Failed to load payment options. Please try again.</div>
+          ) : paymentState.clientSecret ? (
             <form onSubmit={handleSubmit}>
-              <PaymentElement />
-              <Button type="submit">Pay</Button>
+              <div className="space-y-4 mt-4">
+                <PaymentElement key={paymentState.clientSecret} />
+                <Button type="submit" className="w-full mt-4">
+                  Pay ${amount}
+                </Button>
+              </div>
             </form>
           ) : (
-            <div>Loading payment options...</div>
+            <div>Initializing payment...</div>
           )}
         </div>
       </DialogContent>
