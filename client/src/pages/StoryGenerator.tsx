@@ -9,7 +9,7 @@ import { generateStory, getCreditBalance, type Story, type StoryFormData } from 
 import { Link } from "wouter";
 import { CreditPurchaseDialog } from "../components/CreditPurchaseDialog";
 import { Elements } from "@stripe/react-stripe-js";
-import { loadStripe } from "@stripe/stripe-js";
+import { loadStripe, type Appearance, type StripeElementsOptions } from "@stripe/stripe-js";
 
 import { ErrorBoundary } from "react-error-boundary";
 import { Loader2 } from "lucide-react";
@@ -118,7 +118,7 @@ export default function StoryGenerator() {
   };
 
   // Define Stripe Elements options
-  const stripeOptions = useMemo(() => ({
+  const stripeOptions: StripeElementsOptions = useMemo(() => ({
     appearance: {
       theme: 'stripe',
       variables: {
@@ -126,8 +126,8 @@ export default function StoryGenerator() {
         colorBackground: '#ffffff',
         colorText: '#1f2937',
       },
-    },
-    mode: 'payment' as const,
+    } as Appearance,
+    mode: 'payment',
   }), []);
 
   return (
