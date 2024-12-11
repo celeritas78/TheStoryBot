@@ -47,7 +47,11 @@ export async function createPaymentIntent({
     console.log('Creating payment intent:', {
       amount,
       userId,
-      timestamp: new Date().toISOString()
+      amountInCents: amount * 100,
+      creditsToAdd: amount * CREDITS_PER_USD,
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV,
+      stripeMode: STRIPE_PAYMENT_MODE
     });
 
     // Amount should be in cents for Stripe

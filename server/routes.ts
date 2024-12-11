@@ -12,7 +12,6 @@ import bcrypt from 'bcryptjs';
 import { 
   MAX_FREE_STORIES,
   PLANS,
-  CREDITS_PER_USD,
 } from './config';
 
 interface UserWithStoryCount {

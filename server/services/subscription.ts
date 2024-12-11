@@ -44,7 +44,11 @@ const subscriptionLogger = {
 
 export async function checkStoryCreationEligibility(userId: number): Promise<SubscriptionStatus> {
   try {
-    subscriptionLogger.info('Checking story creation eligibility', { userId });
+    const startTime = Date.now();
+    subscriptionLogger.info('Starting story creation eligibility check', { 
+      userId,
+      timestamp: new Date().toISOString()
+    });
 
     // Get user details with story count in a single query
     const result = await db
@@ -62,9 +66,22 @@ export async function checkStoryCreationEligibility(userId: number): Promise<Sub
     const user = result[0];
     
     if (!user) {
-      subscriptionLogger.error('User not found', { userId });
+      subscriptionLogger.error('User not found during eligibility check', { 
+        userId,
+        queryDuration: Date.now() - startTime,
+        timestamp: new Date().toISOString()
+      });
       throw new Error('User not found');
     }
+
+    subscriptionLogger.info('Retrieved user data for eligibility check', {
+      userId,
+      credits: user.credits,
+      isPremium: user.isPremium,
+      totalStories: Number(user.totalStories),
+      queryDuration: Date.now() - startTime,
+      timestamp: new Date().toISOString()
+    });
 
     const status: SubscriptionStatus = {
       isEligible: false,
