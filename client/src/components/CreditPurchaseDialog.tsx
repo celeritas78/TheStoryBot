@@ -1,4 +1,5 @@
-import { useStripe, useElements, PaymentElement } from "@stripe/react-stripe-js";
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { useStripe, useElements, PaymentElement, Elements } from "@stripe/react-stripe-js";
 import type { StripeElementsOptions } from "@stripe/stripe-js";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "./ui/dialog";
 import { Button } from "./ui/button";
@@ -6,8 +7,7 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { purchaseCredits } from "../lib/api";
 import { useToast } from "@/hooks/use-toast";
-import { useState, useEffect } from "react";
-import type { PaymentState, CreatePaymentResponse } from "../types/payment";
+import type { PaymentState } from "../types/payment";
 
 interface CreditPurchaseDialogProps {
   open: boolean;
@@ -35,76 +35,8 @@ export function CreditPurchaseDialog({
   const elements = useElements();
   const { toast } = useToast();
 
-  // Reset payment state when dialog closes
-  useEffect(() => {
-    if (!open) {
-      setPaymentState(initialPaymentState);
-      setAmount(10); // Reset amount to default
-    }
-  }, [open]);
-
-  // Initialize Stripe when component mounts
-  useEffect(() => {
-    if (open && !stripe) {
-      console.log('Waiting for Stripe to initialize...', {
-        hasStripe: !!stripe,
-        timestamp: new Date().toISOString()
-      });
-    }
-  }, [open, stripe]);
-
-  // Initialize payment when dialog opens or amount changes
-  useEffect(() => {
-    let isActive = true;
-    
-    const initialize = async () => {
-      if (!open || amount <= 0 || paymentState.status !== 'idle') {
-        return;
-      }
-
-      console.log('Starting payment initialization...', {
-        amount,
-        hasStripe: !!stripe,
-        timestamp: new Date().toISOString()
-      });
-
-      try {
-        setPaymentState(state => ({ ...state, status: 'processing', error: null }));
-        
-        // Add small delay to prevent rapid re-initialization
-        await new Promise(resolve => setTimeout(resolve, 300));
-        
-        if (!isActive) return;
-        
-        await initializePayment();
-      } catch (error) {
-        console.error('Payment initialization failed:', {
-          error: error instanceof Error ? error.message : 'Unknown error',
-          stack: error instanceof Error ? error.stack : undefined,
-          timestamp: new Date().toISOString()
-        });
-        
-        if (!isActive) return;
-        
-        setPaymentState(state => ({
-          ...state,
-          status: 'failed',
-          error: {
-            message: error instanceof Error ? error.message : 'Payment initialization failed',
-            code: error instanceof Error ? error.name : 'UNKNOWN_ERROR'
-          }
-        }));
-      }
-    };
-
-    void initialize();
-
-    return () => {
-      isActive = false;
-    };
-  }, [open, amount, paymentState.status, stripe, initializePayment]);
-
-  const initializePayment = async () => {
+  // First define initializePayment function
+  const initializePayment = useCallback(async () => {
     if (!stripe) {
       console.error('Stripe not initialized');
       toast({
@@ -208,7 +140,76 @@ export function CreditPurchaseDialog({
         onOpenChange(false);
       }
     }
-  };
+  }, [amount, MIN_CREDITS, MAX_CREDITS, stripe, toast, onOpenChange]);
+
+  // Reset payment state when dialog closes
+  useEffect(() => {
+    if (!open) {
+      setPaymentState(initialPaymentState);
+      setAmount(10); // Reset amount to default
+    }
+  }, [open]);
+
+  // Initialize Stripe when component mounts
+  useEffect(() => {
+    if (open && !stripe) {
+      console.log('Waiting for Stripe to initialize...', {
+        hasStripe: !!stripe,
+        timestamp: new Date().toISOString()
+      });
+    }
+  }, [open, stripe]);
+
+  // Initialize payment when dialog opens or amount changes
+  useEffect(() => {
+    let isActive = true;
+    
+    const initialize = async () => {
+      if (!open || amount <= 0 || paymentState.status !== 'idle') {
+        return;
+      }
+
+      console.log('Starting payment initialization...', {
+        amount,
+        hasStripe: !!stripe,
+        timestamp: new Date().toISOString()
+      });
+
+      try {
+        setPaymentState(state => ({ ...state, status: 'processing', error: null }));
+        
+        // Add small delay to prevent rapid re-initialization
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        if (!isActive) return;
+        
+        await initializePayment();
+      } catch (error) {
+        console.error('Payment initialization failed:', {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          stack: error instanceof Error ? error.stack : undefined,
+          timestamp: new Date().toISOString()
+        });
+        
+        if (!isActive) return;
+        
+        setPaymentState(state => ({
+          ...state,
+          status: 'failed',
+          error: {
+            message: error instanceof Error ? error.message : 'Payment initialization failed',
+            code: error instanceof Error ? error.name : 'UNKNOWN_ERROR'
+          }
+        }));
+      }
+    };
+
+    void initialize();
+
+    return () => {
+      isActive = false;
+    };
+  }, [open, amount, paymentState.status, stripe, initializePayment]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

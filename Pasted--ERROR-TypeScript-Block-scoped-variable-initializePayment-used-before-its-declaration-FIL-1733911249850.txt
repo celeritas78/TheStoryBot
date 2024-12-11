@@ -1,0 +1,69 @@
+   
+
+ ERROR(TypeScript)  Block-scoped variable 'initializePayment' used before its declaration.
+ FILE  /home/runner/CustomBedtimeStories/client/src/components/CreditPurchaseDialog.tsx:105:50
+
+    103 |       isActive = false;
+    104 |     };
+  > 105 |   }, [open, amount, paymentState.status, stripe, initializePayment]);
+        |                                                  ^^^^^^^^^^^^^^^^^
+    106 |
+    107 |   const initializePayment = async () => {
+    108 |     if (!stripe) {
+
+ ERROR(TypeScript)  Variable 'initializePayment' is used before being assigned.
+ FILE  /home/runner/CustomBedtimeStories/client/src/components/CreditPurchaseDialog.tsx:105:50
+
+    103 |       isActive = false;
+    104 |     };
+  > 105 |   }, [open, amount, paymentState.status, stripe, initializePayment]);
+        |                                                  ^^^^^^^^^^^^^^^^^
+    106 |
+    107 |   const initializePayment = async () => {
+    108 |     if (!stripe) {
+
+ ERROR(TypeScript)  Cannot find name 'useMemo'.
+ FILE  /home/runner/CustomBedtimeStories/client/src/components/CreditPurchaseDialog.tsx:278:33
+
+    276 |   
+    277 |   // Set up Stripe Elements options with proper typing and validation
+  > 278 |   const stripeElementsOptions = useMemo<StripeElementsOptions>(() => ({
+        |                                 ^^^^^^^
+    279 |     clientSecret: paymentState.clientSecret || '',
+    280 |     appearance: {
+    281 |       theme: 'stripe',
+
+ ERROR(TypeScript)  Cannot find name 'useMemo'.
+ FILE  /home/runner/CustomBedtimeStories/client/src/components/CreditPurchaseDialog.tsx:292:30
+
+    290 |
+    291 |   // Validate if we can show the payment form
+  > 292 |   const canShowPaymentForm = useMemo(() => {
+        |                              ^^^^^^^
+    293 |     return (
+    294 |       stripe && 
+    295 |       elements && 
+
+ ERROR(TypeScript)  Cannot find name 'Elements'. Did you mean 'elements'?
+ FILE  /home/runner/CustomBedtimeStories/client/src/components/CreditPurchaseDialog.tsx:343:14
+
+    341 |
+    342 |           {!isProcessing && paymentState.clientSecret && (
+  > 343 |             <Elements stripe={stripe!} options={stripeElementsOptions}>
+        |              ^^^^^^^^
+    344 |               {canShowPaymentForm ? (
+    345 |                 <>
+    346 |                   <PaymentElement 
+
+ ERROR(TypeScript)  Cannot find name 'Elements'. Did you mean 'elements'?
+ FILE  /home/runner/CustomBedtimeStories/client/src/components/CreditPurchaseDialog.tsx:370:15
+
+    368 |                 </div>
+    369 |               )}
+  > 370 |             </Elements>
+        |               ^^^^^^^^
+    371 |           )}
+    372 |
+    373 |           {!isProcessing && !paymentState.clientSecret && (
+
+[TypeScript] Found 6 errors. Watching for file changes.
