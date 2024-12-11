@@ -157,6 +157,16 @@ export function CreditPurchaseDialog({
     }
   }, [open]);
 
+  // Validate if we can show the payment form
+  const canShowPaymentForm = useMemo(() => {
+    return (
+      stripe && 
+      elements && 
+      paymentState.clientSecret && 
+      paymentState.status !== 'succeeded'
+    );
+  }, [stripe, elements, paymentState.clientSecret, paymentState.status]);
+
   // Log payment form state changes
   useEffect(() => {
     if (!canShowPaymentForm) {
@@ -302,16 +312,6 @@ export function CreditPurchaseDialog({
     },
     loader: 'auto',
   }), [paymentState.clientSecret]);
-
-  // Validate if we can show the payment form
-  const canShowPaymentForm = useMemo(() => {
-    return (
-      stripe && 
-      elements && 
-      paymentState.clientSecret && 
-      paymentState.status !== 'succeeded'
-    );
-  }, [stripe, elements, paymentState.clientSecret, paymentState.status]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
