@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, FormEvent } from "react";
 import { useStripe, useElements, PaymentElement, Elements } from "@stripe/react-stripe-js";
 import type { StripeElementsOptions } from "@stripe/stripe-js";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "./ui/dialog";
@@ -8,6 +8,12 @@ import { Label } from "./ui/label";
 import { purchaseCredits } from "../lib/api";
 import { useToast } from "@/hooks/use-toast";
 import type { PaymentState } from "../types/payment";
+
+interface PaymentFormProps {
+  amount: number;
+  isProcessing: boolean;
+  onSubmit: (e: FormEvent<HTMLFormElement>) => Promise<void>;
+}
 
 interface CreditPurchaseDialogProps {
   open: boolean;
@@ -23,7 +29,7 @@ const initialPaymentState: PaymentState = {
 };
 
 // Memoized PaymentForm Component
-const PaymentForm = React.memo(function PaymentForm({ amount, isProcessing, onSubmit }) {
+const PaymentForm: React.FC<PaymentFormProps> = React.memo(function PaymentForm({ amount, isProcessing, onSubmit }) {
   const stripe = useStripe();
   const elements = useElements();
 
@@ -120,11 +126,11 @@ export function CreditPurchaseDialog({ open, onOpenChange, onSuccess }: CreditPu
     }
   }, [open]);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
-    const elements = useElements();
-    if (!stripe || !paymentState.clientSecret || !elements) {
+    
+    const elementsInstance = useElements();
+    if (!stripe || !paymentState.clientSecret || !elementsInstance) {
       toast({
         title: "Error",
         description: "Payment system not initialized",
@@ -228,7 +234,11 @@ export function CreditPurchaseDialog({ open, onOpenChange, onSuccess }: CreditPu
 
           {!isProcessing && paymentState.clientSecret && stripe && (
             <Elements stripe={stripe} options={stripeElementsOptions}>
-              <PaymentForm amount={amount} isProcessing={isProcessing} onSubmit={handleSubmit} />
+              <PaymentForm 
+                amount={amount} 
+                isProcessing={isProcessing} 
+                onSubmit={handleSubmit} 
+              />
             </Elements>
           )}
 
