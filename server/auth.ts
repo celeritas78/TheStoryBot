@@ -15,22 +15,6 @@ import { z } from "zod";
 declare module 'express-session' {
   interface SessionData {
     user?: Omit<SelectUser, 'password'>;
-    initialized?: boolean;
-  }
-}
-
-// Error Types
-class AuthError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'AuthError';
-  }
-}
-
-class DatabaseError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'DatabaseError';
   }
 }
 
@@ -78,26 +62,7 @@ const registrationSchema = z.object({
     .regex(/[0-9]/, "Must contain a number"),
 });
 
-export async function setupAuth(app: Express) {
-  console.log('Initializing auth setup...', {
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV
-  });
-
-  // Verify database connection
-  try {
-    const [testUser] = await db.select({ count: sql`count(*)` }).from(users).limit(1);
-    console.log('Database connection verified', {
-      timestamp: new Date().toISOString()
-    });
-  } catch (error) {
-    console.error('Database connection failed:', {
-      error: error instanceof Error ? error.message : 'Unknown error',
-      timestamp: new Date().toISOString()
-    });
-    throw new DatabaseError('Failed to connect to database');
-  }
-
+export function setupAuth(app: Express) {
   // Set up session store
   const MemoryStore = createMemoryStore(session);
   const sessionSettings: session.SessionOptions = {

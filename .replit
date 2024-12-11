@@ -8,7 +8,7 @@ channel = "stable-24_05"
 [deployment]
 deploymentTarget = "cloudrun"
 build = ["npm", "run", "build"]
-run = ["sh", "-c", "NODE_ENV=development DEBUG=express:* tsx watch --clear-screen=false server/index.ts"]
+run = ["sh", "-c", "NODE_ENV=development PORT=3000 DEBUG=express:* tsx watch --clear-screen=false server/index.ts"]
 
 [[ports]]
 localPort = 3000
@@ -30,8 +30,27 @@ author = "agent"
 task = "workflow.run"
 args = "Development Server"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Flask Server"
+
 [[workflows.workflow]]
 name = "Development Server"
+author = "agent"
+
+[workflows.workflow.metadata]
+agentRequireRestartOnSave = false
+
+[[workflows.workflow.tasks]]
+task = "packager.installForAll"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "NODE_ENV=development PORT=3000 DEBUG=express:* tsx watch --clear-screen=false server/index.ts"
+waitForPort = 3000
+
+[[workflows.workflow]]
+name = "Flask Server"
 author = "agent"
 
 [workflows.workflow.metadata]

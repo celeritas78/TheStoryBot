@@ -113,257 +113,163 @@ async function startServer() {
   return stripeInitialized;
 }
 
-// Initialize error handlers
-function setupErrorHandlers() {
-  const errorHandler = (error: Error | unknown, context: string) => {
-    console.error(`${context}:`, {
-      error: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined,
-      timestamp: new Date().toISOString()
-    });
-  };
+// Initialize services and start the server
+const stripeEnabled = await startServer();
 
-  // Single handler for uncaught exceptions
-  process.on('uncaughtException', (error) => errorHandler(error, 'Uncaught exception'));
-  process.on('unhandledRejection', (reason) => errorHandler(reason, 'Unhandled rejection'));
-}
-
-// Initialize services in non-blocking way
-async function initializeServicesAsync() {
-  try {
-    const startTime = Date.now();
-    const requestId = Math.random().toString(36).substring(7);
-    
-    console.log('Starting service initialization...', {
-      requestId,
-      timestamp: new Date().toISOString(),
-      environment: process.env.NODE_ENV
-    });
-
-    if (process.env.STRIPE_SECRET_KEY) {
-      try {
-        await initializeStripeService();
-        console.log('Stripe service initialized successfully', {
-          requestId,
-          duration: Date.now() - startTime,
-          timestamp: new Date().toISOString()
-        });
-        return true;
-      } catch (error) {
-        console.error('Stripe initialization failed:', {
-          error: error instanceof Error ? error.message : 'Unknown error',
-          timestamp: new Date().toISOString()
-        });
-      }
-    } else {
-      console.warn('STRIPE_SECRET_KEY not provided - payment features will be disabled');
-    }
-    return false;
-  } catch (error) {
-    console.error('Service initialization error:', {
-      error: error instanceof Error ? error.message : 'Unknown error',
-      timestamp: new Date().toISOString()
-    });
-    return false;
-  }
-}
-
-// Set up base middleware
-setupErrorHandlers();
-app.use(express.static('client/public'));
-
-// Setup auth with proper error handling
-try {
-  await setupAuth(app);
-  console.log('Auth setup completed successfully', {
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV
-  });
-} catch (error) {
-  console.error('Auth setup failed:', {
-    error: error instanceof Error ? error.message : 'Unknown error',
-    stack: error instanceof Error ? error.stack : undefined,
+// Set up error handlers for uncaught exceptions
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught exception:', {
+    error: error.message,
+    stack: error.stack,
     timestamp: new Date().toISOString()
   });
-  throw error;
-}
+});
 
-// Request logging middleware
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection:', {
+    reason,
+    promise,
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Serve static files from client/public directory
+app.use(express.static('client/public'));
+
+// Call setupAuth before routes
+setupAuth(app);
+
+// Middleware to debug req.isAuthenticated
 app.use((req, res, next) => {
-  const start = Date.now();
-  const path = req.path;
-  
-  const originalJson = res.json;
-  res.json = function(body) {
-    const duration = Date.now() - start;
-    if (path.startsWith("/api")) {
-      const logData = {
-        method: req.method,
-        path,
-        status: res.statusCode,
-        duration: `${duration}ms`,
-        body: JSON.stringify(body).slice(0, 100)
-      };
-      log(`${logData.method} ${logData.path} ${logData.status} in ${logData.duration}`);
-    }
-    return originalJson.call(res, body);
-  };
-  
   next();
 });
 
-// Start server function
-async function bootServer() {
-  const PORT = process.env.PORT || 3000;
-  const server = createServer(app);
-  
-  // Setup routes and error handling
-  try {
-    setupRoutes(app);
-  } catch (error) {
-    console.error('Failed to setup routes:', {
-      error: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined,
-      timestamp: new Date().toISOString()
-    });
-    throw error;
-  }
-  
-  // Global error handler
+// Logging middleware for API routes
+app.use((req, res, next) => {
+  const start = Date.now();
+  const path = req.path;
+  let capturedJsonResponse: Record<string, any> | undefined = undefined;
+
+  const originalResJson = res.json;
+  res.json = function (bodyJson, ...args) {
+    capturedJsonResponse = bodyJson;
+    return originalResJson.apply(res, [bodyJson, ...args]);
+  };
+
+  res.on("finish", () => {
+    const duration = Date.now() - start;
+    if (path.startsWith("/api")) {
+      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
+      if (capturedJsonResponse) {
+        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
+      }
+
+      if (logLine.length > 80) {
+        logLine = logLine.slice(0, 79) + "…";
+      }
+
+      log(logLine);
+    }
+  });
+
+  next();
+});
+
+(async () => {
+  // Register API routes before Vite middleware or static serving
+  setupRoutes(app);
+
+  // Error-handling middleware
   app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || 500;
     const message = err.message || "Internal Server Error";
-    console.error(`Error processing ${req.method} ${req.url}:`, {
-      status,
-      message,
-      stack: err.stack,
-      timestamp: new Date().toISOString()
-    });
+    console.error(`${req.method} ${req.url} - Error:`, { status, message, stack: err.stack });
     res.status(status).json({ message });
   });
 
-  // Setup development/production middleware
-  if (process.env.NODE_ENV === "development") {
+  const server = createServer(app);
+
+  if (app.get("env") === "development") {
+    // Vite middleware in development
     await setupVite(app, server);
   } else {
+    // Serve static files in production
     serveStatic(app);
   }
 
-  // Graceful shutdown handler
-  function handleShutdown(signal: string) {
-    console.log(`Received ${signal}, initiating graceful shutdown...`);
-    server.close((err) => {
-      if (err) {
-        console.error('Error during server shutdown:', err);
-        process.exit(1);
-      }
-      console.log('Server closed successfully');
+  // Use port 3000 for development, otherwise use environment variable
+  const PORT = process.env.PORT || 3000;
+
+  // Add shutdown handler
+  function handleShutdown() {
+    log('Server shutting down...');
+    server.close(() => {
+      log('Server closed');
       process.exit(0);
     });
 
-    // Force shutdown after timeout
+    // Force close after 10s
     setTimeout(() => {
-      console.error('Forced shutdown after timeout');
+      log('Forcing server shutdown...');
       process.exit(1);
-    }, 10000).unref();
+    }, 10000);
   }
 
-  // Attach signal handlers
-  process.once('SIGTERM', () => handleShutdown('SIGTERM'));
-  process.once('SIGINT', () => handleShutdown('SIGINT'));
+  // Handle termination signals
+  process.on('SIGTERM', handleShutdown);
+  process.on('SIGINT', handleShutdown);
 
-  // Start server
-  return new Promise<void>((resolve, reject) => {
-    const port = typeof PORT === 'string' ? parseInt(PORT, 10) : PORT;
-    
-    console.log('Attempting to start server...', {
-      port,
-      environment: process.env.NODE_ENV,
+  // Handle uncaught errors
+  process.on('uncaughtException', (error) => {
+    console.error('Uncaught exception:', {
+      error: error.message,
+      stack: error.stack,
       timestamp: new Date().toISOString()
     });
+    handleShutdown();
+  });
 
-    const server = createServer(app);
+  process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Rejection:', {
+      reason,
+      promise,
+      timestamp: new Date().toISOString()
+    });
+  });
 
-    const serverError = (error: NodeJS.ErrnoException) => {
-      console.error('Server error:', {
-        code: error.code,
-        message: error.message,
-        stack: error.stack,
-        timestamp: new Date().toISOString()
+  try {
+    await new Promise<void>((resolve, reject) => {
+      const port = typeof PORT === 'string' ? parseInt(PORT, 10) : PORT;
+      console.log('Starting server on port:', port);
+      
+      server.listen(port, '0.0.0.0', () => {
+        log(`Server initialization complete`);
+        log(`Server Details:
+          Port: ${port}
+          Environment: ${app.get('env')}
+          Node Version: ${process.version}
+          Start Time: ${new Date().toISOString()}
+        `);
+        resolve();
       });
 
-      if (error.code === 'EADDRINUSE') {
-        reject(new Error(`Port ${port} is already in use`));
-      } else {
-        reject(error);
-      }
-    };
-
-    try {
-      server
-        .on('error', serverError)
-        .listen(port, '0.0.0.0', () => {
-          console.log('Server listening:', {
-            port,
-            address: '0.0.0.0',
-            environment: process.env.NODE_ENV,
+      server.on('error', (error: NodeJS.ErrnoException) => {
+        if (error.code === 'EADDRINUSE') {
+          console.error(`Port ${PORT} is already in use`);
+          reject(new Error(`Port ${PORT} is already in use`));
+        } else {
+          console.error('Server error:', {
+            code: error.code,
+            message: error.message,
+            stack: error.stack,
             timestamp: new Date().toISOString()
           });
-          resolve();
-        });
-    } catch (error) {
-      console.error('Failed to start server:', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined,
-        timestamp: new Date().toISOString()
+          reject(error);
+        }
       });
-      reject(error);
-    }
-  });
-}
-
-// Initialize services and start server
-(async () => {
-  try {
-    console.log('Starting application bootstrap...', {
-      timestamp: new Date().toISOString(),
-      environment: process.env.NODE_ENV,
-      nodeVersion: process.version
     });
-
-    // Initialize services (non-blocking)
-    initializeServicesAsync()
-      .then(success => {
-        console.log('Services initialization completed:', {
-          success,
-          timestamp: new Date().toISOString()
-        });
-      })
-      .catch(error => {
-        console.error('Services initialization error:', {
-          error: error instanceof Error ? error.message : 'Unknown error',
-          stack: error instanceof Error ? error.stack : undefined,
-          timestamp: new Date().toISOString()
-        });
-      });
-    
-    // Start server
-    try {
-      await bootServer();
-      console.log('Server started successfully', {
-        timestamp: new Date().toISOString(),
-        environment: process.env.NODE_ENV
-      });
-    } catch (error) {
-      console.error('Server startup error:', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined,
-        timestamp: new Date().toISOString()
-      });
-      throw error;
-    }
   } catch (error) {
-    console.error('Fatal error during startup:', {
+    console.error('Failed to start server:', {
       error: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack : undefined,
       timestamp: new Date().toISOString()
