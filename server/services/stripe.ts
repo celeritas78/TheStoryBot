@@ -2,7 +2,6 @@ import Stripe from 'stripe';
 import { 
   CREDITS_PER_USD, 
   STRIPE_CURRENCY,
-  STRIPE_PAYMENT_MODE,
   STRIPE_STATEMENT_DESCRIPTOR,
   STRIPE_STATEMENT_DESCRIPTOR_SUFFIX,
   STRIPE_API_VERSION
@@ -103,8 +102,7 @@ export async function createPaymentIntent({
       amountInCents: amount * 100,
       creditsToAdd: amount * CREDITS_PER_USD,
       timestamp: new Date().toISOString(),
-      environment: process.env.NODE_ENV,
-      stripeMode: STRIPE_PAYMENT_MODE
+      environment: process.env.NODE_ENV
     });
 
     // Amount should be in cents for Stripe
@@ -115,7 +113,7 @@ export async function createPaymentIntent({
       amount: amountInCents,
       currency: STRIPE_CURRENCY,
       automatic_payment_methods: {
-        enabled: true,
+        enabled: true
       },
       metadata: {
         userId: userId.toString(),
@@ -124,12 +122,8 @@ export async function createPaymentIntent({
       },
       description: description || `Purchase ${credits} story credits`,
       receipt_email: receiptEmail,
-      statement_descriptor: STRIPE_STATEMENT_DESCRIPTOR?.substring(0, 22), // Stripe limit
-      statement_descriptor_suffix: STRIPE_STATEMENT_DESCRIPTOR_SUFFIX?.substring(0, 22), // Stripe limit
-      confirm: false,
-      payment_method_types: ['card'],
-      mode: STRIPE_PAYMENT_MODE,
-      capture_method: 'automatic',
+      statement_descriptor: STRIPE_STATEMENT_DESCRIPTOR?.substring(0, 22),
+      statement_descriptor_suffix: STRIPE_STATEMENT_DESCRIPTOR_SUFFIX?.substring(0, 22)
     });
 
     console.log('Payment intent created:', {
@@ -149,12 +143,14 @@ export async function createPaymentIntent({
     };
   } catch (error) {
     console.error('Error creating payment intent:', {
-      error,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      type: error instanceof Error ? error.constructor.name : 'Unknown',
+      stack: error instanceof Error ? error.stack : undefined,
       amount,
       userId,
       timestamp: new Date().toISOString()
     });
-    throw new Error('Failed to create payment intent');
+    throw error;
   }
 }
 
@@ -176,10 +172,12 @@ export async function confirmPaymentIntent(paymentIntentId: string): Promise<boo
     return paymentIntent.status === 'succeeded';
   } catch (error) {
     console.error('Error confirming payment intent:', {
-      error,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      type: error instanceof Error ? error.constructor.name : 'Unknown',
+      stack: error instanceof Error ? error.stack : undefined,
       paymentIntentId,
       timestamp: new Date().toISOString()
     });
-    throw new Error('Failed to confirm payment');
+    throw error;
   }
 }

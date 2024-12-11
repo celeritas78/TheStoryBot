@@ -54,11 +54,9 @@ export const TRANSACTION_TYPES = {
 
 // Stripe configuration
 export const STRIPE_CURRENCY = 'usd';
-export const STRIPE_PAYMENT_MODE = 'payment';
 export const STRIPE_STATEMENT_DESCRIPTOR = 'Story Credits';
 export const STRIPE_STATEMENT_DESCRIPTOR_SUFFIX = 'Credits';
-export const STRIPE_TEST_MODE = true;
-export const STRIPE_API_VERSION = '2024-11-20.acacia' as const; // Latest Stripe API version
+export const STRIPE_API_VERSION = '2020-08-27' as const;
 
 // Transaction Status
 export const TRANSACTION_STATUS = {

@@ -7,6 +7,7 @@ import { purchaseCredits } from "../lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
 import type { PaymentState } from "../types/payment";
+import type { StripeError } from "@stripe/stripe-js";
 
 interface CreditPurchaseDialogProps {
   open: boolean;
@@ -227,22 +228,23 @@ export function CreditPurchaseDialog({
 
           {showPaymentForm ? (
             <>
-              {console.log('Rendering PaymentElement with clientSecret:', paymentState.clientSecret)}
               <PaymentElement 
                 options={{
                   layout: 'tabs',
-                  paymentMethodOrder: ['card'],
-                  defaultValues: {
+                  fields: {
                     billingDetails: {
-                      email: window.localStorage.getItem('userEmail') || undefined
+                      email: 'auto'
                     }
+                  },
+                  appearance: {
+                    theme: 'stripe'
                   }
                 }}
-                onLoadError={(error) => {
-                  console.error('PaymentElement load error:', error);
+                onLoadError={(event: { elementType: string; error: StripeError }) => {
+                  console.error('PaymentElement load error:', event);
                   toast({
                     title: "Payment Error",
-                    description: error.message,
+                    description: event.error.message || "Failed to load payment form",
                     variant: "destructive",
                   });
                 }}
