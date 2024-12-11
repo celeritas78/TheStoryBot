@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useStripe, useElements, PaymentElement, Elements } from "@stripe/react-stripe-js";
 import type { StripeElementsOptions } from "@stripe/stripe-js";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "./ui/dialog";
@@ -35,10 +35,21 @@ export function CreditPurchaseDialog({
   const elements = useElements();
   const { toast } = useToast();
 
-  // First define initializePayment function
+  // Initialize payment function defined first
   const initializePayment = useCallback(async () => {
+    const requestId = Math.random().toString(36).substring(7);
+    console.log('Starting payment initialization...', {
+      requestId,
+      amount,
+      hasStripe: !!stripe,
+      timestamp: new Date().toISOString()
+    });
+
     if (!stripe) {
-      console.error('Stripe not initialized');
+      console.error('Payment initialization failed: Stripe not initialized', {
+        requestId,
+        timestamp: new Date().toISOString()
+      });
       toast({
         title: "Payment Error",
         description: "Payment system not initialized properly. Please try again later.",
@@ -48,6 +59,13 @@ export function CreditPurchaseDialog({
     }
 
     if (amount < MIN_CREDITS || amount > MAX_CREDITS) {
+      console.error('Payment initialization failed: Invalid amount', {
+        requestId,
+        amount,
+        min: MIN_CREDITS,
+        max: MAX_CREDITS,
+        timestamp: new Date().toISOString()
+      });
       toast({
         title: "Invalid Amount",
         description: `Please choose between ${MIN_CREDITS} and ${MAX_CREDITS} credits`,
@@ -56,35 +74,42 @@ export function CreditPurchaseDialog({
       return;
     }
 
-    const startTime = Date.now();
-    const requestId = Math.random().toString(36).substring(7);
-    console.log('Starting payment initialization...', {
-      requestId,
-      amount,
-      timestamp: new Date().toISOString()
-    });
-
     try {
-      setPaymentState(state => ({ ...state, status: 'processing', error: null }));
-      
+      console.log('Initializing credit purchase...', {
+        requestId,
+        amount,
+        timestamp: new Date().toISOString()
+      });
+
       const response = await purchaseCredits(amount);
       
-      if (response.error) {
-        throw new Error(response.error.message || 'Failed to initialize payment');
-      }
+      console.log('Credit purchase response received:', {
+        requestId,
+        responseData: response,
+        timestamp: new Date().toISOString()
+      });
       
-      if (!response?.clientSecret) {
-        throw new Error('No client secret received from server');
+      if (!response?.clientSecret || !response?.status) {
+        const missingFields = [];
+        if (!response?.clientSecret) missingFields.push('clientSecret');
+        if (!response?.status) missingFields.push('status');
+        
+        console.error('Missing required fields in response:', {
+          requestId,
+          missingFields,
+          receivedFields: Object.keys(response || {}),
+          partialData: response,
+          timestamp: new Date().toISOString()
+        });
+        
+        throw new Error(`Invalid response: missing ${missingFields.join(', ')}`);
       }
 
-      console.log('Payment intent created:', {
+      console.log('Payment intent created successfully:', {
         requestId,
         amount: response.amount,
         status: response.status,
-        transactionId: response.transactionId,
         creditsToAdd: response.creditsToAdd,
-        currentCredits: response.currentCredits,
-        projectedTotal: response.projectedTotalCredits,
         timestamp: new Date().toISOString()
       });
 
@@ -99,48 +124,30 @@ export function CreditPurchaseDialog({
         transactionId: response.transactionId
       }));
 
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : "Failed to initialize payment";
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      
+    } catch (error) {
       console.error('Credit purchase initialization failed:', {
         requestId,
-        error: errorMessage,
-        amount,
-        duration: Date.now() - startTime,
-        timestamp: new Date().toISOString(),
-        stack: errorStack
+        error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        timestamp: new Date().toISOString()
       });
-
-      // Handle specific error cases
-      let userMessage = errorMessage;
-      if (errorMessage.includes('amount must be between')) {
-        userMessage = `Please choose between ${MIN_CREDITS} and ${MAX_CREDITS} credits`;
-      } else if (errorMessage.includes('No client secret')) {
-        userMessage = "Unable to initialize payment. Please try again later.";
-      }
 
       setPaymentState(state => ({
         ...state,
         status: 'failed',
         error: { 
-          message: errorMessage,
+          message: error instanceof Error ? error.message : 'Failed to initialize payment',
           code: error instanceof Error ? error.name : 'UNKNOWN_ERROR'
         }
       }));
 
       toast({
         title: "Payment Error",
-        description: userMessage,
+        description: error instanceof Error ? error.message : "Failed to initialize payment",
         variant: "destructive",
       });
-
-      // Only close dialog for certain errors
-      if (errorMessage.includes('No client secret') || errorMessage.includes('not initialized')) {
-        onOpenChange(false);
-      }
     }
-  }, [amount, MIN_CREDITS, MAX_CREDITS, stripe, toast, onOpenChange]);
+  }, [amount, stripe, toast, MIN_CREDITS, MAX_CREDITS]);
 
   // Reset payment state when dialog closes
   useEffect(() => {
@@ -150,30 +157,21 @@ export function CreditPurchaseDialog({
     }
   }, [open]);
 
-  // Initialize Stripe when component mounts
-  useEffect(() => {
-    if (open && !stripe) {
-      console.log('Waiting for Stripe to initialize...', {
-        hasStripe: !!stripe,
-        timestamp: new Date().toISOString()
-      });
-    }
-  }, [open, stripe]);
-
   // Initialize payment when dialog opens or amount changes
   useEffect(() => {
     let isActive = true;
     
     const initialize = async () => {
-      if (!open || amount <= 0 || paymentState.status !== 'idle') {
+      if (!open || amount <= 0 || paymentState.status !== 'idle' || !stripe) {
+        console.log('Skipping payment initialization:', {
+          open,
+          amount,
+          status: paymentState.status,
+          hasStripe: !!stripe,
+          timestamp: new Date().toISOString()
+        });
         return;
       }
-
-      console.log('Starting payment initialization...', {
-        amount,
-        hasStripe: !!stripe,
-        timestamp: new Date().toISOString()
-      });
 
       try {
         setPaymentState(state => ({ ...state, status: 'processing', error: null }));
@@ -181,11 +179,14 @@ export function CreditPurchaseDialog({
         // Add small delay to prevent rapid re-initialization
         await new Promise(resolve => setTimeout(resolve, 300));
         
-        if (!isActive) return;
+        if (!isActive) {
+          console.log('Payment initialization cancelled - component unmounted');
+          return;
+        }
         
         await initializePayment();
       } catch (error) {
-        console.error('Payment initialization failed:', {
+        console.error('Payment initialization effect failed:', {
           error: error instanceof Error ? error.message : 'Unknown error',
           stack: error instanceof Error ? error.stack : undefined,
           timestamp: new Date().toISOString()
@@ -341,34 +342,60 @@ export function CreditPurchaseDialog({
           )}
 
           {!isProcessing && paymentState.clientSecret && (
-            <Elements stripe={stripe!} options={stripeElementsOptions}>
-              {canShowPaymentForm ? (
-                <>
-                  <PaymentElement 
-                    options={{
-                      layout: 'tabs',
-                      fields: {
-                        billingDetails: {
-                          name: 'auto',
+            <>
+              {console.log('Initializing Stripe Elements:', {
+                hasClientSecret: !!paymentState.clientSecret,
+                hasStripe: !!stripe,
+                status: paymentState.status,
+                timestamp: new Date().toISOString()
+              })}
+              <Elements stripe={stripe!} options={stripeElementsOptions}>
+                {canShowPaymentForm ? (
+                  <>
+                    {console.log('Rendering payment form:', {
+                      timestamp: new Date().toISOString()
+                    })}
+                    <PaymentElement 
+                      options={{
+                        layout: 'tabs',
+                        fields: {
+                          billingDetails: {
+                            name: 'auto',
+                          }
                         }
-                      }
-                    }}
-                  />
-                  <Button
-                    type="submit"
-                    disabled={isProcessing || !stripe}
-                    className="w-full mt-4"
-                  >
-                    {isProcessing ? "Processing payment..." : `Pay $${amount}.00`}
-                  </Button>
-                </>
-              ) : (
-                <div className="text-center p-4">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-2" />
-                  <p className="text-gray-600">Initializing payment form...</p>
-                </div>
-              )}
-            </Elements>
+                      }}
+                      onChange={(event) => {
+                        console.log('Payment element state changed:', {
+                          complete: event.complete,
+                          empty: event.empty,
+                          error: event.error,
+                          timestamp: new Date().toISOString()
+                        });
+                      }}
+                    />
+                    <Button
+                      type="submit"
+                      disabled={isProcessing || !stripe}
+                      className="w-full mt-4"
+                    >
+                      {isProcessing ? "Processing payment..." : `Pay $${amount}.00`}
+                    </Button>
+                  </>
+                ) : (
+                  <div className="text-center p-4">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-2" />
+                    <p className="text-gray-600">Initializing payment form...</p>
+                    {console.log('Payment form not ready:', {
+                      hasStripe: !!stripe,
+                      hasElements: !!elements,
+                      hasClientSecret: !!paymentState.clientSecret,
+                      status: paymentState.status,
+                      timestamp: new Date().toISOString()
+                    })}
+                  </div>
+                )}
+              </Elements>
+            </>
           )}
 
           {!isProcessing && !paymentState.clientSecret && (
