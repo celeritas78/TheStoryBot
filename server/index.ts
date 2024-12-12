@@ -139,41 +139,17 @@ app.use(express.static('client/public'));
 // Call setupAuth before routes
 setupAuth(app);
 
-// Middleware to debug req.isAuthenticated
-app.use((req, res, next) => {
-  next();
-});
-
-// Logging middleware for API routes
-app.use((req, res, next) => {
-  const start = Date.now();
-  const path = req.path;
-  let capturedJsonResponse: Record<string, any> | undefined = undefined;
-
-  const originalResJson = res.json;
-  res.json = function (bodyJson, ...args) {
-    capturedJsonResponse = bodyJson;
-    return originalResJson.apply(res, [bodyJson, ...args]);
-  };
-
-  res.on("finish", () => {
-    const duration = Date.now() - start;
-    if (path.startsWith("/api")) {
-      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      if (capturedJsonResponse) {
-        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
-      }
-
-      if (logLine.length > 80) {
-        logLine = logLine.slice(0, 79) + "…";
-      }
-
-      log(logLine);
-    }
-  });
-
-  next();
-});
+// Express static middleware with no logging for static files
+app.use(express.static('client/public', {
+  // Disable logging for static files
+  logger: false,
+  // Set cache headers
+  maxAge: '1d',
+  // Don't generate etags
+  etag: false,
+  // Don't list directories
+  redirect: false
+}));
 
 (async () => {
   // Register API routes before Vite middleware or static serving
@@ -237,43 +213,18 @@ app.use((req, res, next) => {
     });
   });
 
-  try {
-    await new Promise<void>((resolve, reject) => {
-      const port = typeof PORT === 'string' ? parseInt(PORT, 10) : PORT;
-      console.log('Starting server on port:', port);
-      
-      server.listen(port, '0.0.0.0', () => {
-        log(`Server initialization complete`);
-        log(`Server Details:
-          Port: ${port}
-          Environment: ${app.get('env')}
-          Node Version: ${process.version}
-          Start Time: ${new Date().toISOString()}
-        `);
-        resolve();
-      });
-
-      server.on('error', (error: NodeJS.ErrnoException) => {
-        if (error.code === 'EADDRINUSE') {
-          console.error(`Port ${PORT} is already in use`);
-          reject(new Error(`Port ${PORT} is already in use`));
-        } else {
-          console.error('Server error:', {
-            code: error.code,
-            message: error.message,
-            stack: error.stack,
-            timestamp: new Date().toISOString()
-          });
-          reject(error);
-        }
-      });
-    });
-  } catch (error) {
-    console.error('Failed to start server:', {
-      error: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined,
-      timestamp: new Date().toISOString()
-    });
+  const port = Number(process.env.PORT) || 3000;
+  
+  server.on('error', (error: NodeJS.ErrnoException) => {
+    if (error.code === 'EADDRINUSE') {
+      console.error(`Port ${port} is already in use`);
+      process.exit(1);
+    }
+    console.error('Server error:', error);
     process.exit(1);
-  }
+  });
+
+  server.listen(port, '0.0.0.0', () => {
+    console.log(`Server started on port ${port} (${app.get('env')})`);
+  });
 })();
