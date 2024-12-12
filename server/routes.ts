@@ -354,7 +354,7 @@ export function setupRoutes(app: express.Application) {
     }
   });
 
-  // Image serving endpoint
+  // Image serving endpoint with minimal logging
   app.get("/images/:filename", async (req, res) => {
     try {
       const { filename } = req.params;
@@ -379,9 +379,15 @@ export function setupRoutes(app: express.Application) {
       res.setHeader('Cache-Control', 'public, max-age=31536000');
       res.setHeader('ETag', etag);
 
+      // Disable express debug logging for static files
+      req.app.set('etag', false);
+      req.app.disable('x-powered-by');
+
       fs.createReadStream(filePath).pipe(res);
     } catch (error) {
-      console.error('Error serving image:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error serving image:', error);
+      }
       res.status(500).json({ error: 'Failed to serve image' });
     }
   });

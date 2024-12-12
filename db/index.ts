@@ -162,11 +162,14 @@ export const db = drizzle(pool, {
   schema,
   logger: {
     logQuery: (query: string, params: unknown[]) => {
-      // Skip logging for common queries in production
-      if (process.env.NODE_ENV === 'production' && (
-        query.toLowerCase().includes('select') || 
-        query.toLowerCase().includes('where id =')
-      )) {
+      // Only log queries in development mode with debug enabled
+      if (process.env.NODE_ENV !== 'development' || !process.env.DEBUG) {
+        return;
+      }
+
+      // Skip common queries even in development
+      if (query.toLowerCase().includes('select') || 
+          query.toLowerCase().includes('where id =')) {
         return;
       }
 
@@ -181,10 +184,15 @@ export const db = drizzle(pool, {
         ? query.substring(0, 100) + '...' 
         : query;
 
-      dbLogger.info('DB Query', {
-        query: truncatedQuery,
-        params: maskedParams
-      });
+      // Only log significant database operations
+      if (query.toLowerCase().includes('insert') || 
+          query.toLowerCase().includes('update') || 
+          query.toLowerCase().includes('delete')) {
+        dbLogger.info('DB Query', {
+          query: truncatedQuery,
+          params: maskedParams
+        });
+      }
     },
   },
 });
