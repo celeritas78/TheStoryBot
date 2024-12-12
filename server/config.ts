@@ -1,9 +1,44 @@
 // Credits and Plan Configuration
-export const CREDITS_PER_USD = 1; // 1 USD = 1 credit
 export const MAX_CREDITS_PURCHASE = 100; // Maximum credits per purchase
 export const MIN_CREDITS_PURCHASE = 1; // Minimum credits per purchase
 export const FREE_CREDITS = 3; // Free credits for new users
 export const MAX_FREE_STORIES = 3; // Maximum stories for free plan
+
+// Currency Configuration
+export const SUPPORTED_CURRENCIES = {
+  USD: {
+    code: 'usd',
+    symbol: '$',
+    name: 'US Dollar',
+    creditsPerUnit: 1, // 1 USD = 1 credit
+    minAmount: 1,
+    maxAmount: 100
+  },
+  EUR: {
+    code: 'eur',
+    symbol: '€',
+    name: 'Euro',
+    creditsPerUnit: 1.1, // 1 EUR ≈ 1.1 credits
+    minAmount: 1,
+    maxAmount: 85
+  },
+  GBP: {
+    code: 'gbp',
+    symbol: '£',
+    name: 'British Pound',
+    creditsPerUnit: 1.25, // 1 GBP ≈ 1.25 credits
+    minAmount: 1,
+    maxAmount: 75
+  },
+  INR: {
+    code: 'inr',
+    symbol: '₹',
+    name: 'Indian Rupee',
+    creditsPerUnit: 0.012, // 1 INR ≈ 0.012 credits
+    minAmount: 100,
+    maxAmount: 8000
+  }
+} as const;
 
 // Plan Configuration
 export const PLANS = {
@@ -38,8 +73,7 @@ export const PLANS = {
       requiresCredits: true,
       creditCost: 1, // 1 credit per story
       minCreditPurchase: MIN_CREDITS_PURCHASE,
-      maxCreditPurchase: MAX_CREDITS_PURCHASE,
-      creditPriceUSD: 1 // $1 per credit
+      maxCreditPurchase: MAX_CREDITS_PURCHASE
     }
   }
 } as const;
@@ -52,8 +86,8 @@ export const TRANSACTION_TYPES = {
   PREMIUM_UPGRADE: 'premium_upgrade'
 } as const;
 
-// Stripe configuration
-export const STRIPE_CURRENCY = 'usd';
+// Stripe Configuration
+export const STRIPE_DEFAULT_CURRENCY = SUPPORTED_CURRENCIES.USD.code;
 export const STRIPE_STATEMENT_DESCRIPTOR = 'Story Credits';
 export const STRIPE_STATEMENT_DESCRIPTOR_SUFFIX = 'Credits';
 export const STRIPE_API_VERSION = '2024-11-20.acacia' as const;
@@ -65,3 +99,41 @@ export const TRANSACTION_STATUS = {
   FAILED: 'failed',
   REFUNDED: 'refunded',
 } as const;
+
+// Helper function to calculate credits from amount and currency
+export function calculateCredits(amount: number, currency: keyof typeof SUPPORTED_CURRENCIES): number {
+  const currencyConfig = SUPPORTED_CURRENCIES[currency];
+  return Math.floor(amount * currencyConfig.creditsPerUnit);
+}
+
+// Helper function to validate purchase amount for currency
+export function validatePurchaseAmount(amount: number, currency: keyof typeof SUPPORTED_CURRENCIES): {
+  isValid: boolean;
+  error?: string;
+} {
+  const currencyConfig = SUPPORTED_CURRENCIES[currency];
+  
+  if (amount < currencyConfig.minAmount) {
+    return {
+      isValid: false,
+      error: `Minimum amount for ${currencyConfig.name} is ${currencyConfig.symbol}${currencyConfig.minAmount}`
+    };
+  }
+  
+  if (amount > currencyConfig.maxAmount) {
+    return {
+      isValid: false,
+      error: `Maximum amount for ${currencyConfig.name} is ${currencyConfig.symbol}${currencyConfig.maxAmount}`
+    };
+  }
+
+  const credits = calculateCredits(amount, currency);
+  if (credits < MIN_CREDITS_PURCHASE || credits > MAX_CREDITS_PURCHASE) {
+    return {
+      isValid: false,
+      error: `Amount would result in ${credits} credits. Must be between ${MIN_CREDITS_PURCHASE} and ${MAX_CREDITS_PURCHASE} credits`
+    };
+  }
+
+  return { isValid: true };
+}

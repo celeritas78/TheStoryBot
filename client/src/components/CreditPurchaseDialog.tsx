@@ -4,10 +4,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { purchaseCredits } from "../lib/api";
 import { useToast } from "@/hooks/use-toast";
-import type { PaymentState, PaymentStatus } from "../types/payment";
+import type { PaymentState, PaymentStatus, CurrencyCode } from "../types/payment";
 import type { Stripe, StripeElementsOptions } from '@stripe/stripe-js';
+import { SUPPORTED_CURRENCIES } from "../../server/config";
 
 const initialPaymentState: PaymentState = {
   status: "idle",
@@ -130,13 +132,23 @@ export const CreditPurchaseDialog = ({
   stripeOptions?: StripeElementsOptions;
 }) => {
   const [amount, setAmount] = useState(10);
-  const [paymentState, setPaymentState] = useState<PaymentState>(initialPaymentState);
+  const [currency, setCurrency] = useState<CurrencyCode>('usd');
+  const [paymentState, setPaymentState] = useState<PaymentState>({
+    ...initialPaymentState,
+    currency: 'usd'
+  });
   const { toast } = useToast();
+
+  // Get currency configuration
+  const currencyConfig = SUPPORTED_CURRENCIES[currency];
+  const creditsToReceive = Math.floor(amount * currencyConfig.creditsPerUnit);
 
   console.log("CreditPurchaseDialog rendered with state:", {
     hasClientSecret: !!paymentState.clientSecret,
     status: paymentState.status,
     amount: paymentState.amount,
+    currency,
+    creditsToReceive,
     timestamp: new Date().toISOString()
   });
 
@@ -235,23 +247,69 @@ export const CreditPurchaseDialog = ({
           <DialogDescription>Add credits to your account.</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="amount">Credits to Purchase</Label>
-            <Input
-              id="amount"
-              type="number"
-              value={amount}
-              onChange={(e) => {
-                const value = Number(e.target.value);
-                if (value >= 1 && value <= 100) {
-                  setAmount(value);
-                }
-              }}
-              min={1}
-              max={100}
-              className="w-full"
-            />
-            <p className="text-sm text-gray-500">Each credit costs $1 USD</p>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="currency">Currency</Label>
+                <Select
+                  value={currency}
+                  onValueChange={(value: CurrencyCode) => {
+                    setCurrency(value);
+                    // Reset amount to minimum for selected currency
+                    setAmount(SUPPORTED_CURRENCIES[value].minAmount);
+                  }}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select currency" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(SUPPORTED_CURRENCIES).map(([code, config]) => (
+                      <SelectItem key={code} value={code}>
+                        {config.symbol} {config.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <Label htmlFor="amount">Amount</Label>
+                <Input
+                  id="amount"
+                  type="number"
+                  value={amount}
+                  onChange={(e) => {
+                    const value = Number(e.target.value);
+                    const config = SUPPORTED_CURRENCIES[currency];
+                    if (value >= config.minAmount && value <= config.maxAmount) {
+                      setAmount(value);
+                    }
+                  }}
+                  min={currencyConfig.minAmount}
+                  max={currencyConfig.maxAmount}
+                  step="1"
+                  className="w-full"
+                />
+              </div>
+            </div>
+            
+            <div className="rounded-lg bg-secondary p-4">
+              <p className="text-sm font-medium">Purchase Summary</p>
+              <div className="mt-2 space-y-1">
+                <div className="flex justify-between text-sm">
+                  <span>Amount:</span>
+                  <span>{currencyConfig.symbol}{amount.toFixed(2)} {currencyConfig.name}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span>Credits to receive:</span>
+                  <span>{creditsToReceive} credits</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span>Rate:</span>
+                  <span>1 {currencyConfig.name} = {currencyConfig.creditsPerUnit} credits</span>
+                </div>
+              </div>
+            </div>
           </div>
           
           {paymentState.status === "processing" ? (

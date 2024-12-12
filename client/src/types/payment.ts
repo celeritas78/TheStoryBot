@@ -1,20 +1,34 @@
 import type { PaymentIntent, StripeError } from '@stripe/stripe-js';
 
+// Supported currency codes
+export type CurrencyCode = 'usd' | 'eur' | 'gbp' | 'inr';
+
+export interface CurrencyInfo {
+  code: CurrencyCode;
+  symbol: string;
+  name: string;
+  creditsPerUnit: number;
+  minAmount: number;
+  maxAmount: number;
+}
+
 export interface PaymentFormData {
   amount: number;
+  currency: CurrencyCode;
 }
 
 // Define the base response type from server's Stripe service
 export interface PaymentIntentResponse {
   clientSecret: string;
   amount: number;
-  currency: string;
+  currency: CurrencyCode;
   status: PaymentIntent['status'];
   creditsToAdd: number;
   currentCredits: number;
   projectedTotalCredits: number;
   transactionId: number;
   stripePaymentId?: string;
+  currencyInfo: CurrencyInfo;
   error?: {
     message: string;
     code?: string;
@@ -29,6 +43,8 @@ export interface PaymentStateDetails {
   currentCredits?: number;
   projectedTotalCredits?: number;
   transactionId?: number;
+  currency?: CurrencyCode;
+  currencyInfo?: CurrencyInfo;
 }
 
 export interface PaymentError {
@@ -40,12 +56,15 @@ export interface PaymentError {
   min?: number;
   max?: number;
   requested?: number;
+  currency?: CurrencyCode;
 }
 
 export interface PaymentConfirmationResponse {
   success: boolean;
   credits: number;
   isPremium: boolean;
+  currency: CurrencyCode;
+  amount: number;
 }
 
 export type PaymentStatus = 
@@ -64,10 +83,12 @@ export interface PaymentState extends PaymentStateDetails {
   error: PaymentError | null;
   clientSecret: string | null;
   amount: number | null;
+  currency: CurrencyCode;
 }
 
 export interface StripePaymentElementOptions {
   clientSecret: string;
+  currency?: CurrencyCode;
   appearance?: {
     theme: 'stripe' | 'night' | 'flat';
     variables?: Record<string, string>;
@@ -90,9 +111,19 @@ export interface CreditPurchaseError {
   min?: number;
   max?: number;
   requested?: number;
+  currency?: CurrencyCode;
 }
 
 export interface CreditBalanceResponse {
   credits: number;
   isPremium: boolean;
+}
+
+export interface CurrencyOption {
+  value: CurrencyCode;
+  label: string;
+  symbol: string;
+  minAmount: number;
+  maxAmount: number;
+  creditsPerUnit: number;
 }

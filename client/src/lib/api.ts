@@ -180,11 +180,12 @@ export async function getCreditBalance(): Promise<CreditBalance> {
   return response.json();
 }
 
-export async function purchaseCredits(amount: number): Promise<PaymentIntentResponse> {
+export async function purchaseCredits(amount: number, currency: CurrencyCode): Promise<PaymentIntentResponse> {
   const requestId = Math.random().toString(36).substring(7);
   console.log('Initiating credit purchase:', {
     requestId,
     amount,
+    currency,
     timestamp: new Date().toISOString()
   });
 
@@ -196,7 +197,7 @@ export async function purchaseCredits(amount: number): Promise<PaymentIntentResp
         "Accept": "application/json",
       },
       credentials: 'include',
-      body: JSON.stringify({ amount }),
+      body: JSON.stringify({ amount, currency }),
     });
 
     if (!response.ok) {
