@@ -49,13 +49,16 @@ async function initializeServices() {
 (async () => {
   try {
     const isDevelopment = process.env.NODE_ENV === 'development';
+    // Use REPL_SLUG to detect Replit environment
+    const isReplit = process.env.REPL_SLUG !== undefined;
     const port = Number(process.env.PORT) || 3000;
     const host = '0.0.0.0';
     
     console.log('Starting server initialization:', { 
       port, 
       host,
-      environment: process.env.NODE_ENV 
+      environment: process.env.NODE_ENV,
+      platform: isReplit ? 'replit' : 'local'
     });
 
     // Initialize core services
