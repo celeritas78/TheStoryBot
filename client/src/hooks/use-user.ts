@@ -4,7 +4,10 @@ import type { User, InsertUser } from "@db/schema";
 type RequestResult = {
   ok: boolean;
   message?: string;
-  data?: User | null;
+  data?: {
+    user: User;
+    isAuthenticated?: boolean;
+  } | null;
 };
 
 async function handleRequest<T extends Record<string, unknown>>(
@@ -144,12 +147,14 @@ export function useUser() {
         data: data
       };
     },
-    onSuccess: async (data) => {
-      // Update the cache with the user data
-      queryClient.setQueryData(['user'], data.data.user);
-      // Force immediate refetch to ensure we have the latest data
-      await queryClient.invalidateQueries({ queryKey: ['user'] });
-      await queryClient.refetchQueries({ queryKey: ['user'], exact: true });
+    onSuccess: async (result) => {
+      if (result.data?.user) {
+        // Update the cache with the user data
+        queryClient.setQueryData(['user'], result.data.user);
+        // Force immediate refetch to ensure we have the latest data
+        await queryClient.invalidateQueries({ queryKey: ['user'] });
+        await queryClient.refetchQueries({ queryKey: ['user'], exact: true });
+      }
     },
     onError: (error) => {
       console.error('Login mutation failed:', error);

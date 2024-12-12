@@ -95,30 +95,8 @@ setupAuth(app);
     process.on('SIGTERM', () => handleShutdown('SIGTERM'));
     process.on('SIGINT', () => handleShutdown('SIGINT'));
 
-    // Start server first
-    await new Promise<void>((resolve, reject) => {
-      server.listen(port, host, () => {
-        console.log('Server started successfully:', {
-          port,
-          host,
-          environment: process.env.NODE_ENV,
-          timestamp: new Date().toISOString()
-        });
-        resolve();
-      });
-
-      server.on('error', (error: NodeJS.ErrnoException) => {
-        console.error('Server startup error:', {
-          error: error.message,
-          code: error.code,
-          stack: error.stack,
-          timestamp: new Date().toISOString()
-        });
-        reject(error);
-      });
-    });
-
-    // Setup development or production mode after server is running
+    // Start server and set up Vite/static file serving
+    // Setup development or production mode before starting server
     if (process.env.NODE_ENV === 'development') {
       await setupVite(app, server);
     } else {
@@ -128,6 +106,29 @@ setupAuth(app);
         res.sendFile(path.resolve(__dirname, '..', 'public', 'index.html'));
       });
     }
+
+    // Start server after setting up the mode
+    await new Promise<void>((resolve, reject) => {
+      server.on('error', (error: NodeJS.ErrnoException) => {
+        console.error('Server startup error:', {
+          error: error.message,
+          code: error.code,
+          stack: error.stack,
+          timestamp: new Date().toISOString()
+        });
+        reject(error);
+      });
+
+      server.listen(port, host, () => {
+        console.log('Server started successfully:', {
+          port,
+          host,
+          environment: process.env.NODE_ENV,
+          timestamp: new Date().toISOString()
+        });
+        resolve();
+      });
+    });
 
   } catch (error) {
     console.error('Fatal error during startup:', {

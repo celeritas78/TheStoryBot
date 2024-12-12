@@ -41,7 +41,7 @@ export default function AuthPage() {
 
       if (type === "login") {
         // Check if email is verified
-        if (!result.data?.user?.emailVerified) {
+        if (result.data?.user && !result.data.user.emailVerified) {
           toast({
             title: "Email not verified",
             description: "Please check your email for the verification link before accessing all features.",

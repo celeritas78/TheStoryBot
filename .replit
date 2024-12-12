@@ -11,6 +11,10 @@ build = ["npm", "run", "build"]
 run = ["sh", "-c", "NODE_ENV=development DEBUG=express:*,app:* tsx watch --clear-screen=false --exclude vite.config.ts.* server/index.ts"]
 
 [[ports]]
+localPort = 3000
+externalPort = 3000
+
+[[ports]]
 localPort = 5000
 externalPort = 80
 
