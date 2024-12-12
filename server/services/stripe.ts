@@ -130,32 +130,53 @@ async function initializeStripe(retryCount = 3): Promise<Stripe | null> {
 
 // Initialize stripe instance
 let stripeInstance: Stripe | null = null;
+let isInitializing = false;
+let initializationError: Error | null = null;
 
 // Export getter for stripe instance to ensure proper initialization check
 export function getStripe(): Stripe | null {
+  if (initializationError) {
+    throw initializationError;
+  }
   return stripeInstance;
 }
 
 // Initialize Stripe and return promise for server startup
 export async function initializeStripeService(): Promise<void> {
+  if (isInitializing) {
+    console.log('Stripe service initialization already in progress');
+    return;
+  }
+
+  if (stripeInstance) {
+    console.log('Stripe service already initialized');
+    return;
+  }
+
+  isInitializing = true;
+  initializationError = null;
   const environment = process.env.NODE_ENV || 'development';
   const startTime = Date.now();
   
   try {
     console.log('Starting Stripe service initialization...', {
       environment,
+      hasSecretKey: !!process.env.STRIPE_SECRET_KEY,
       timestamp: new Date().toISOString()
     });
     
     stripeInstance = await initializeStripe();
     
     if (!stripeInstance) {
-      console.warn('Stripe service initialization incomplete - some features will be disabled', {
+      const error = new Error('Stripe service initialization failed - service is null');
+      console.error('Stripe initialization failed:', {
+        error: error.message,
         environment,
         duration: Date.now() - startTime,
         timestamp: new Date().toISOString()
       });
-      return;
+      initializationError = error;
+      throw error;
     }
     
     console.log('Stripe service initialized successfully', {
@@ -174,8 +195,10 @@ export async function initializeStripeService(): Promise<void> {
       timestamp: new Date().toISOString()
     });
     
-    // Don't throw - allow the application to start without Stripe
-    return;
+    initializationError = error instanceof Error ? error : new Error('Unknown initialization error');
+    throw initializationError;
+  } finally {
+    isInitializing = false;
   }
 }
 

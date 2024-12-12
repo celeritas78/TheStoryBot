@@ -31,13 +31,23 @@ const PaymentForm = ({
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    console.log("Payment form submitted");
 
     if (!stripe || !elements) {
+      console.error("Stripe or Elements not initialized");
       toast({ title: "Error", description: "Payment system not initialized", variant: "destructive" });
       return;
     }
 
+    const paymentElement = elements.getElement('payment');
+    if (!paymentElement) {
+      console.error("Payment Element not found");
+      toast({ title: "Error", description: "Payment form not properly loaded", variant: "destructive" });
+      return;
+    }
+
     try {
+      console.log("Confirming payment...");
       const { error, paymentIntent } = await stripe.confirmPayment({
         elements,
         confirmParams: { 
@@ -52,6 +62,7 @@ const PaymentForm = ({
       });
 
       if (error) {
+        console.error("Payment error:", error);
         if (error.type === 'card_error' || error.type === 'validation_error') {
           toast({ 
             title: "Payment Error", 
@@ -68,6 +79,7 @@ const PaymentForm = ({
         return;
       }
 
+      console.log("Payment intent status:", paymentIntent?.status);
       if (paymentIntent?.status === 'succeeded') {
         toast({ 
           title: "Payment Successful", 
@@ -129,24 +141,43 @@ export const CreditPurchaseDialog = ({
   });
 
   const initializePayment = useCallback(async () => {
+    const requestId = Math.random().toString(36).substring(7);
     console.log("Initializing payment with state:", {
+      requestId,
       hasClientSecret: !!paymentState.clientSecret,
       amount,
       status: paymentState.status,
       timestamp: new Date().toISOString()
     });
 
+    // Prevent multiple initialization attempts
+    if (paymentState.status === "processing") {
+      console.log("Payment initialization already in progress, skipping", {
+        requestId,
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+
     if (paymentState.clientSecret) {
-      console.log("Payment already initialized, skipping");
+      console.log("Payment already initialized with client secret, skipping", {
+        requestId,
+        timestamp: new Date().toISOString()
+      });
       return;
     }
 
     try {
       setPaymentState((state) => ({ ...state, status: "processing", error: null }));
-      console.log("Requesting credit purchase from server...");
+      console.log("Requesting credit purchase from server...", {
+        requestId,
+        amount,
+        timestamp: new Date().toISOString()
+      });
 
       const response = await purchaseCredits(amount);
       console.log("Credit purchase response:", {
+        requestId,
         hasClientSecret: !!response?.clientSecret,
         status: response?.status,
         amount: response?.amount,
@@ -203,33 +234,67 @@ export const CreditPurchaseDialog = ({
           <DialogTitle>Purchase Story Credits</DialogTitle>
           <DialogDescription>Add credits to your account.</DialogDescription>
         </DialogHeader>
-        <div>
-          <Label htmlFor="amount">Credits</Label>
-          <Input
-            type="number"
-            value={amount}
-            onChange={(e) => setAmount(Number(e.target.value))}
-          />
-          {paymentState.status === "processing" ? (
-            <div>Loading payment options...</div>
-          ) : paymentState.status === "failed" ? (
-            <div>Failed to load payment options. Please try again.</div>
-          ) : paymentState.clientSecret ? (
-            <Elements 
-              stripe={stripePromise} 
-              options={{
-                clientSecret: paymentState.clientSecret!,
-                appearance: stripeOptions?.appearance,
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="amount">Credits to Purchase</Label>
+            <Input
+              id="amount"
+              type="number"
+              value={amount}
+              onChange={(e) => {
+                const value = Number(e.target.value);
+                if (value >= 1 && value <= 100) {
+                  setAmount(value);
+                }
               }}
-            >
-              <PaymentForm 
-                clientSecret={paymentState.clientSecret}
-                amount={amount}
-                onSuccess={onSuccess}
-              />
-            </Elements>
+              min={1}
+              max={100}
+              className="w-full"
+            />
+            <p className="text-sm text-gray-500">Each credit costs $1 USD</p>
+          </div>
+          
+          {paymentState.status === "processing" ? (
+            <div className="flex items-center justify-center p-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              <span className="ml-2">Loading payment options...</span>
+            </div>
+          ) : paymentState.status === "failed" ? (
+            <div className="text-red-500 p-4 text-center">
+              Failed to load payment options. Please try again.
+            </div>
+          ) : paymentState.clientSecret ? (
+            <div className="mt-4">
+              <Elements 
+                stripe={stripePromise} 
+                options={{
+                  clientSecret: paymentState.clientSecret,
+                  appearance: {
+                    theme: 'stripe',
+                    variables: {
+                      colorPrimary: '#6366f1',
+                      colorBackground: '#ffffff',
+                      colorText: '#1f2937',
+                      colorDanger: '#dc2626',
+                      fontFamily: 'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont',
+                      spacingUnit: '4px',
+                      borderRadius: '6px',
+                    },
+                  },
+                }}
+                key={paymentState.clientSecret}
+              >
+                <PaymentForm 
+                  clientSecret={paymentState.clientSecret}
+                  amount={amount}
+                  onSuccess={onSuccess}
+                />
+              </Elements>
+            </div>
           ) : (
-            <div>Initializing payment...</div>
+            <div className="text-center p-4">
+              <div className="animate-pulse">Initializing payment...</div>
+            </div>
           )}
         </div>
       </DialogContent>

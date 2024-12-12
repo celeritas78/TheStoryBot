@@ -114,7 +114,23 @@ async function startServer() {
 }
 
 // Initialize services and start the server
-const stripeEnabled = await startServer();
+let stripeEnabled = false;
+try {
+  stripeEnabled = await startServer();
+  console.log('Server initialization completed:', {
+    stripeEnabled,
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV
+  });
+} catch (error) {
+  console.error('Failed to initialize server:', {
+    error: error instanceof Error ? error.message : 'Unknown error',
+    stack: error instanceof Error ? error.stack : undefined,
+    timestamp: new Date().toISOString()
+  });
+  // Continue without Stripe - features will be limited
+  console.log('Continuing without payment features - functionality will be limited');
+}
 
 // Set up error handlers for uncaught exceptions
 process.on('uncaughtException', (error) => {
@@ -133,23 +149,16 @@ process.on('unhandledRejection', (reason, promise) => {
   });
 });
 
-// Serve static files from client/public directory
-app.use(express.static('client/public'));
+// Serve static files from client/public directory with proper configuration
+app.use(express.static('client/public', {
+  maxAge: '1d',
+  etag: false,
+  redirect: false,
+  index: false // Prevent serving index.html for /
+}));
 
 // Call setupAuth before routes
 setupAuth(app);
-
-// Express static middleware with no logging for static files
-app.use(express.static('client/public', {
-  // Disable logging for static files
-  logger: false,
-  // Set cache headers
-  maxAge: '1d',
-  // Don't generate etags
-  etag: false,
-  // Don't list directories
-  redirect: false
-}));
 
 (async () => {
   // Register API routes before Vite middleware or static serving
@@ -174,26 +183,62 @@ app.use(express.static('client/public', {
   }
 
   // Use port 3000 for development, otherwise use environment variable
-  const PORT = process.env.PORT || 3000;
+  const port = Number(process.env.PORT) || 3000;
+  const host = '0.0.0.0';
 
-  // Add shutdown handler
-  function handleShutdown() {
-    log('Server shutting down...');
-    server.close(() => {
-      log('Server closed');
-      process.exit(0);
+  // Add shutdown handler with improved cleanup
+  function handleShutdown(signal?: string) {
+    const requestId = Math.random().toString(36).substring(7);
+    console.log('Server shutdown initiated', {
+      signal,
+      requestId,
+      timestamp: new Date().toISOString()
     });
 
-    // Force close after 10s
-    setTimeout(() => {
-      log('Forcing server shutdown...');
-      process.exit(1);
-    }, 10000);
+    let forceShutdownTimer: NodeJS.Timeout;
+
+    // Create a promise that resolves when the server closes
+    const closeServer = new Promise<void>((resolve) => {
+      server.close(() => {
+        console.log('Server closed gracefully', {
+          requestId,
+          timestamp: new Date().toISOString()
+        });
+        resolve();
+      });
+    });
+
+    // Set a timeout for force shutdown
+    const forceShutdown = new Promise<void>((resolve) => {
+      forceShutdownTimer = setTimeout(() => {
+        console.error('Force shutting down server after timeout', {
+          requestId,
+          timestamp: new Date().toISOString()
+        });
+        resolve();
+      }, 10000);
+    });
+
+    // Wait for either graceful shutdown or force shutdown
+    Promise.race([closeServer, forceShutdown])
+      .then(() => {
+        clearTimeout(forceShutdownTimer);
+        process.exit(0);
+      })
+      .catch((error) => {
+        console.error('Error during shutdown:', {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          stack: error instanceof Error ? error.stack : undefined,
+          requestId,
+          timestamp: new Date().toISOString()
+        });
+        process.exit(1);
+      });
   }
 
   // Handle termination signals
-  process.on('SIGTERM', handleShutdown);
-  process.on('SIGINT', handleShutdown);
+  process.on('SIGTERM', () => handleShutdown('SIGTERM'));
+  process.on('SIGINT', () => handleShutdown('SIGINT'));
 
   // Handle uncaught errors
   process.on('uncaughtException', (error) => {
@@ -202,7 +247,7 @@ app.use(express.static('client/public', {
       stack: error.stack,
       timestamp: new Date().toISOString()
     });
-    handleShutdown();
+    handleShutdown('uncaughtException');
   });
 
   process.on('unhandledRejection', (reason, promise) => {
@@ -213,18 +258,53 @@ app.use(express.static('client/public', {
     });
   });
 
-  const port = Number(process.env.PORT) || 3000;
-  
+  // Improved error handling for server startup
   server.on('error', (error: NodeJS.ErrnoException) => {
+    const requestId = Math.random().toString(36).substring(7);
     if (error.code === 'EADDRINUSE') {
-      console.error(`Port ${port} is already in use`);
+      console.error('Port binding failed:', {
+        error: `Port ${port} is already in use`,
+        port,
+        host,
+        requestId,
+        timestamp: new Date().toISOString()
+      });
       process.exit(1);
     }
-    console.error('Server error:', error);
+    
+    console.error('Server error:', {
+      error: error.message,
+      code: error.code,
+      stack: error.stack,
+      requestId,
+      timestamp: new Date().toISOString()
+    });
     process.exit(1);
   });
 
-  server.listen(port, '0.0.0.0', () => {
-    console.log(`Server started on port ${port} (${app.get('env')})`);
-  });
+  // Start the server with enhanced logging
+  try {
+    await new Promise<void>((resolve, reject) => {
+      server.listen(port, host, () => {
+        console.log('Server started successfully:', {
+          port,
+          host,
+          environment: app.get('env'),
+          timestamp: new Date().toISOString()
+        });
+        resolve();
+      });
+
+      server.on('error', reject);
+    });
+  } catch (error) {
+    console.error('Failed to start server:', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      port,
+      host,
+      timestamp: new Date().toISOString()
+    });
+    process.exit(1);
+  }
 })();
