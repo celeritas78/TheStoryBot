@@ -5,9 +5,21 @@ import { createServer } from "http";
 import { setupAuth } from "./auth";
 import path from "path";
 
+// Configure logging based on environment
+const logLevel = process.env.NODE_ENV === 'production' ? 'error' : 'warn';
+const logger = {
+  info: (...args: any[]) => {
+    if (process.env.DEBUG === 'true') {
+      console.log(...args);
+    }
+  },
+  warn: (...args: any[]) => console.warn(...args),
+  error: (...args: any[]) => console.error(...args),
+};
+
 // Global error handler for unhandled promise rejections
 process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled Rejection:', {
+  logger.error('Unhandled Rejection:', {
     reason,
     promise,
     timestamp: new Date().toISOString()
