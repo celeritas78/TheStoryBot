@@ -375,15 +375,22 @@ export function setupRoutes(app: express.Application) {
         return res.status(304).end();
       }
 
+      // Set headers for optimal caching and performance
       res.setHeader('Content-Type', getImageMimeType(filename));
       res.setHeader('Cache-Control', 'public, max-age=31536000');
       res.setHeader('ETag', etag);
+      res.setHeader('X-Content-Type-Options', 'nosniff');
 
-      // Disable express debug logging for static files
-      req.app.set('etag', false);
-      req.app.disable('x-powered-by');
+      // Disable express debug logging and unnecessary headers
+      app.set('etag', false);
+      app.disable('x-powered-by');
+      app.set('env', process.env.NODE_ENV || 'production');
+      app.disable('verbose');
 
-      fs.createReadStream(filePath).pipe(res);
+      // Stream the file without logging
+      const stream = fs.createReadStream(filePath);
+      stream.pipe(res);
+      
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
         console.error('Error serving image:', error);

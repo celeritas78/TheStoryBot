@@ -5,16 +5,16 @@ import { createServer } from "http";
 import { setupAuth } from "./auth";
 import path from "path";
 
-// Configure logging based on environment
-const logLevel = process.env.NODE_ENV === 'production' ? 'error' : 'warn';
+// Configure structured logging
+process.env.DEBUG = process.env.NODE_ENV === 'development' ? 'app:*' : 'false';
 const logger = {
   info: (...args: any[]) => {
-    if (process.env.DEBUG === 'true') {
-      console.log(...args);
+    if (process.env.NODE_ENV === 'development') {
+      console.log(new Date().toISOString(), '[INFO]', ...args);
     }
   },
-  warn: (...args: any[]) => console.warn(...args),
-  error: (...args: any[]) => console.error(...args),
+  warn: (...args: any[]) => console.warn(new Date().toISOString(), '[WARN]', ...args),
+  error: (...args: any[]) => console.error(new Date().toISOString(), '[ERROR]', ...args)
 };
 
 // Global error handler for unhandled promise rejections
@@ -29,15 +29,21 @@ process.on('unhandledRejection', (reason, promise) => {
 const app = express();
 const server = createServer(app);
 
-// Disable debug logging for production and development
+// Disable express debug logging
 app.set('debug', false);
 app.disable('verbose');
+app.disable('log');
+app.set('env', 'production'); // Disable express development logging
 
 // Basic middleware setup
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Disable powered by header
+// Disable express logging and headers
+app.set('debug', false);
+app.disable('verbose');
+app.disable('log');
+app.set('env', 'production'); // Disable express development logging
 app.disable('x-powered-by');
 
 // Initialize application services
@@ -59,16 +65,15 @@ async function initializeServices() {
     // Use REPL_SLUG to detect Replit environment
     const isReplit = process.env.REPL_SLUG !== undefined;
     // Default to port 3000, but allow override through PORT env var
-    const port = Number(process.env.PORT || 3000);
+    let port = Number(process.env.PORT || 3000);
     const host = '0.0.0.0';
     
-    // Minimal logging during startup
-    if (process.env.DEBUG !== 'false') {
-      console.log('Server initializing:', { 
-        port,
-        environment: process.env.NODE_ENV
-      });
-    }
+    // Always log server initialization
+    console.log('Server initializing:', { 
+      port,
+      environment: process.env.NODE_ENV,
+      timestamp: new Date().toISOString()
+    });
 
     // Initialize core services
     await initializeServices();
@@ -100,7 +105,7 @@ async function initializeServices() {
 
     // Setup static file serving and catch-all route for production
     if (!isDevelopment) {
-      const publicPath = path.resolve(__dirname, '..', 'public');
+      const publicPath = path.resolve(process.cwd(), 'public');
       console.log('Setting up static file serving:', { publicPath });
       app.use(express.static(publicPath));
       app.get('*', (_req, res) => {
@@ -135,27 +140,38 @@ async function initializeServices() {
     process.on('SIGTERM', () => handleShutdown('SIGTERM'));
     process.on('SIGINT', () => handleShutdown('SIGINT'));
 
-    // Start the server
+    // Start the server with retry logic for port conflicts
     await new Promise<void>((resolve, reject) => {
-      server.on('error', (error: NodeJS.ErrnoException) => {
-        console.error('Server startup error:', {
-          error: error.message,
-          code: error.code,
-          stack: error.stack,
-          timestamp: new Date().toISOString()
+      const tryListen = (retryPort: number) => {
+        server.on('error', (error: NodeJS.ErrnoException) => {
+          if (error.code === 'EADDRINUSE') {
+            console.log(`Port ${retryPort} is in use, trying port ${retryPort + 1}`);
+            server.close();
+            tryListen(retryPort + 1);
+          } else {
+            console.error('Server startup error:', {
+              error: error.message,
+              code: error.code,
+              stack: error.stack,
+              timestamp: new Date().toISOString()
+            });
+            reject(error);
+          }
         });
-        reject(error);
-      });
 
-      server.listen(port, host, () => {
-        console.log('Server started successfully:', {
-          port,
-          host,
-          environment: process.env.NODE_ENV,
-          timestamp: new Date().toISOString()
+        server.listen(retryPort, host, () => {
+          port = retryPort; // Update the port number if we had to change it
+          console.log('Server started successfully:', {
+            port: retryPort,
+            host,
+            environment: process.env.NODE_ENV,
+            timestamp: new Date().toISOString()
+          });
+          resolve();
         });
-        resolve();
-      });
+      };
+
+      tryListen(port);
     });
 
   } catch (error) {
