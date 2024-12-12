@@ -95,7 +95,11 @@ setupAuth(app);
     if (process.env.NODE_ENV === 'development') {
       await setupVite(app, server);
     } else {
-      serveStatic(app);
+      // In production, serve from the client build directory
+      app.use(express.static(path.resolve(__dirname, '..', 'public')));
+      app.get('*', (_req, res) => {
+        res.sendFile(path.resolve(__dirname, '..', 'public', 'index.html'));
+      });
     }
 
     // Start server
