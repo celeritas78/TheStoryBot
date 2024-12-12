@@ -3,6 +3,7 @@ import { setupRoutes } from "./routes";
 import { setupVite, serveStatic } from "./vite";
 import { createServer } from "http";
 import { setupAuth } from "./auth";
+import path from "path";
 // Global error handler for unhandled promise rejections
 process.on('unhandledRejection', (reason, promise) => {
   console.error('Unhandled Rejection:', {

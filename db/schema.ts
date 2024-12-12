@@ -50,8 +50,6 @@ export const storySegments = pgTable("story_segments", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-
-
 // Define relations
 export const userRelations = relations(users, ({ many }) => ({
   stories: many(stories),
@@ -87,5 +85,3 @@ export const insertStorySegmentSchema = createInsertSchema(storySegments);
 export const selectStorySegmentSchema = createSelectSchema(storySegments);
 export type InsertStorySegment = z.infer<typeof insertStorySegmentSchema>;
 export type StorySegment = z.infer<typeof selectStorySegmentSchema>;
-
-
