@@ -1,0 +1,480 @@
+express:application set "x-powered-by" to true +0ms
+  express:application set "etag" to 'weak' +1ms
+  express:application set "etag fn" to [Function: generateETag] +0ms
+  express:application set "env" to 'development' +1ms
+  express:application set "query parser" to 'extended' +0ms
+  express:application set "query parser fn" to [Function: parseExtendedQueryString] +0ms
+  express:application set "subdomain offset" to 2 +0ms
+  express:application set "trust proxy" to false +0ms
+  express:application set "trust proxy fn" to [Function: trustNone] +0ms
+  express:application booting in development mode +1ms
+  express:application set "view" to [Function: View] +0ms
+  express:application set "views" to '/home/runner/CustomBedtimeStories/views' +0ms
+  express:application set "jsonp callback name" to 'callback' +0ms
+  express:router use '/' query +1ms
+  express:router:layer new '/' +0ms
+  express:router use '/' expressInit +0ms
+  express:router:layer new '/' +0ms
+  express:router use '/' jsonParser +0ms
+  express:router:layer new '/' +0ms
+  express:router use '/' urlencodedParser +1ms
+  express:router:layer new '/' +0ms
+  express:router use '/' session +1ms
+  express:router:layer new '/' +0ms
+  express:router use '/' initialize +0ms
+  express:router:layer new '/' +0ms
+  express:router use '/' authenticate +1ms
+  express:router:layer new '/' +0ms
+  express:router:route new '/api/register' +0ms
+  express:router:layer new '/api/register' +0ms
+  express:router:route post '/api/register' +0ms
+  express:router:layer new '/' +0ms
+  express:router:route new '/api/verify-email/:token' +0ms
+  express:router:layer new '/api/verify-email/:token' +0ms
+  express:router:route get '/api/verify-email/:token' +0ms
+  express:router:layer new '/' +1ms
+  express:router:route new '/api/login' +0ms
+  express:router:layer new '/api/login' +0ms
+  express:router:route post '/api/login' +0ms
+  express:router:layer new '/' +0ms
+  express:router:route new '/api/logout' +0ms
+  express:router:layer new '/api/logout' +0ms
+  express:router:route post '/api/logout' +0ms
+  express:router:layer new '/' +0ms
+  express:router:route new '/api/profile' +0ms
+  express:router:layer new '/api/profile' +0ms
+  express:router:route put '/api/profile' +0ms
+  express:router:layer new '/' +0ms
+  express:router:route new '/api/user' +0ms
+  express:router:layer new '/api/user' +0ms
+  express:router:route get '/api/user' +1ms
+  express:router:layer new '/' +0ms
+Starting application initialization... { timestamp: '2024-12-12T13:38:26.818Z', environment: 'development' }
+Starting server initialization: { port: 3000, host: '0.0.0.0', environment: 'development' }
+Setting up Vite middleware...
+  express:router:route new '/api/user' +646ms
+  express:router:layer new '/api/user' +1ms
+  express:router:route get '/api/user' +0ms
+  express:router:layer new '/' +0ms
+  express:router use '/' app +0ms
+  express:router:layer new '/' +0ms
+  express:router use '/' <anonymous> +0ms
+  express:router:layer new '/' +0ms
+Setting up API routes...
+  express:router:route new '/api/profile/child-photo' +1ms
+  express:router:layer new '/api/profile/child-photo' +0ms
+  express:router:route post '/api/profile/child-photo' +0ms
+  express:router:layer new '/' +0ms
+  express:router:route post '/api/profile/child-photo' +0ms
+  express:router:layer new '/' +0ms
+  express:router:route new '/api/register' +0ms
+  express:router:layer new '/api/register' +0ms
+  express:router:route post '/api/register' +0ms
+  express:router:layer new '/' +0ms
+  express:router:route new '/api/stories' +0ms
+  express:router:layer new '/api/stories' +1ms
+  express:router:route post '/api/stories' +0ms
+  express:router:layer new '/' +0ms
+  express:router:route new '/api/stories/:id/continue' +0ms
+  express:router:layer new '/api/stories/:id/continue' +0ms
+  express:router:route post '/api/stories/:id/continue' +0ms
+  express:router:layer new '/' +0ms
+  express:router:route new '/api/stories' +0ms
+  express:router:layer new '/api/stories' +0ms
+  express:router:route get '/api/stories' +0ms
+  express:router:layer new '/' +0ms
+  express:router:route new '/api/stories/:id' +0ms
+  express:router:layer new '/api/stories/:id' +0ms
+  express:router:route get '/api/stories/:id' +0ms
+  express:router:layer new '/' +0ms
+  express:router:route new '/images/:filename' +0ms
+  express:router:layer new '/images/:filename' +1ms
+  express:router:route get '/images/:filename' +0ms
+  express:router:layer new '/' +0ms
+  express:router:route new '/audio/:filename' +0ms
+  express:router:layer new '/audio/:filename' +0ms
+  express:router:route get '/audio/:filename' +0ms
+  express:router:layer new '/' +0ms
+  express:router use '/' <anonymous> +0ms
+  express:router:layer new '/' +0ms
+Server started successfully: {
+  port: 3000,
+  host: '0.0.0.0',
+  environment: 'development',
+  timestamp: '2024-12-12T13:38:27.473Z'
+}
+
+[TypeScript] Found 0 errors. Watching for file changes.
+  express:router dispatching GET / +33s
+  express:router query  : / +2ms
+  express:router expressInit  : / +0ms
+  express:router jsonParser  : / +1ms
+  express:router urlencodedParser  : / +0ms
+  express:router session  : / +0ms
+  express:router initialize  : / +2ms
+  express:router authenticate  : / +1ms
+  express:router app  : / +0ms
+  express:router <anonymous>  : / +3ms
+  express:router dispatching GET /@vite/client +737ms
+  express:router query  : /@vite/client +0ms
+  express:router expressInit  : /@vite/client +0ms
+  express:router jsonParser  : /@vite/client +0ms
+  express:router urlencodedParser  : /@vite/client +1ms
+  express:router session  : /@vite/client +0ms
+  express:router initialize  : /@vite/client +0ms
+  express:router authenticate  : /@vite/client +0ms
+  express:router app  : /@vite/client +1ms
+  express:router dispatching GET /src/main.tsx +2ms
+  express:router query  : /src/main.tsx +0ms
+  express:router expressInit  : /src/main.tsx +0ms
+  express:router jsonParser  : /src/main.tsx +0ms
+  express:router urlencodedParser  : /src/main.tsx +0ms
+  express:router session  : /src/main.tsx +1ms
+  express:router initialize  : /src/main.tsx +0ms
+  express:router authenticate  : /src/main.tsx +0ms
+  express:router app  : /src/main.tsx +0ms
+  express:router dispatching GET /@react-refresh +257ms
+  express:router query  : /@react-refresh +1ms
+  express:router expressInit  : /@react-refresh +1ms
+  express:router jsonParser  : /@react-refresh +0ms
+  express:router urlencodedParser  : /@react-refresh +0ms
+  express:router session  : /@react-refresh +0ms
+  express:router initialize  : /@react-refresh +2ms
+  express:router authenticate  : /@react-refresh +0ms
+  express:router app  : /@react-refresh +0ms
+  express:router dispatching GET /@vite-plugin-checker-runtime +1ms
+  express:router query  : /@vite-plugin-checker-runtime +1ms
+  express:router expressInit  : /@vite-plugin-checker-runtime +0ms
+  express:router jsonParser  : /@vite-plugin-checker-runtime +1ms
+  express:router urlencodedParser  : /@vite-plugin-checker-runtime +0ms
+  express:router session  : /@vite-plugin-checker-runtime +0ms
+  express:router initialize  : /@vite-plugin-checker-runtime +0ms
+  express:router authenticate  : /@vite-plugin-checker-runtime +0ms
+  express:router app  : /@vite-plugin-checker-runtime +0ms
+  express:router dispatching GET /@fs/home/runner/CustomBedtimeStories/node_modules/vite/dist/client/env.mjs +639ms
+  express:router query  : /@fs/home/runner/CustomBedtimeStories/node_modules/vite/dist/client/env.mjs +0ms
+  express:router expressInit  : /@fs/home/runner/CustomBedtimeStories/node_modules/vite/dist/client/env.mjs +0ms
+  express:router jsonParser  : /@fs/home/runner/CustomBedtimeStories/node_modules/vite/dist/client/env.mjs +0ms
+  express:router urlencodedParser  : /@fs/home/runner/CustomBedtimeStories/node_modules/vite/dist/client/env.mjs +0ms
+  express:router session  : /@fs/home/runner/CustomBedtimeStories/node_modules/vite/dist/client/env.mjs +0ms
+  express:router initialize  : /@fs/home/runner/CustomBedtimeStories/node_modules/vite/dist/client/env.mjs +0ms
+  express:router authenticate  : /@fs/home/runner/CustomBedtimeStories/node_modules/vite/dist/client/env.mjs +0ms
+  express:router app  : /@fs/home/runner/CustomBedtimeStories/node_modules/vite/dist/client/env.mjs +0ms
+  express:router dispatching GET /src/lib/queryClient.ts +22ms
+  express:router query  : /src/lib/queryClient.ts +0ms
+  express:router expressInit  : /src/lib/queryClient.ts +0ms
+  express:router jsonParser  : /src/lib/queryClient.ts +1ms
+  express:router urlencodedParser  : /src/lib/queryClient.ts +0ms
+  express:router session  : /src/lib/queryClient.ts +0ms
+  express:router initialize  : /src/lib/queryClient.ts +0ms
+  express:router authenticate  : /src/lib/queryClient.ts +0ms
+  express:router app  : /src/lib/queryClient.ts +0ms
+  express:router dispatching GET /src/index.css +1ms
+  express:router query  : /src/index.css +0ms
+  express:router expressInit  : /src/index.css +0ms
+  express:router jsonParser  : /src/index.css +0ms
+  express:router urlencodedParser  : /src/index.css +0ms
+  express:router session  : /src/index.css +0ms
+  express:router initialize  : /src/index.css +1ms
+  express:router authenticate  : /src/index.css +0ms
+  express:router app  : /src/index.css +0ms
+  express:router dispatching GET /src/components/ui/toaster.tsx +4ms
+  express:router query  : /src/components/ui/toaster.tsx +0ms
+  express:router expressInit  : /src/components/ui/toaster.tsx +0ms
+  express:router jsonParser  : /src/components/ui/toaster.tsx +0ms
+  express:router urlencodedParser  : /src/components/ui/toaster.tsx +1ms
+  express:router session  : /src/components/ui/toaster.tsx +0ms
+  express:router initialize  : /src/components/ui/toaster.tsx +0ms
+  express:router authenticate  : /src/components/ui/toaster.tsx +0ms
+  express:router app  : /src/components/ui/toaster.tsx +0ms
+  express:router dispatching GET /src/pages/HomePage.tsx +21ms
+  express:router query  : /src/pages/HomePage.tsx +0ms
+  express:router expressInit  : /src/pages/HomePage.tsx +0ms
+  express:router jsonParser  : /src/pages/HomePage.tsx +0ms
+  express:router urlencodedParser  : /src/pages/HomePage.tsx +0ms
+  express:router session  : /src/pages/HomePage.tsx +0ms
+  express:router initialize  : /src/pages/HomePage.tsx +1ms
+  express:router authenticate  : /src/pages/HomePage.tsx +0ms
+  express:router app  : /src/pages/HomePage.tsx +0ms
+  express:router dispatching GET /src/pages/StoryGenerator.tsx +872ms
+  express:router query  : /src/pages/StoryGenerator.tsx +0ms
+  express:router expressInit  : /src/pages/StoryGenerator.tsx +0ms
+  express:router jsonParser  : /src/pages/StoryGenerator.tsx +0ms
+  express:router urlencodedParser  : /src/pages/StoryGenerator.tsx +0ms
+  express:router session  : /src/pages/StoryGenerator.tsx +1ms
+  express:router initialize  : /src/pages/StoryGenerator.tsx +0ms
+  express:router authenticate  : /src/pages/StoryGenerator.tsx +0ms
+  express:router app  : /src/pages/StoryGenerator.tsx +0ms
+  express:router dispatching GET /src/pages/AuthPage.tsx +7ms
+  express:router query  : /src/pages/AuthPage.tsx +0ms
+  express:router expressInit  : /src/pages/AuthPage.tsx +0ms
+  express:router jsonParser  : /src/pages/AuthPage.tsx +0ms
+  express:router urlencodedParser  : /src/pages/AuthPage.tsx +0ms
+  express:router session  : /src/pages/AuthPage.tsx +0ms
+  express:router initialize  : /src/pages/AuthPage.tsx +1ms
+  express:router authenticate  : /src/pages/AuthPage.tsx +0ms
+  express:router app  : /src/pages/AuthPage.tsx +0ms
+  express:router dispatching GET /src/pages/Library.tsx +2ms
+  express:router query  : /src/pages/Library.tsx +0ms
+  express:router expressInit  : /src/pages/Library.tsx +1ms
+  express:router jsonParser  : /src/pages/Library.tsx +0ms
+  express:router urlencodedParser  : /src/pages/Library.tsx +0ms
+  express:router session  : /src/pages/Library.tsx +0ms
+  express:router initialize  : /src/pages/Library.tsx +7ms
+  express:router authenticate  : /src/pages/Library.tsx +1ms
+  express:router app  : /src/pages/Library.tsx +0ms
+  express:router dispatching GET /src/pages/EmailVerificationPage.tsx +91ms
+  express:router query  : /src/pages/EmailVerificationPage.tsx +0ms
+  express:router expressInit  : /src/pages/EmailVerificationPage.tsx +2ms
+  express:router jsonParser  : /src/pages/EmailVerificationPage.tsx +0ms
+  express:router urlencodedParser  : /src/pages/EmailVerificationPage.tsx +0ms
+  express:router session  : /src/pages/EmailVerificationPage.tsx +1ms
+  express:router initialize  : /src/pages/EmailVerificationPage.tsx +0ms
+  express:router authenticate  : /src/pages/EmailVerificationPage.tsx +0ms
+  express:router app  : /src/pages/EmailVerificationPage.tsx +0ms
+  express:router dispatching GET /src/hooks/use-user.ts +3ms
+  express:router query  : /src/hooks/use-user.ts +0ms
+  express:router expressInit  : /src/hooks/use-user.ts +0ms
+  express:router jsonParser  : /src/hooks/use-user.ts +0ms
+  express:router urlencodedParser  : /src/hooks/use-user.ts +0ms
+  express:router session  : /src/hooks/use-user.ts +0ms
+  express:router initialize  : /src/hooks/use-user.ts +1ms
+  express:router authenticate  : /src/hooks/use-user.ts +0ms
+  express:router app  : /src/hooks/use-user.ts +0ms
+  express:router dispatching GET /src/components/ErrorBoundary.tsx +2ms
+  express:router query  : /src/components/ErrorBoundary.tsx +0ms
+  express:router expressInit  : /src/components/ErrorBoundary.tsx +0ms
+  express:router jsonParser  : /src/components/ErrorBoundary.tsx +0ms
+  express:router urlencodedParser  : /src/components/ErrorBoundary.tsx +0ms
+  express:router session  : /src/components/ErrorBoundary.tsx +1ms
+  express:router initialize  : /src/components/ErrorBoundary.tsx +0ms
+  express:router authenticate  : /src/components/ErrorBoundary.tsx +0ms
+  express:router app  : /src/components/ErrorBoundary.tsx +0ms
+  express:router dispatching GET /src/pages/StoryPage.tsx +4ms
+  express:router query  : /src/pages/StoryPage.tsx +0ms
+  express:router expressInit  : /src/pages/StoryPage.tsx +0ms
+  express:router jsonParser  : /src/pages/StoryPage.tsx +0ms
+  express:router urlencodedParser  : /src/pages/StoryPage.tsx +0ms
+  express:router session  : /src/pages/StoryPage.tsx +0ms
+  express:router initialize  : /src/pages/StoryPage.tsx +1ms
+  express:router authenticate  : /src/pages/StoryPage.tsx +0ms
+  express:router app  : /src/pages/StoryPage.tsx +1ms
+  express:router dispatching GET /src/pages/ProfilePage.tsx +8ms
+  express:router query  : /src/pages/ProfilePage.tsx +0ms
+  express:router expressInit  : /src/pages/ProfilePage.tsx +0ms
+  express:router jsonParser  : /src/pages/ProfilePage.tsx +0ms
+  express:router urlencodedParser  : /src/pages/ProfilePage.tsx +0ms
+  express:router session  : /src/pages/ProfilePage.tsx +0ms
+  express:router initialize  : /src/pages/ProfilePage.tsx +0ms
+  express:router authenticate  : /src/pages/ProfilePage.tsx +0ms
+  express:router app  : /src/pages/ProfilePage.tsx +0ms
+  express:router dispatching GET /src/components/Header.tsx +114ms
+  express:router query  : /src/components/Header.tsx +0ms
+  express:router expressInit  : /src/components/Header.tsx +0ms
+  express:router jsonParser  : /src/components/Header.tsx +0ms
+  express:router urlencodedParser  : /src/components/Header.tsx +0ms
+  express:router session  : /src/components/Header.tsx +0ms
+  express:router initialize  : /src/components/Header.tsx +0ms
+  express:router authenticate  : /src/components/Header.tsx +0ms
+  express:router app  : /src/components/Header.tsx +5ms
+  express:router dispatching GET /src/hooks/use-toast.ts +14ms
+  express:router query  : /src/hooks/use-toast.ts +0ms
+  express:router expressInit  : /src/hooks/use-toast.ts +0ms
+  express:router jsonParser  : /src/hooks/use-toast.ts +0ms
+  express:router urlencodedParser  : /src/hooks/use-toast.ts +1ms
+  express:router session  : /src/hooks/use-toast.ts +0ms
+  express:router initialize  : /src/hooks/use-toast.ts +0ms
+  express:router authenticate  : /src/hooks/use-toast.ts +0ms
+  express:router app  : /src/hooks/use-toast.ts +0ms
+  express:router dispatching GET /src/components/ui/toast.tsx +6ms
+  express:router query  : /src/components/ui/toast.tsx +0ms
+  express:router expressInit  : /src/components/ui/toast.tsx +0ms
+  express:router jsonParser  : /src/components/ui/toast.tsx +0ms
+  express:router urlencodedParser  : /src/components/ui/toast.tsx +0ms
+  express:router session  : /src/components/ui/toast.tsx +0ms
+  express:router initialize  : /src/components/ui/toast.tsx +1ms
+  express:router authenticate  : /src/components/ui/toast.tsx +0ms
+  express:router app  : /src/components/ui/toast.tsx +0ms
+  express:router dispatching GET /src/components/ui/card.tsx +14ms
+  express:router query  : /src/components/ui/card.tsx +0ms
+  express:router expressInit  : /src/components/ui/card.tsx +0ms
+  express:router jsonParser  : /src/components/ui/card.tsx +0ms
+  express:router urlencodedParser  : /src/components/ui/card.tsx +0ms
+  express:router session  : /src/components/ui/card.tsx +0ms
+  express:router initialize  : /src/components/ui/card.tsx +1ms
+  express:router authenticate  : /src/components/ui/card.tsx +0ms
+  express:router app  : /src/components/ui/card.tsx +0ms
+  express:router dispatching GET /src/components/StoryForm.tsx +3ms
+  express:router query  : /src/components/StoryForm.tsx +0ms
+  express:router expressInit  : /src/components/StoryForm.tsx +0ms
+  express:router jsonParser  : /src/components/StoryForm.tsx +0ms
+  express:router urlencodedParser  : /src/components/StoryForm.tsx +0ms
+  express:router session  : /src/components/StoryForm.tsx +0ms
+  express:router initialize  : /src/components/StoryForm.tsx +0ms
+  express:router authenticate  : /src/components/StoryForm.tsx +1ms
+  express:router app  : /src/components/StoryForm.tsx +0ms
+  express:router dispatching GET /src/components/ui/button.tsx +1ms
+  express:router query  : /src/components/ui/button.tsx +0ms
+  express:router expressInit  : /src/components/ui/button.tsx +0ms
+  express:router jsonParser  : /src/components/ui/button.tsx +0ms
+  express:router urlencodedParser  : /src/components/ui/button.tsx +0ms
+  express:router session  : /src/components/ui/button.tsx +0ms
+  express:router initialize  : /src/components/ui/button.tsx +0ms
+  express:router authenticate  : /src/components/ui/button.tsx +0ms
+  express:router app  : /src/components/ui/button.tsx +1ms
+  express:router dispatching GET /src/components/ui/title.tsx +9ms
+  express:router query  : /src/components/ui/title.tsx +0ms
+  express:router expressInit  : /src/components/ui/title.tsx +0ms
+  express:router jsonParser  : /src/components/ui/title.tsx +0ms
+  express:router urlencodedParser  : /src/components/ui/title.tsx +0ms
+  express:router session  : /src/components/ui/title.tsx +0ms
+  express:router initialize  : /src/components/ui/title.tsx +1ms
+  express:router authenticate  : /src/components/ui/title.tsx +0ms
+  express:router app  : /src/components/ui/title.tsx +0ms
+  express:router dispatching GET /src/components/StoryViewer.tsx +22ms
+  express:router query  : /src/components/StoryViewer.tsx +0ms
+  express:router expressInit  : /src/components/StoryViewer.tsx +0ms
+  express:router jsonParser  : /src/components/StoryViewer.tsx +0ms
+  express:router urlencodedParser  : /src/components/StoryViewer.tsx +0ms
+  express:router session  : /src/components/StoryViewer.tsx +0ms
+  express:router initialize  : /src/components/StoryViewer.tsx +8ms
+  express:router authenticate  : /src/components/StoryViewer.tsx +0ms
+  express:router app  : /src/components/StoryViewer.tsx +0ms
+  express:router dispatching GET /src/lib/api.ts +1ms
+  express:router query  : /src/lib/api.ts +0ms
+  express:router expressInit  : /src/lib/api.ts +0ms
+  express:router jsonParser  : /src/lib/api.ts +0ms
+  express:router urlencodedParser  : /src/lib/api.ts +0ms
+  express:router session  : /src/lib/api.ts +0ms
+  express:router initialize  : /src/lib/api.ts +0ms
+  express:router authenticate  : /src/lib/api.ts +0ms
+  express:router app  : /src/lib/api.ts +0ms
+  express:router dispatching GET /src/components/ui/alert.tsx +3ms
+  express:router query  : /src/components/ui/alert.tsx +1ms
+  express:router expressInit  : /src/components/ui/alert.tsx +0ms
+  express:router jsonParser  : /src/components/ui/alert.tsx +0ms
+  express:router urlencodedParser  : /src/components/ui/alert.tsx +0ms
+  express:router session  : /src/components/ui/alert.tsx +0ms
+  express:router initialize  : /src/components/ui/alert.tsx +0ms
+  express:router authenticate  : /src/components/ui/alert.tsx +0ms
+  express:router app  : /src/components/ui/alert.tsx +0ms
+  express:router dispatching GET /src/components/ui/input.tsx +2ms
+  express:router query  : /src/components/ui/input.tsx +0ms
+  express:router expressInit  : /src/components/ui/input.tsx +0ms
+  express:router jsonParser  : /src/components/ui/input.tsx +0ms
+  express:router urlencodedParser  : /src/components/ui/input.tsx +0ms
+  express:router session  : /src/components/ui/input.tsx +1ms
+  express:router initialize  : /src/components/ui/input.tsx +0ms
+  express:router authenticate  : /src/components/ui/input.tsx +0ms
+  express:router app  : /src/components/ui/input.tsx +0ms
+  express:router dispatching GET /src/components/ui/label.tsx +1ms
+  express:router query  : /src/components/ui/label.tsx +0ms
+  express:router expressInit  : /src/components/ui/label.tsx +0ms
+  express:router jsonParser  : /src/components/ui/label.tsx +0ms
+  express:router urlencodedParser  : /src/components/ui/label.tsx +0ms
+  express:router session  : /src/components/ui/label.tsx +0ms
+  express:router initialize  : /src/components/ui/label.tsx +0ms
+  express:router authenticate  : /src/components/ui/label.tsx +0ms
+  express:router app  : /src/components/ui/label.tsx +1ms
+  express:router dispatching GET /src/components/ui/tabs.tsx +1ms
+  express:router query  : /src/components/ui/tabs.tsx +0ms
+  express:router expressInit  : /src/components/ui/tabs.tsx +0ms
+  express:router jsonParser  : /src/components/ui/tabs.tsx +0ms
+  express:router urlencodedParser  : /src/components/ui/tabs.tsx +0ms
+  express:router session  : /src/components/ui/tabs.tsx +0ms
+  express:router initialize  : /src/components/ui/tabs.tsx +0ms
+  express:router authenticate  : /src/components/ui/tabs.tsx +0ms
+  express:router app  : /src/components/ui/tabs.tsx +0ms
+  express:router dispatching GET /src/components/ui/textarea.tsx +25ms
+  express:router query  : /src/components/ui/textarea.tsx +0ms
+  express:router expressInit  : /src/components/ui/textarea.tsx +0ms
+  express:router jsonParser  : /src/components/ui/textarea.tsx +0ms
+  express:router urlencodedParser  : /src/components/ui/textarea.tsx +0ms
+  express:router session  : /src/components/ui/textarea.tsx +0ms
+  express:router initialize  : /src/components/ui/textarea.tsx +0ms
+  express:router authenticate  : /src/components/ui/textarea.tsx +0ms
+  express:router app  : /src/components/ui/textarea.tsx +0ms
+  express:router dispatching GET /src/components/OptimizedImage.tsx +19ms
+  express:router query  : /src/components/OptimizedImage.tsx +0ms
+  express:router expressInit  : /src/components/OptimizedImage.tsx +1ms
+  express:router jsonParser  : /src/components/OptimizedImage.tsx +0ms
+  express:router urlencodedParser  : /src/components/OptimizedImage.tsx +0ms
+  express:router session  : /src/components/OptimizedImage.tsx +0ms
+  express:router initialize  : /src/components/OptimizedImage.tsx +0ms
+  express:router authenticate  : /src/components/OptimizedImage.tsx +0ms
+  express:router app  : /src/components/OptimizedImage.tsx +0ms
+  express:router dispatching GET /src/components/ui/dropdown-menu.tsx +10ms
+  express:router query  : /src/components/ui/dropdown-menu.tsx +0ms
+  express:router expressInit  : /src/components/ui/dropdown-menu.tsx +0ms
+  express:router jsonParser  : /src/components/ui/dropdown-menu.tsx +0ms
+  express:router urlencodedParser  : /src/components/ui/dropdown-menu.tsx +0ms
+  express:router session  : /src/components/ui/dropdown-menu.tsx +0ms
+  express:router initialize  : /src/components/ui/dropdown-menu.tsx +0ms
+  express:router authenticate  : /src/components/ui/dropdown-menu.tsx +0ms
+  express:router app  : /src/components/ui/dropdown-menu.tsx +0ms
+  express:router dispatching GET /src/lib/utils.ts +5ms
+  express:router query  : /src/lib/utils.ts +0ms
+  express:router expressInit  : /src/lib/utils.ts +0ms
+  express:router jsonParser  : /src/lib/utils.ts +0ms
+  express:router urlencodedParser  : /src/lib/utils.ts +0ms
+  express:router session  : /src/lib/utils.ts +0ms
+  express:router initialize  : /src/lib/utils.ts +0ms
+  express:router authenticate  : /src/lib/utils.ts +0ms
+  express:router app  : /src/lib/utils.ts +0ms
+  express:router dispatching GET /src/components/ui/avatar.tsx +1ms
+  express:router query  : /src/components/ui/avatar.tsx +0ms
+  express:router expressInit  : /src/components/ui/avatar.tsx +0ms
+  express:router jsonParser  : /src/components/ui/avatar.tsx +0ms
+  express:router urlencodedParser  : /src/components/ui/avatar.tsx +0ms
+  express:router session  : /src/components/ui/avatar.tsx +0ms
+  express:router initialize  : /src/components/ui/avatar.tsx +0ms
+  express:router authenticate  : /src/components/ui/avatar.tsx +0ms
+  express:router app  : /src/components/ui/avatar.tsx +0ms
+  express:router dispatching GET /src/components/ui/form.tsx +4ms
+  express:router query  : /src/components/ui/form.tsx +0ms
+  express:router expressInit  : /src/components/ui/form.tsx +1ms
+  express:router jsonParser  : /src/components/ui/form.tsx +0ms
+  express:router urlencodedParser  : /src/components/ui/form.tsx +0ms
+  express:router session  : /src/components/ui/form.tsx +0ms
+  express:router initialize  : /src/components/ui/form.tsx +0ms
+  express:router authenticate  : /src/components/ui/form.tsx +0ms
+  express:router app  : /src/components/ui/form.tsx +0ms
+  express:router dispatching GET /src/components/ui/select.tsx +7ms
+  express:router query  : /src/components/ui/select.tsx +0ms
+  express:router expressInit  : /src/components/ui/select.tsx +0ms
+  express:router jsonParser  : /src/components/ui/select.tsx +0ms
+  express:router urlencodedParser  : /src/components/ui/select.tsx +0ms
+  express:router session  : /src/components/ui/select.tsx +0ms
+  express:router initialize  : /src/components/ui/select.tsx +0ms
+  express:router authenticate  : /src/components/ui/select.tsx +0ms
+  express:router app  : /src/components/ui/select.tsx +0ms
+  express:router dispatching GET /src/components/AudioPlayer.tsx +32ms
+  express:router query  : /src/components/AudioPlayer.tsx +0ms
+  express:router expressInit  : /src/components/AudioPlayer.tsx +0ms
+  express:router jsonParser  : /src/components/AudioPlayer.tsx +0ms
+  express:router urlencodedParser  : /src/components/AudioPlayer.tsx +0ms
+  express:router session  : /src/components/AudioPlayer.tsx +0ms
+  express:router initialize  : /src/components/AudioPlayer.tsx +0ms
+  express:router authenticate  : /src/components/AudioPlayer.tsx +0ms
+  express:router app  : /src/components/AudioPlayer.tsx +1ms
+  express:router dispatching GET /src/components/ui/slider.tsx +124ms
+  express:router query  : /src/components/ui/slider.tsx +0ms
+  express:router expressInit  : /src/components/ui/slider.tsx +0ms
+  express:router jsonParser  : /src/components/ui/slider.tsx +0ms
+  express:router urlencodedParser  : /src/components/ui/slider.tsx +0ms
+  express:router session  : /src/components/ui/slider.tsx +0ms
+  express:router initialize  : /src/components/ui/slider.tsx +0ms
+  express:router authenticate  : /src/components/ui/slider.tsx +0ms
+  express:router app  : /src/components/ui/slider.tsx +1ms
+  express:router dispatching GET /api/user +259ms
+  express:router query  : /api/user +0ms
+  express:router expressInit  : /api/user +0ms
+  express:router jsonParser  : /api/user +0ms
+  express:router urlencodedParser  : /api/user +0ms
+  express:router session  : /api/user +0ms
+  express:router initialize  : /api/user +0ms
+  express:router authenticate  : /api/user +1ms
+  express:router:route new '/api/account' +0ms
+  express:router:layer new '/api/account' +0ms
+  express:router:route delete '/api/account' +0ms
+  express:router:layer new '/' +0ms
