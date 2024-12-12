@@ -1,1 +1,1 @@
-// This file intentionally left empty - payment types removed for fresh implementation
+// Payment types will be reimplemented from scratch

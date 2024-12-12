@@ -1,1 +1,1 @@
-// This file intentionally left empty - payment service removed for fresh implementation
+// Payment service will be reimplemented from scratch
