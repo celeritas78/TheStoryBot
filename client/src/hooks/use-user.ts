@@ -86,7 +86,7 @@ async function fetchUser(): Promise<User | null> {
       lastLoginAt: userData.lastLoginAt ? new Date(userData.lastLoginAt) : null,
       active: typeof userData.active === 'boolean' ? userData.active : true,
       createdAt: new Date(userData.createdAt),
-      updatedAt: new Date(userData.updatedAt)
+      updatedAt: userData.updatedAt ? new Date(userData.updatedAt) : new Date()
     };
 
     console.log('Processed user data:', {

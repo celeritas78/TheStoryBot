@@ -1,7 +1,6 @@
 import express from 'express';
 import fs from 'fs';
 import { eq, desc } from 'drizzle-orm';
-import { crypto } from './auth';
 import { z } from 'zod';
 import { db } from '../db';
 import { stories, storySegments, users } from '../db/schema';
