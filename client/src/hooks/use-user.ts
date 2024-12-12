@@ -4,7 +4,7 @@ import type { User, InsertUser } from "@db/schema";
 type RequestResult = {
   ok: boolean;
   message?: string;
-  data?: any;
+  data?: User | null;
 };
 
 async function handleRequest<T extends Record<string, unknown>>(

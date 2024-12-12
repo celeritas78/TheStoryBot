@@ -15,7 +15,7 @@ import {
   generateSpeech 
 } from './services/openai';
 import { sendErrorResponse } from './utils/error';
-import { subscriptionService } from './services/subscription';
+
 import { 
   getAudioFilePath, 
   audioFileExists, 
@@ -148,12 +148,14 @@ export function setupRoutes(app: express.Application) {
       const { childName, childAge, mainCharacter, theme } = req.body;
       const userId = req.user?.id;
 
-      // Check story creation eligibility
-      const eligibilityStatus = await subscriptionService.checkStoryCreationEligibility(userId);
+      // Check story creation limit
+      const existingStories = await db.query.stories.findMany({
+        where: eq(stories.userId, userId)
+      });
       
-      if (!eligibilityStatus.isEligible) {
+      if (existingStories.length >= MAX_STORIES) {
         return res.status(403).json({
-          error: eligibilityStatus.message,
+          error: `You have reached the maximum limit of ${MAX_STORIES} stories`,
           maxStories: MAX_STORIES
         });
       }
