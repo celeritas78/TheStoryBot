@@ -3,38 +3,51 @@ export const MAX_CREDITS_PURCHASE = 100; // Maximum credits per purchase
 export const MIN_CREDITS_PURCHASE = 1; // Minimum credits per purchase
 export const FREE_CREDITS = 3; // Free credits for new users
 export const MAX_FREE_STORIES = 3; // Maximum stories for free plan
+export const CREDITS_PER_USD = 1; // Base rate: 1 USD = 1 credit
+
+// Currency Configuration Types
+type CurrencyCode = 'usd' | 'eur' | 'gbp' | 'inr';
+
+interface CurrencyConfig {
+  code: CurrencyCode;
+  symbol: string;
+  name: string;
+  creditsPerUnit: number;
+  minAmount: number;
+  maxAmount: number;
+}
 
 // Currency Configuration
-export const SUPPORTED_CURRENCIES = {
-  USD: {
+export const SUPPORTED_CURRENCIES: Record<CurrencyCode, CurrencyConfig> = {
+  usd: {
     code: 'usd',
     symbol: '$',
     name: 'US Dollar',
-    creditsPerUnit: 1, // 1 USD = 1 credit
+    creditsPerUnit: CREDITS_PER_USD,
     minAmount: 1,
     maxAmount: 100
   },
-  EUR: {
+  eur: {
     code: 'eur',
     symbol: '€',
     name: 'Euro',
-    creditsPerUnit: 1.1, // 1 EUR ≈ 1.1 credits
+    creditsPerUnit: CREDITS_PER_USD * 1.1, // EUR/USD rate
     minAmount: 1,
     maxAmount: 85
   },
-  GBP: {
+  gbp: {
     code: 'gbp',
     symbol: '£',
     name: 'British Pound',
-    creditsPerUnit: 1.25, // 1 GBP ≈ 1.25 credits
+    creditsPerUnit: CREDITS_PER_USD * 1.25, // GBP/USD rate
     minAmount: 1,
     maxAmount: 75
   },
-  INR: {
+  inr: {
     code: 'inr',
     symbol: '₹',
     name: 'Indian Rupee',
-    creditsPerUnit: 0.012, // 1 INR ≈ 0.012 credits
+    creditsPerUnit: CREDITS_PER_USD * 0.012, // INR/USD rate
     minAmount: 100,
     maxAmount: 8000
   }
@@ -78,7 +91,7 @@ export const PLANS = {
   }
 } as const;
 
-// Credit Transaction Types
+// Transaction Types and Status
 export const TRANSACTION_TYPES = {
   INITIAL_FREE_CREDITS: 'initial_free_credits',
   CREDIT_PURCHASE: 'credit_purchase',
@@ -86,13 +99,6 @@ export const TRANSACTION_TYPES = {
   PREMIUM_UPGRADE: 'premium_upgrade'
 } as const;
 
-// Stripe Configuration
-export const STRIPE_DEFAULT_CURRENCY = SUPPORTED_CURRENCIES.USD.code;
-export const STRIPE_STATEMENT_DESCRIPTOR = 'Story Credits';
-export const STRIPE_STATEMENT_DESCRIPTOR_SUFFIX = 'Credits';
-export const STRIPE_API_VERSION = '2024-11-20.acacia' as const;
-
-// Transaction Status
 export const TRANSACTION_STATUS = {
   PENDING: 'pending',
   COMPLETED: 'completed',
@@ -100,13 +106,12 @@ export const TRANSACTION_STATUS = {
   REFUNDED: 'refunded',
 } as const;
 
-// Helper function to calculate credits from amount and currency
+// Payment Helper Functions
 export function calculateCredits(amount: number, currency: keyof typeof SUPPORTED_CURRENCIES): number {
   const currencyConfig = SUPPORTED_CURRENCIES[currency];
   return Math.floor(amount * currencyConfig.creditsPerUnit);
 }
 
-// Helper function to validate purchase amount for currency
 export function validatePurchaseAmount(amount: number, currency: keyof typeof SUPPORTED_CURRENCIES): {
   isValid: boolean;
   error?: string;
@@ -137,3 +142,9 @@ export function validatePurchaseAmount(amount: number, currency: keyof typeof SU
 
   return { isValid: true };
 }
+
+// Stripe Configuration
+export const STRIPE_DEFAULT_CURRENCY = 'usd' as const;
+export const STRIPE_STATEMENT_DESCRIPTOR = 'Story Credits';
+export const STRIPE_STATEMENT_DESCRIPTOR_SUFFIX = 'Credits';
+export const STRIPE_API_VERSION = '2024-11-20.acacia' as const;

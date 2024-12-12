@@ -9,7 +9,7 @@ import { purchaseCredits } from "../lib/api";
 import { useToast } from "@/hooks/use-toast";
 import type { PaymentState, PaymentStatus, CurrencyCode } from "../types/payment";
 import type { Stripe, StripeElementsOptions } from '@stripe/stripe-js';
-import { SUPPORTED_CURRENCIES } from "../../server/config";
+import { SUPPORTED_CURRENCIES } from "../config/currencies";
 
 const initialPaymentState: PaymentState = {
   status: "idle",
@@ -158,6 +158,8 @@ export const CreditPurchaseDialog = ({
       requestId,
       hasClientSecret: !!paymentState.clientSecret,
       amount,
+      currency,
+      creditsToReceive,
       status: paymentState.status,
       timestamp: new Date().toISOString()
     });
@@ -180,28 +182,51 @@ export const CreditPurchaseDialog = ({
     }
 
     try {
-      setPaymentState((state) => ({ ...state, status: "processing", error: null }));
+      setPaymentState((state) => ({ 
+        ...state, 
+        status: "processing", 
+        error: null,
+        currency 
+      }));
+      
       console.log("Requesting credit purchase from server...", {
         requestId,
         amount,
+        currency,
+        creditsToReceive,
         timestamp: new Date().toISOString()
       });
 
-      const response = await purchaseCredits(amount);
+      const response = await purchaseCredits(amount, currency);
       console.log("Credit purchase response:", {
         requestId,
         hasClientSecret: !!response?.clientSecret,
         status: response?.status,
         amount: response?.amount,
+        currency: response?.currency,
+        creditsToAdd: response?.creditsToAdd,
+        currentCredits: response?.currentCredits,
+        projectedTotalCredits: response?.projectedTotalCredits,
         timestamp: new Date().toISOString()
       });
 
       if (!response?.clientSecret || !response?.status) {
-        console.error("Invalid server response:", response);
+        console.error("Invalid server response:", {
+          response,
+          requestId,
+          timestamp: new Date().toISOString()
+        });
         throw new Error("Invalid response from server");
       }
 
-      console.log("Setting payment state with client secret");
+      console.log("Setting payment state with client secret", {
+        requestId,
+        status: response.status,
+        amount: response.amount,
+        currency: response.currency,
+        timestamp: new Date().toISOString()
+      });
+
       // Convert Stripe PaymentIntent status to our PaymentStatus type
       const paymentStatus = response.status === "requires_payment_method" ? "requires_payment_method" :
                            response.status === "succeeded" ? "succeeded" :
@@ -215,23 +240,39 @@ export const CreditPurchaseDialog = ({
         status: paymentStatus,
         clientSecret: response.clientSecret,
         amount: response.amount,
+        currency: response.currency,
+        creditsToAdd: response.creditsToAdd,
+        currentCredits: response.currentCredits,
+        projectedTotalCredits: response.projectedTotalCredits,
+        currencyInfo: response.currencyInfo
       }));
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Failed to initialize payment";
       console.error("Payment initialization failed:", {
+        requestId,
         error: errorMessage,
         stack: error instanceof Error ? error.stack : undefined,
+        amount,
+        currency,
         timestamp: new Date().toISOString()
       });
       
       setPaymentState((state) => ({
         ...state,
         status: "failed",
-        error: { message: errorMessage },
+        error: { 
+          message: errorMessage,
+          code: error instanceof Error ? (error as any).code : undefined,
+          decline_code: error instanceof Error ? (error as any).decline_code : undefined
+        },
       }));
-      toast({ title: "Payment Error", description: errorMessage, variant: "destructive" });
+      toast({ 
+        title: "Payment Error", 
+        description: errorMessage, 
+        variant: "destructive" 
+      });
     }
-  }, [amount, paymentState.clientSecret, toast]);
+  }, [amount, currency, creditsToReceive, paymentState.clientSecret, toast]);
 
   useEffect(() => {
     if (open && paymentState.status === "idle") initializePayment();
