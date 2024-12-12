@@ -4,6 +4,7 @@ import { setupVite, serveStatic } from "./vite";
 import { createServer } from "http";
 import { setupAuth } from "./auth";
 import path from "path";
+
 // Global error handler for unhandled promise rejections
 process.on('unhandledRejection', (reason, promise) => {
   console.error('Unhandled Rejection:', {
@@ -62,8 +63,10 @@ setupAuth(app);
     });
 
     const server = createServer(app);
-    const port = Number(process.env.PORT) || 5000;
+    const port = Number(process.env.PORT) || 3000;
     const host = '0.0.0.0';
+    
+    console.log('Starting server on:', { port, host });
 
     // Handle shutdown gracefully
     function handleShutdown(signal?: string) {
@@ -92,18 +95,7 @@ setupAuth(app);
     process.on('SIGTERM', () => handleShutdown('SIGTERM'));
     process.on('SIGINT', () => handleShutdown('SIGINT'));
 
-    // Development vs Production setup
-    if (process.env.NODE_ENV === 'development') {
-      await setupVite(app, server);
-    } else {
-      // In production, serve from the client build directory
-      app.use(express.static(path.resolve(__dirname, '..', 'public')));
-      app.get('*', (_req, res) => {
-        res.sendFile(path.resolve(__dirname, '..', 'public', 'index.html'));
-      });
-    }
-
-    // Start server
+    // Start server first
     await new Promise<void>((resolve, reject) => {
       server.listen(port, host, () => {
         console.log('Server started successfully:', {
@@ -125,6 +117,18 @@ setupAuth(app);
         reject(error);
       });
     });
+
+    // Setup development or production mode after server is running
+    if (process.env.NODE_ENV === 'development') {
+      await setupVite(app, server);
+    } else {
+      // In production, serve from the client build directory
+      app.use(express.static(path.resolve(__dirname, '..', 'public')));
+      app.get('*', (_req, res) => {
+        res.sendFile(path.resolve(__dirname, '..', 'public', 'index.html'));
+      });
+    }
+
   } catch (error) {
     console.error('Fatal error during startup:', {
       error: error instanceof Error ? error.message : 'Unknown error',
