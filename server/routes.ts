@@ -146,16 +146,9 @@ export function setupRoutes(app: express.Application) {
       const { childName, childAge, mainCharacter, theme } = req.body;
       const userId = req.user?.id;
 
-      // Check story creation limit
-      const existingStories = await db.query.stories.findMany({
-        where: eq(stories.userId, userId)
-      });
-      
-      if (existingStories.length >= MAX_STORIES) {
-        return res.status(403).json({
-          error: `You have reached the maximum limit of ${MAX_STORIES} stories`,
-          maxStories: MAX_STORIES
-        });
+      // Validate user permission
+      if (!userId) {
+        return res.status(401).json({ error: "User not authenticated" });
       }
 
       if (!childName?.trim() || !childAge || !mainCharacter?.trim() || !theme?.trim()) {
