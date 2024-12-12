@@ -29,9 +29,16 @@ process.on('unhandledRejection', (reason, promise) => {
 const app = express();
 const server = createServer(app);
 
+// Disable debug logging for production and development
+app.set('debug', false);
+app.disable('verbose');
+
 // Basic middleware setup
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Disable powered by header
+app.disable('x-powered-by');
 
 // Initialize application services
 async function initializeServices() {
@@ -51,15 +58,17 @@ async function initializeServices() {
     const isDevelopment = process.env.NODE_ENV === 'development';
     // Use REPL_SLUG to detect Replit environment
     const isReplit = process.env.REPL_SLUG !== undefined;
-    const port = Number(process.env.PORT) || 3000;
+    // Default to port 3000, but allow override through PORT env var
+    const port = Number(process.env.PORT || 3000);
     const host = '0.0.0.0';
     
-    console.log('Starting server initialization:', { 
-      port, 
-      host,
-      environment: process.env.NODE_ENV,
-      platform: isReplit ? 'replit' : 'local'
-    });
+    // Minimal logging during startup
+    if (process.env.DEBUG !== 'false') {
+      console.log('Server initializing:', { 
+        port,
+        environment: process.env.NODE_ENV
+      });
+    }
 
     // Initialize core services
     await initializeServices();
