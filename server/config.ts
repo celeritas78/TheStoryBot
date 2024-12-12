@@ -14,18 +14,5 @@ export const MIN_TITLE_LENGTH = 3;
 export const RATE_LIMIT_WINDOW = 15 * 60 * 1000; // 15 minutes
 export const RATE_LIMIT_MAX_REQUESTS = 100;
 
-// Basic plan configuration
-export const MAX_FREE_STORIES = 3;
-export const FREE_CREDITS = 3;
-
-export const PLANS = {
-  FREE: {
-    id: 'free',
-    name: 'Free Plan',
-    features: [
-      'Create up to 3 stories',
-      'Basic story customization',
-      'View created stories'
-    ]
-  }
-} as const;
+// Basic configuration
+export const MAX_STORIES = 10;

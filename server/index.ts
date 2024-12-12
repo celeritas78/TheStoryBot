@@ -3,8 +3,6 @@ import { setupRoutes } from "./routes";
 import { setupVite, serveStatic } from "./vite";
 import { createServer } from "http";
 import { setupAuth } from "./auth";
-import { getStripe, initializeStripeService } from './services/stripe';
-
 // Global error handler for unhandled promise rejections
 process.on('unhandledRejection', (reason, promise) => {
   console.error('Unhandled Rejection:', {
@@ -14,34 +12,21 @@ process.on('unhandledRejection', (reason, promise) => {
   });
 });
 
-// Initialize and verify critical services
+// Initialize services (payment services removed for fresh implementation)
 async function initializeServices() {
   const requestId = Math.random().toString(36).substring(7);
   console.log('Starting service initialization...', {
     requestId,
     timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV,
-    hasStripeKey: !!process.env.STRIPE_SECRET_KEY
+    environment: process.env.NODE_ENV
   });
 
   try {
-    if (process.env.STRIPE_SECRET_KEY) {
-      await initializeStripeService();
-      const stripe = getStripe();
-      if (!stripe) {
-        throw new Error('Stripe failed to initialize after successful service start');
-      }
-      
-      console.log('Stripe service verified and ready', {
-        requestId,
-        timestamp: new Date().toISOString()
-      });
-    } else {
-      console.warn('STRIPE_SECRET_KEY not provided - payment features will be disabled', {
-        requestId,
-        timestamp: new Date().toISOString()
-      });
-    }
+    // Payment service initialization removed for fresh implementation
+    console.log('Services initialized successfully', {
+      requestId,
+      timestamp: new Date().toISOString()
+    });
   } catch (error) {
     console.error('Failed to initialize services:', {
       error: error instanceof Error ? error.message : 'Unknown error',

@@ -1,21 +1,21 @@
 import { db } from '../../db';
 import { users, stories } from '../../db/schema';
 import { eq, sql } from 'drizzle-orm';
-import { MAX_FREE_STORIES, PLANS } from '../config';
+import { MAX_STORIES } from '../config';
 
-interface SubscriptionStatus {
+interface StoryLimitStatus {
   isEligible: boolean;
   totalStories: number;
   message: string;
 }
 
-// Logger utility for subscription operations
-const subscriptionLogger = {
+// Logger utility for story limit operations
+const storyLimitLogger = {
   info: (message: string, data: Record<string, any> = {}) => {
     console.log(JSON.stringify({
       timestamp: new Date().toISOString(),
       level: 'INFO',
-      service: 'subscription',
+      service: 'story-limit',
       message,
       ...data,
     }));
@@ -24,7 +24,7 @@ const subscriptionLogger = {
     console.error(JSON.stringify({
       timestamp: new Date().toISOString(),
       level: 'ERROR',
-      service: 'subscription',
+      service: 'story-limit',
       message,
       error: error instanceof Error ? {
         message: error.message,
@@ -34,9 +34,9 @@ const subscriptionLogger = {
   }
 };
 
-export async function checkStoryCreationEligibility(userId: number): Promise<SubscriptionStatus> {
+export async function checkStoryCreationEligibility(userId: number): Promise<StoryLimitStatus> {
   try {
-    subscriptionLogger.info('Starting story creation eligibility check', { userId });
+    storyLimitLogger.info('Starting story limit check', { userId });
 
     // Get user's story count
     const result = await db
@@ -57,23 +57,23 @@ export async function checkStoryCreationEligibility(userId: number): Promise<Sub
 
     const totalStories = Number(user.totalStories) || 0;
 
-    const status: SubscriptionStatus = {
-      isEligible: totalStories < MAX_FREE_STORIES,
+    const status: StoryLimitStatus = {
+      isEligible: totalStories < MAX_STORIES,
       totalStories,
-      message: totalStories >= MAX_FREE_STORIES ? 
-        `Free plan limit reached (${totalStories}/${MAX_FREE_STORIES} stories)` :
-        `${MAX_FREE_STORIES - totalStories} free stories remaining`
+      message: totalStories >= MAX_STORIES ? 
+        `Story limit reached (${totalStories}/${MAX_STORIES} stories)` :
+        `${MAX_STORIES - totalStories} stories remaining`
     };
 
-    subscriptionLogger.info('Eligibility check completed', { userId, status });
+    storyLimitLogger.info('Story limit check completed', { userId, status });
     return status;
   } catch (error) {
-    subscriptionLogger.error('Error checking story creation eligibility', error);
+    storyLimitLogger.error('Error checking story creation eligibility', error);
     throw error;
   }
 }
 
 export const subscriptionService = {
   checkStoryCreationEligibility,
-  logger: subscriptionLogger,
+  logger: storyLimitLogger,
 };
