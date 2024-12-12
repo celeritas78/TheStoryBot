@@ -63,6 +63,7 @@ export async function generateStory(formData: StoryFormData): Promise<Story> {
           "Accept": "application/json",
         },
         body: JSON.stringify(formData),
+        credentials: 'include',
       });
 
       if (!response.ok) {
@@ -113,7 +114,7 @@ export async function getAllStories() {
         headers: {
           "Accept": "application/json",
         },
-        credentials: 'include', // Include credentials for authentication
+        credentials: 'include',
       });
 
       if (!response.ok) {
@@ -147,5 +148,3 @@ export async function getAllStories() {
 
   throw lastError || new Error('Failed to fetch stories after all retries');
 }
-
-// Payment-related code removed for fresh implementation

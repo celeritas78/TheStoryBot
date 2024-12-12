@@ -12,29 +12,12 @@ process.on('unhandledRejection', (reason, promise) => {
   });
 });
 
-// Initialize services (payment services removed for fresh implementation)
+// Initialize application services
 async function initializeServices() {
-  const requestId = Math.random().toString(36).substring(7);
-  console.log('Starting service initialization...', {
-    requestId,
+  console.log('Starting application initialization...', {
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV
   });
-
-  try {
-    // Payment service initialization removed for fresh implementation
-    console.log('Services initialized successfully', {
-      requestId,
-      timestamp: new Date().toISOString()
-    });
-  } catch (error) {
-    console.error('Failed to initialize services:', {
-      error: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined,
-      timestamp: new Date().toISOString()
-    });
-    throw error;
-  }
 }
 
 const app = express();
@@ -78,7 +61,7 @@ setupAuth(app);
     });
 
     const server = createServer(app);
-    const port = Number(process.env.PORT) || 3000;
+    const port = Number(process.env.PORT) || 5000;
     const host = '0.0.0.0';
 
     // Handle shutdown gracefully

@@ -9,35 +9,19 @@ interface StoryLimitStatus {
   message: string;
 }
 
-// Logger utility for story limit operations
-const storyLimitLogger = {
-  info: (message: string, data: Record<string, any> = {}) => {
-    console.log(JSON.stringify({
-      timestamp: new Date().toISOString(),
-      level: 'INFO',
-      service: 'story-limit',
-      message,
-      ...data,
-    }));
-  },
-  error: (message: string, error: unknown) => {
-    console.error(JSON.stringify({
-      timestamp: new Date().toISOString(),
-      level: 'ERROR',
-      service: 'story-limit',
-      message,
-      error: error instanceof Error ? {
-        message: error.message,
-        stack: error.stack
-      } : String(error)
-    }));
-  }
-};
+// Simple logger for story limit checks
+function logStoryLimit(userId: number, message: string, data?: any) {
+  console.log(JSON.stringify({
+    timestamp: new Date().toISOString(),
+    service: 'story-limit',
+    userId,
+    message,
+    ...data
+  }));
+}
 
 export async function checkStoryCreationEligibility(userId: number): Promise<StoryLimitStatus> {
   try {
-    storyLimitLogger.info('Starting story limit check', { userId });
-
     // Get user's story count
     const result = await db
       .select({
@@ -49,31 +33,25 @@ export async function checkStoryCreationEligibility(userId: number): Promise<Sto
       .groupBy(users.id)
       .execute();
 
-    const user = result[0];
-    
-    if (!user) {
-      throw new Error('User not found');
-    }
-
-    const totalStories = Number(user.totalStories) || 0;
+    const totalStories = Number(result[0]?.totalStories) || 0;
+    const isEligible = totalStories < MAX_STORIES;
 
     const status: StoryLimitStatus = {
-      isEligible: totalStories < MAX_STORIES,
+      isEligible,
       totalStories,
-      message: totalStories >= MAX_STORIES ? 
-        `Story limit reached (${totalStories}/${MAX_STORIES} stories)` :
-        `${MAX_STORIES - totalStories} stories remaining`
+      message: isEligible ? 
+        `${MAX_STORIES - totalStories} stories remaining` :
+        `Story limit reached (${totalStories}/${MAX_STORIES} stories)`
     };
 
-    storyLimitLogger.info('Story limit check completed', { userId, status });
+    logStoryLimit(userId, 'Story limit check completed', { status });
     return status;
   } catch (error) {
-    storyLimitLogger.error('Error checking story creation eligibility', error);
+    logStoryLimit(userId, 'Error checking story limit', { error: String(error) });
     throw error;
   }
 }
 
 export const subscriptionService = {
-  checkStoryCreationEligibility,
-  logger: storyLimitLogger,
+  checkStoryCreationEligibility
 };

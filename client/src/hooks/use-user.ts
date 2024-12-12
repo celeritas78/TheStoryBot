@@ -85,8 +85,6 @@ async function fetchUser(): Promise<User | null> {
       resetTokenExpiry: userData.resetTokenExpiry ? new Date(userData.resetTokenExpiry) : null,
       lastLoginAt: userData.lastLoginAt ? new Date(userData.lastLoginAt) : null,
       active: typeof userData.active === 'boolean' ? userData.active : true,
-      isPremium: typeof userData.isPremium === 'boolean' ? userData.isPremium : false,
-      storyCredits: typeof userData.storyCredits === 'number' ? userData.storyCredits : 3,
       createdAt: new Date(userData.createdAt),
       updatedAt: new Date(userData.updatedAt)
     };
@@ -94,8 +92,6 @@ async function fetchUser(): Promise<User | null> {
     console.log('Processed user data:', {
       id: user.id,
       email: user.email,
-      isPremium: user.isPremium,
-      storyCredits: user.storyCredits,
       timestamp: new Date().toISOString()
     });
 
