@@ -20,8 +20,6 @@ export const users = pgTable("users", {
   resetTokenExpiry: timestamp("reset_token_expiry"),
   lastLoginAt: timestamp("last_login_at"),
   active: boolean("active").notNull().default(true),
-  isPremium: boolean("is_premium").notNull().default(false),
-  storyCredits: integer("story_credits").notNull().default(3),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -52,22 +50,11 @@ export const storySegments = pgTable("story_segments", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const creditTransactions = pgTable("credit_transactions", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id")
-    .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
-  amount: integer("amount").notNull(),
-  credits: integer("credits").notNull(),
-  status: varchar("status", { length: 50 }).notNull(),
-  stripePaymentId: varchar("stripe_payment_id", { length: 255 }),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+
 
 // Define relations
 export const userRelations = relations(users, ({ many }) => ({
   stories: many(stories),
-  creditTransactions: many(creditTransactions),
 }));
 
 export const storiesRelations = relations(stories, ({ many, one }) => ({
@@ -101,7 +88,4 @@ export const selectStorySegmentSchema = createSelectSchema(storySegments);
 export type InsertStorySegment = z.infer<typeof insertStorySegmentSchema>;
 export type StorySegment = z.infer<typeof selectStorySegmentSchema>;
 
-export const insertCreditTransactionSchema = createInsertSchema(creditTransactions);
-export const selectCreditTransactionSchema = createSelectSchema(creditTransactions);
-export type InsertCreditTransaction = z.infer<typeof insertCreditTransactionSchema>;
-export type CreditTransaction = z.infer<typeof selectCreditTransactionSchema>;
+

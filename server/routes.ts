@@ -1,28 +1,16 @@
 import express from 'express';
 import fs from 'fs';
-import { getStripe, createPaymentIntent, confirmPaymentIntent } from './services/stripe';
+// Payment service imports removed for fresh implementation
 import { eq, sql, and, desc } from 'drizzle-orm';
 import { crypto } from './auth';
 import { z } from 'zod';
 import { db } from '../db';
-import { stories, storySegments, users, creditTransactions } from '../db/schema';
+import { stories, storySegments, users } from '../db/schema';
 import type { Request, Response } from 'express';
 import multer from 'multer';
 import { saveImageFile } from './services/image-storage';
 import bcrypt from 'bcryptjs';
-import { 
-  MAX_FREE_STORIES,
-  PLANS,
-  MAX_CREDITS_PURCHASE,
-  MIN_CREDITS_PURCHASE,
-  FREE_CREDITS,
-  STRIPE_DEFAULT_CURRENCY,
-  STRIPE_STATEMENT_DESCRIPTOR,
-  STRIPE_STATEMENT_DESCRIPTOR_SUFFIX,
-  SUPPORTED_CURRENCIES,
-  calculateCredits,
-  validatePurchaseAmount
-} from './config';
+// Payment and credit related imports removed
 
 interface UserWithStoryCount {
   credits: number;
@@ -829,16 +817,10 @@ export function setupRoutes(app: express.Application) {
         });
 
         if (!subscriptionStatus.isEligible) {
-          const response: SubscriptionCheckResponse = {
+          return res.status(403).json({
             error: subscriptionStatus.message,
-            creditsNeeded: subscriptionStatus.currentCredits <= 0,
-            currentCredits: subscriptionStatus.currentCredits,
-            isPremium: subscriptionStatus.isPremium,
-            maxFreeStories: MAX_FREE_STORIES,
-            upgradeToPremium: !subscriptionStatus.isPremium && 
-              subscriptionStatus.totalStories >= MAX_FREE_STORIES
-          };
-          return res.status(403).json(response);
+            maxFreeStories: MAX_FREE_STORIES
+          });
         }
       } catch (error) {
         console.error('Error checking subscription status:', error);
@@ -911,24 +893,8 @@ export function setupRoutes(app: express.Application) {
         }
       }));
 
-      // Deduct one credit and save story to the database
+      // Save story to the database
       const result = await db.transaction(async (tx) => {
-        // Deduct credit using subscription service
-        const newCredits = await subscriptionService.deductStoryCredit(userId);
-        
-        if (newCredits === undefined) {
-          console.error('Failed to deduct credit:', {
-            userId,
-            timestamp: new Date().toISOString()
-          });
-          throw new Error('Failed to deduct credit');
-        }
-
-        console.log('Credit deducted successfully:', {
-          userId,
-          newBalance: newCredits,
-          timestamp: new Date().toISOString()
-        });
 
         // Create story
         const [newStory] = await tx
