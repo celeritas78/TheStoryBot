@@ -1,6 +1,6 @@
 import express from 'express';
 import fs from 'fs';
-import { eq, sql, and, desc } from 'drizzle-orm';
+import { eq, desc } from 'drizzle-orm';
 import { crypto } from './auth';
 import { z } from 'zod';
 import { db } from '../db';
@@ -15,7 +15,6 @@ import {
   generateSpeech 
 } from './services/openai';
 import { sendErrorResponse } from './utils/error';
-
 import { 
   getAudioFilePath, 
   audioFileExists, 
