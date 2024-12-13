@@ -106,12 +106,19 @@ async function initializeServices() {
 
     // Setup static file serving and catch-all route for production
     if (!isDevelopment) {
-      // Configure static file serving for media files
-      const mediaPath = path.resolve(process.cwd());
+      // Define paths for static content
+      const rootPath = process.cwd();
+      const publicPath = path.join(rootPath, 'public');
+      const mediaPath = rootPath;
       
       console.log('Setting up static file serving:', { 
+        rootPath,
+        publicPath,
         mediaPath,
-        exists: fs.existsSync(mediaPath),
+        exists: {
+          public: fs.existsSync(publicPath),
+          media: fs.existsSync(mediaPath)
+        },
         directories: {
           images: fs.existsSync(path.join(mediaPath, 'images')),
           audio: fs.existsSync(path.join(mediaPath, 'audio'))
@@ -153,12 +160,12 @@ async function initializeServices() {
         }
       }));
 
-      // Serve static files for public directory
+      // Serve static files for the client application
       app.use(express.static(publicPath));
 
       // Fallback route for SPA
       app.get('*', (_req, res) => {
-        res.sendFile(path.resolve(publicPath, 'index.html'));
+        res.sendFile(path.join(publicPath, 'index.html'));
       });
     }
 
