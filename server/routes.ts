@@ -426,16 +426,23 @@ export function setupRoutes(app: express.Application) {
 
   // Audio serving endpoint with enhanced headers and logging
   app.get("/audio/:filename", async (req, res) => {
+    const { filename } = req.params;
     try {
-      const { filename } = req.params;
       console.log('Audio request received:', {
         filename,
         headers: req.headers,
         url: req.url,
+        method: req.method,
+        path: req.path,
         timestamp: new Date().toISOString()
       });
       
       if (!isAudioFormatSupported(filename)) {
+        console.warn('Unsupported audio format attempted:', {
+          filename,
+          supportedFormats: SUPPORTED_AUDIO_FORMATS,
+          timestamp: new Date().toISOString()
+        });
         return res.status(400).json({ error: "Unsupported audio format" });
       }
 
@@ -444,21 +451,25 @@ export function setupRoutes(app: express.Application) {
         console.error('Audio file not found:', {
           filename,
           searchPath: filePath,
+          cwd: process.cwd(),
           timestamp: new Date().toISOString()
         });
         return res.status(404).json({ error: "Audio file not found" });
       }
 
       const stat = fs.statSync(filePath);
+      const mimeType = getMimeType(filename);
       
       // Set comprehensive headers for audio streaming
-      res.setHeader('Content-Type', 'audio/mpeg');
+      res.setHeader('Content-Type', mimeType);
       res.setHeader('Content-Length', stat.size);
       res.setHeader('Accept-Ranges', 'bytes');
       res.setHeader('Cache-Control', 'public, max-age=31536000');
       res.setHeader('Access-Control-Allow-Origin', '*');
-      res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
       res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Range');
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+      res.setHeader('Vary', 'Accept-Encoding');
       
       console.log('Serving audio file:', {
         filename,
@@ -470,13 +481,14 @@ export function setupRoutes(app: express.Application) {
 
       fs.createReadStream(filePath).pipe(res);
     } catch (error) {
-      console.error('Error serving audio:', {
+      const errorDetails = {
         error: error instanceof Error ? error.message : 'Unknown error',
         stack: error instanceof Error ? error.stack : undefined,
-        filename,
+        requestedFile: filename, // Use the filename from route params
         timestamp: new Date().toISOString()
-      });
-      res.status(500).json({ error: 'Failed to serve audio file' });
+      };
+      console.error('Error serving audio:', errorDetails);
+      res.status(500).json({ error: 'Failed to serve audio file', details: errorDetails });
     }
   });
 }
