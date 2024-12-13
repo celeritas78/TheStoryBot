@@ -106,8 +106,37 @@ async function initializeServices() {
     // Setup static file serving and catch-all route for production
     if (!isDevelopment) {
       const publicPath = path.resolve(process.cwd(), 'public');
-      console.log('Setting up static file serving:', { publicPath });
-      app.use(express.static(publicPath));
+      console.log('Setting up static file serving:', { 
+        publicPath,
+        exists: fs.existsSync(publicPath),
+        contents: fs.existsSync(publicPath) ? fs.readdirSync(publicPath) : []
+      });
+      
+      // Serve static files with proper MIME types and caching headers
+      app.use(express.static(publicPath, {
+        etag: true,
+        lastModified: true,
+        setHeaders: (res, filePath) => {
+          // Set cache control headers
+          res.setHeader('Cache-Control', 'public, max-age=31536000');
+          
+          // Set proper MIME types for audio and images
+          if (filePath.endsWith('.mp3')) {
+            res.setHeader('Content-Type', 'audio/mpeg');
+          } else if (filePath.endsWith('.png')) {
+            res.setHeader('Content-Type', 'image/png');
+          } else if (filePath.endsWith('.jpg') || filePath.endsWith('.jpeg')) {
+            res.setHeader('Content-Type', 'image/jpeg');
+          }
+          
+          // Set CORS headers
+          res.setHeader('Access-Control-Allow-Origin', '*');
+          res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+          res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Range');
+        }
+      }));
+
+      // Fallback route for SPA
       app.get('*', (_req, res) => {
         res.sendFile(path.resolve(publicPath, 'index.html'));
       });

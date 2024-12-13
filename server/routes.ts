@@ -447,7 +447,23 @@ export function setupRoutes(app: express.Application) {
       }
 
       const filePath = getAudioFilePath(filename);
-      if (!audioFileExists(filePath)) {
+      
+      // Check if file exists and log directory contents for debugging
+      const directoryPath = path.dirname(filePath);
+      const directoryExists = fs.existsSync(directoryPath);
+      const fileExists = fs.existsSync(filePath);
+      
+      console.log('Audio file access check:', {
+        filename,
+        filePath,
+        directoryPath,
+        directoryExists,
+        fileExists,
+        directoryContents: directoryExists ? fs.readdirSync(directoryPath) : [],
+        timestamp: new Date().toISOString()
+      });
+
+      if (!fileExists) {
         console.error('Audio file not found:', {
           filename,
           searchPath: filePath,
@@ -459,6 +475,15 @@ export function setupRoutes(app: express.Application) {
 
       const stat = fs.statSync(filePath);
       const mimeType = getMimeType(filename);
+      
+      // Set comprehensive headers for audio streaming
+      res.setHeader('Content-Type', 'audio/mpeg');
+      res.setHeader('Content-Length', stat.size);
+      res.setHeader('Accept-Ranges', 'bytes');
+      res.setHeader('Cache-Control', 'public, max-age=31536000');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Range');
       
       // Set comprehensive headers for audio streaming
       res.setHeader('Content-Type', mimeType);
