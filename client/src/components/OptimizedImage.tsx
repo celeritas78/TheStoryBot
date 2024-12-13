@@ -40,85 +40,31 @@ export function OptimizedImage({
     
     if (!priority && src) {
       console.log('OptimizedImage: Loading image with src:', src);
-      // Reset states when src changes
       setIsLoading(true);
       setIsError(false);
-      setImageSrc(''); // Clear current image while loading
-
-      const loadImage = async () => {
-        try {
-          console.log('OptimizedImage: Creating new Image object for:', src);
-          // Create new image object
-          const img = new Image();
-          
-          // Create a promise to handle image loading
-          await new Promise<void>((resolve, reject) => {
-            img.onload = () => {
-              console.log('OptimizedImage: Image loaded successfully:', {
-                originalSrc: src,
-                finalSrc: img.src,
-                naturalWidth: img.naturalWidth,
-                naturalHeight: img.naturalHeight,
-                complete: img.complete
-              });
-              resolve();
-            };
-            img.onerror = (error) => {
-              console.error('OptimizedImage: Image load error:', {
-                originalSrc: src,
-                finalSrc: img.src,
-                error: error,
-                complete: img.complete,
-                naturalWidth: img.naturalWidth,
-                naturalHeight: img.naturalHeight
-              });
-              reject(new Error(`Failed to load image: ${src}`));
-            };
-            // Ensure the URL includes the public folder path
-            const fullImageUrl = src.startsWith('http') 
-              ? src 
-              : `${window.location.origin}${src}`;
-            console.log('OptimizedImage: Loading image with details:', {
-              originalSrc: src,
-              fullUrl: fullImageUrl,
-              corsMode: img.crossOrigin,
-              isComplete: img.complete,
-              naturalDimensions: {
-                width: img.naturalWidth,
-                height: img.naturalHeight
-              },
-              requestUrl: {
-                origin: window.location.origin,
-                pathname: new URL(fullImageUrl).pathname
-              },
-              mimeType: 'image/png',
-              headers: {
-                'Accept': 'image/png,image/*;q=0.9,*/*;q=0.8',
-                'Cache-Control': 'no-cache'
-              }
-            });
-            img.src = fullImageUrl;
-          });
-
-          if (mounted) {
-            console.log('OptimizedImage: Updating component state with loaded image');
-            setImageSrc(src);
-            setIsLoading(false);
-          }
-        } catch (error: unknown) {
-          console.error('OptimizedImage: Failed to load image:', {
-            src,
-            error: error instanceof Error ? error.message : 'Unknown error',
-            errorType: error instanceof Error ? error.name : 'Unknown',
-          });
-          if (mounted) {
-            setIsError(true);
-            setIsLoading(false);
-          }
+      
+      const img = new Image();
+      
+      img.onload = () => {
+        if (mounted) {
+          console.log('OptimizedImage: Image loaded successfully:', src);
+          setIsLoading(false);
+        }
+      };
+      
+      img.onerror = (error) => {
+        console.error('OptimizedImage: Image load error:', {
+          src,
+          error: error,
+        });
+        if (mounted) {
+          setIsError(true);
+          setIsLoading(false);
         }
       };
 
-      loadImage();
+      // Use the src directly since we're already passing the full URL
+      img.src = src;
     }
 
     return () => {
