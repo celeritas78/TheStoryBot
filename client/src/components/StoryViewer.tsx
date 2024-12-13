@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Story } from "../lib/api";
 import { Link } from "wouter";
 import AudioPlayer from "./AudioPlayer";
+import { OptimizedImage } from "./OptimizedImage";
 
 interface StoryViewerProps {
   story: Story;
@@ -47,10 +48,11 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
         <Card className="p-4">
           {segment.imageUrl && (
             <div className="relative w-full aspect-video mb-6">
-              <img
+              <OptimizedImage
                 src={segment.imageUrl}
                 alt={`Story scene ${currentSegment + 1}`}
                 className="absolute inset-0 w-full h-full object-cover rounded-md shadow-md"
+                priority={true}
               />
             </div>
           )}

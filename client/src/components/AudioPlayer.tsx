@@ -39,16 +39,24 @@ function AudioPlayerContent({ audioUrl, onAudioEnd }: AudioPlayerProps) {
   }, [audioUrl]);
 
   useEffect(() => {
+    if (!audioUrl) return;
+
     const audio = new Audio(audioUrl);
     audioRef.current = audio;
 
     const handleTimeUpdate = () => {
-      if (audioRef.current) {
-        setProgress((audioRef.current.currentTime / audioRef.current.duration) * 100);
+      if (audioRef.current && !isNaN(audioRef.current.duration)) {
+        const currentProgress = (audioRef.current.currentTime / audioRef.current.duration) * 100;
+        setProgress(isNaN(currentProgress) ? 0 : currentProgress);
       }
     };
 
     const handleCanPlay = () => {
+      setIsLoading(false);
+    };
+
+    const handleError = (e: ErrorEvent) => {
+      console.error("Audio playback error:", e);
       setIsLoading(false);
     };
 
@@ -61,12 +69,14 @@ function AudioPlayerContent({ audioUrl, onAudioEnd }: AudioPlayerProps) {
     audio.addEventListener("timeupdate", handleTimeUpdate);
     audio.addEventListener("canplay", handleCanPlay);
     audio.addEventListener("ended", handleEnded);
+    audio.addEventListener("error", handleError as EventListener);
 
     return () => {
       audio.pause();
       audio.removeEventListener("timeupdate", handleTimeUpdate);
       audio.removeEventListener("canplay", handleCanPlay);
       audio.removeEventListener("ended", handleEnded);
+      audio.removeEventListener("error", handleError as EventListener);
     };
   }, [audioUrl, onAudioEnd]);
 
@@ -106,10 +116,12 @@ function AudioPlayerContent({ audioUrl, onAudioEnd }: AudioPlayerProps) {
         step={1}
         className="flex-1"
         onValueChange={(value) => {
-          if (audioRef.current) {
+          if (audioRef.current && !isNaN(audioRef.current.duration)) {
             const newTime = (value[0] / 100) * audioRef.current.duration;
-            audioRef.current.currentTime = newTime;
-            setProgress(value[0]);
+            if (!isNaN(newTime)) {
+              audioRef.current.currentTime = newTime;
+              setProgress(value[0]);
+            }
           }
         }}
       />
