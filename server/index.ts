@@ -30,12 +30,6 @@ process.on('unhandledRejection', (reason, promise) => {
 const app = express();
 const server = createServer(app);
 
-// Disable express debug logging
-app.set('debug', false);
-app.disable('verbose');
-app.disable('log');
-app.set('env', 'production'); // Disable express development logging
-
 // Basic middleware setup
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -44,7 +38,7 @@ app.use(express.urlencoded({ extended: false }));
 app.set('debug', false);
 app.disable('verbose');
 app.disable('log');
-app.set('env', 'production'); // Disable express development logging
+app.set('env', 'production');
 app.disable('x-powered-by');
 
 // Initialize application services
@@ -54,19 +48,43 @@ async function initializeServices() {
     environment: process.env.NODE_ENV
   });
   
-  // Initialize authentication first
   await setupAuth(app);
   return true;
 }
+
+// Handle shutdown gracefully
+function handleShutdown(signal?: string) {
+  console.log('Server shutdown initiated', {
+    signal,
+    timestamp: new Date().toISOString()
+  });
+
+  server.close(() => {
+    console.log('Server closed successfully', {
+      timestamp: new Date().toISOString()
+    });
+    process.exit(0);
+  });
+
+  // Force shutdown after timeout
+  setTimeout(() => {
+    console.error('Force shutting down after timeout', {
+      timestamp: new Date().toISOString()
+    });
+    process.exit(1);
+  }, 10000);
+}
+
+// Setup shutdown handlers
+process.on('SIGTERM', () => handleShutdown('SIGTERM'));
+process.on('SIGINT', () => handleShutdown('SIGINT'));
 
 // Initialize services and start the server
 (async () => {
   try {
     const isDevelopment = process.env.NODE_ENV === 'development';
-    // Use REPL_SLUG to detect Replit environment
     const isReplit = process.env.REPL_SLUG !== undefined;
-    // Default to port 3000, but allow override through PORT env var
-    let port = Number(process.env.PORT || 3000);
+    const port = Number(process.env.PORT || 3000);
     const host = '0.0.0.0';
     
     // Always log server initialization
@@ -89,6 +107,78 @@ async function initializeServices() {
     console.log('Setting up API routes...');
     setupRoutes(app);
 
+    // Setup static file serving
+    const rootPath = process.cwd();
+    const publicPath = path.join(rootPath, 'dist', 'public');
+    const mediaPath = path.join(rootPath, 'public');
+
+    // Create media directories if they don't exist
+    const mediaDirs = ['images', 'audio'].map(dir => path.join(mediaPath, dir));
+    mediaDirs.forEach(dir => {
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+    });
+
+    // Debug middleware for static file requests
+    app.use((req: Request, res: Response, next: NextFunction) => {
+      if (req.url.startsWith('/images/') || req.url.startsWith('/audio/')) {
+        console.log('Static file request:', {
+          url: req.url,
+          method: req.method,
+          timestamp: new Date().toISOString(),
+          mediaPath,
+          requestPath: req.path,
+          exists: fs.existsSync(path.join(mediaPath, req.path))
+        });
+      }
+      next();
+    });
+
+    // Custom error handler for static files
+    const handleStaticFileError = (err: Error, req: Request, res: Response, next: NextFunction) => {
+      console.error('Static file error:', {
+        error: err.message,
+        path: req.path,
+        timestamp: new Date().toISOString()
+      });
+      next(err);
+    };
+
+    // Serve media files with enhanced logging and proper headers
+    app.use('/images', express.static(path.join(mediaPath, 'images'), {
+      etag: true,
+      lastModified: true,
+      setHeaders: (res, filePath) => {
+        res.setHeader('Cache-Control', 'public, max-age=31536000');
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+        res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Range');
+        
+        const ext = path.extname(filePath).toLowerCase();
+        if (ext === '.png') {
+          res.setHeader('Content-Type', 'image/png');
+        } else if (ext === '.jpg' || ext === '.jpeg') {
+          res.setHeader('Content-Type', 'image/jpeg');
+        }
+      }
+    }), handleStaticFileError);
+
+    app.use('/audio', express.static(path.join(mediaPath, 'audio'), {
+      etag: true,
+      lastModified: true,
+      setHeaders: (res, filePath) => {
+        res.setHeader('Cache-Control', 'public, max-age=31536000');
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+        res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Range');
+        res.setHeader('Content-Type', 'audio/mpeg');
+      }
+    }), handleStaticFileError);
+
+    // Serve static files for the client application
+    app.use(express.static(publicPath));
+
     // Error handling middleware
     app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
       const status = err.status || 500;
@@ -104,99 +194,12 @@ async function initializeServices() {
       res.status(status).json({ message });
     });
 
-    // Setup static file serving and catch-all route for production
-    if (!isDevelopment) {
-      // Define paths for static content
-      const rootPath = process.cwd();
-      const publicPath = path.join(rootPath, 'public');
-      const mediaPath = rootPath;
-      
-      console.log('Setting up static file serving:', { 
-        rootPath,
-        publicPath,
-        mediaPath,
-        exists: {
-          public: fs.existsSync(publicPath),
-          media: fs.existsSync(mediaPath)
-        },
-        directories: {
-          images: fs.existsSync(path.join(mediaPath, 'images')),
-          audio: fs.existsSync(path.join(mediaPath, 'audio'))
-        },
-        contents: {
-          images: fs.existsSync(path.join(mediaPath, 'images')) ? fs.readdirSync(path.join(mediaPath, 'images')) : [],
-          audio: fs.existsSync(path.join(mediaPath, 'audio')) ? fs.readdirSync(path.join(mediaPath, 'audio')) : []
-        }
-      });
+    // Fallback route for SPA
+    app.get('*', (_req: Request, res: Response) => {
+      res.sendFile(path.join(publicPath, 'index.html'));
+    });
 
-      // Serve media files from root directory with proper CORS and caching headers
-      app.use('/images', express.static(path.join(mediaPath, 'images'), {
-        etag: true,
-        lastModified: true,
-        setHeaders: (res, filePath) => {
-          res.setHeader('Cache-Control', 'public, max-age=31536000');
-          res.setHeader('Access-Control-Allow-Origin', '*');
-          res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
-          res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Range');
-          
-          const ext = path.extname(filePath).toLowerCase();
-          if (ext === '.png') {
-            res.setHeader('Content-Type', 'image/png');
-          } else if (ext === '.jpg' || ext === '.jpeg') {
-            res.setHeader('Content-Type', 'image/jpeg');
-          }
-        }
-      }));
-
-      app.use('/audio', express.static(path.join(mediaPath, 'audio'), {
-        etag: true,
-        lastModified: true,
-        setHeaders: (res, filePath) => {
-          res.setHeader('Cache-Control', 'public, max-age=31536000');
-          res.setHeader('Access-Control-Allow-Origin', '*');
-          res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
-          res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Range');
-          res.setHeader('Content-Type', 'audio/mpeg');
-        }
-      }));
-
-      // Serve static files for the client application
-      app.use(express.static(publicPath));
-
-      // Fallback route for SPA
-      app.get('*', (_req, res) => {
-        res.sendFile(path.join(publicPath, 'index.html'));
-      });
-    }
-
-    // Handle shutdown gracefully
-    function handleShutdown(signal?: string) {
-      console.log('Server shutdown initiated', {
-        signal,
-        timestamp: new Date().toISOString()
-      });
-
-      server.close(() => {
-        console.log('Server closed successfully', {
-          timestamp: new Date().toISOString()
-        });
-        process.exit(0);
-      });
-
-      // Force shutdown after timeout
-      setTimeout(() => {
-        console.error('Force shutting down after timeout', {
-          timestamp: new Date().toISOString()
-        });
-        process.exit(1);
-      }, 10000);
-    }
-
-    // Setup shutdown handlers
-    process.on('SIGTERM', () => handleShutdown('SIGTERM'));
-    process.on('SIGINT', () => handleShutdown('SIGINT'));
-
-    // Start the server with retry logic for port conflicts
+    // Start the server with retry logic
     await new Promise<void>((resolve, reject) => {
       const tryListen = (retryPort: number) => {
         server.on('error', (error: NodeJS.ErrnoException) => {
@@ -216,7 +219,6 @@ async function initializeServices() {
         });
 
         server.listen(retryPort, host, () => {
-          port = retryPort; // Update the port number if we had to change it
           console.log('Server started successfully:', {
             port: retryPort,
             host,
