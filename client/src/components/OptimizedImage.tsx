@@ -52,7 +52,7 @@ export function OptimizedImage({
           const img = new Image();
           
           // Create a promise to handle image loading
-          await new Promise((resolve, reject) => {
+          await new Promise<void>((resolve, reject) => {
             img.onload = () => {
               console.log('OptimizedImage: Image loaded successfully:', {
                 originalSrc: src,

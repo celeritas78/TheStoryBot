@@ -117,7 +117,15 @@ function AudioPlayerContent({ audioUrl, onAudioEnd }: AudioPlayerProps) {
     audio.addEventListener("ended", handleEnded);
     audio.addEventListener("error", handleError);
 
-    audio.src = audioUrl;
+    // Ensure we have a full URL for the audio file
+    const fullAudioUrl = audioUrl.startsWith('http') ? audioUrl : `${window.location.origin}${audioUrl}`;
+    console.log('AudioPlayer: Setting up audio with:', {
+      originalUrl: audioUrl,
+      fullUrl: fullAudioUrl,
+      origin: window.location.origin
+    });
+    
+    audio.src = fullAudioUrl;
     audio.load();
 
     return () => {

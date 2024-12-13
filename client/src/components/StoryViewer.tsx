@@ -33,9 +33,17 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
   const segment = story.segments[currentSegment];
   const baseUrl = window.location.origin;
   
-  // Construct URLs relative to the base URL
-  const imageUrl = segment.imageUrl || '';
-  const audioUrl = segment.audioUrl || '';
+  // Construct URLs relative to the public folder
+  const imageUrl = segment.imageUrl ? `${window.location.origin}${segment.imageUrl}` : '';
+  const audioUrl = segment.audioUrl ? `${window.location.origin}${segment.audioUrl}` : '';
+  
+  console.log('StoryViewer: Constructed media URLs:', {
+    originalImageUrl: segment.imageUrl,
+    originalAudioUrl: segment.audioUrl,
+    fullImageUrl: imageUrl,
+    fullAudioUrl: audioUrl,
+    origin: window.location.origin
+  });
   
   console.log('StoryViewer: Constructing media URLs:', {
     segmentIndex: currentSegment,
