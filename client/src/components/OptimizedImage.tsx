@@ -74,7 +74,16 @@ export function OptimizedImage({
               });
               reject(new Error(`Failed to load image: ${src}`));
             };
-            img.src = src;
+            // Ensure the URL includes the public folder path
+            const fullImageUrl = src.startsWith('http') 
+              ? src 
+              : `${window.location.origin}/public${src}`;
+            console.log('OptimizedImage: Loading image:', {
+              originalSrc: src,
+              fullUrl: fullImageUrl,
+              publicPath: '/public'
+            });
+            img.src = fullImageUrl;
           });
 
           if (mounted) {

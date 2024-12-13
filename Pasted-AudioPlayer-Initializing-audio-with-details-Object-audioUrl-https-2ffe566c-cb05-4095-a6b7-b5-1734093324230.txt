@@ -1,0 +1,27 @@
+AudioPlayer: Initializing audio with details: 
+Object {audioUrl: "https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/audio/0411dced-8c0a-…", origin: "https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev", hostname: "2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev", protocol: "https:"}
+audioUrl: "https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/audio/0411dced-8c0a-44e4-92d6-8d1fb055e7d9.mp3"
+hostname: "2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev"
+origin: "https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev"
+protocol: "https:"
+[[Prototype]]: Object
+AudioPlayer: Setting up audio with: 
+Object {originalUrl: "https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/audio/0411dced-8c0a-…", fullUrl: "https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/audio/0411dced-8c0a-…", origin: "https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev"}
+fullUrl: "https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/audio/0411dced-8c0a-44e4-92d6-8d1fb055e7d9.mp3"
+origin: "https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev"
+originalUrl: "https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/audio/0411dced-8c0a-44e4-92d6-8d1fb055e7d9.mp3"
+[[Prototype]]: Object
+AudioPlayer: Started loading audio
+AudioPlayer: Audio error: 
+Object {errorCode: 4, errorMessage: "DEMUXER_ERROR_COULD_NOT_OPEN: FFmpegDemuxer: open context failed", networkState: 3, readyState: 0, src: "https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/audio/0411dced-8c0a-…", …}
+constructedUrl: "https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/audio/0411dced-8c0a-44e4-92d6-8d1fb055e7d9.mp3"
+crossOrigin: "anonymous"
+errorCode: 4
+errorMessage: "DEMUXER_ERROR_COULD_NOT_OPEN: FFmpegDemuxer: open context failed"
+networkState: 3
+originalUrl: "https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/audio/0411dced-8c0a-44e4-92d6-8d1fb055e7d9.mp3"
+publicPath: true
+readyState: 0
+src: "https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/audio/0411dced-8c0a-44e4-92d6-8d1fb055e7d9.mp3"
+[[Prototype]]: Object
+

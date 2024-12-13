@@ -1,0 +1,98 @@
+Returning image path: /images/0d6a8788-20b0-4e22-818d-852243d9d968.png
+Saved image locally at: /images/0d6a8788-20b0-4e22-818d-852243d9d968.png
+--- GENERATING SPEECH ---
+Speech Input Text: The once cheerful atmosphere quickly turned serious as the rain poured down like a waterfall. Chris could hear the river rising ominously. "We have to help!" he shouted, spotting their village built o...
+Downloaded image buffer size: 3604561
+saveImageFile called with: {
+  bufferSize: 3604561,
+  originalFormat: 'png',
+  maxSizeMB: 10,
+  quality: 90,
+  SUPPORTED_IMAGE_FORMATS: {
+    png: 'image/png',
+    jpg: 'image/jpeg',
+    jpeg: 'image/jpeg',
+    webp: 'image/webp'
+  },
+  timestamp: '2024-12-13T12:32:46.975Z'
+}
+Saving image file: {
+  fileName: '9aa8136c-b24d-4dfb-b0b8-a61dce20a715.png',
+  filePath: '/home/runner/CustomBedtimeStories/public/images/9aa8136c-b24d-4dfb-b0b8-a61dce20a715.png',
+  exists: true,
+  timestamp: '2024-12-13T12:32:46.976Z'
+}
+Image file saved successfully: {
+  fileName: '9aa8136c-b24d-4dfb-b0b8-a61dce20a715.png',
+  filePath: '/home/runner/CustomBedtimeStories/public/images/9aa8136c-b24d-4dfb-b0b8-a61dce20a715.png',
+  size: 3604561,
+  timestamp: '2024-12-13T12:32:46.979Z'
+}
+Returning image path: /images/9aa8136c-b24d-4dfb-b0b8-a61dce20a715.png
+Saved image locally at: /images/9aa8136c-b24d-4dfb-b0b8-a61dce20a715.png
+--- GENERATING SPEECH ---
+Speech Input Text: On a bright afternoon, Chris, Maria, and Leo ran barefoot along the banks of the Amazon River, laughing as they kicked their black and white soccer ball back and forth. Colorful birds flitted among th...
+saveAudioFile called with: {
+  bufferSize: 881760,
+  originalFormat: 'mp3',
+  SUPPORTED_AUDIO_FORMATS: { mp3: 'audio/mpeg', m4a: 'audio/mp4', wav: 'audio/wav' }
+}
+Saving audio file: {
+  fileName: '0411dced-8c0a-44e4-92d6-8d1fb055e7d9.mp3',
+  filePath: '/home/runner/CustomBedtimeStories/public/audio/0411dced-8c0a-44e4-92d6-8d1fb055e7d9.mp3',
+  exists: true
+}
+Successfully saved audio file: /audio/0411dced-8c0a-44e4-92d6-8d1fb055e7d9.mp3
+Received Image URL from OpenAI: https://oaidalleapiprodscus.blob.core.windows.net/private/org-8hqUrMQvREaIO7bDZXZNpDR1/user-RcpYfzRbtZ5ra2JTLyVdShGs/img-1F9sFsqrzVgxdb5IiyJw2Qc7.png?st=2024-12-13T11%3A32%3A52Z&se=2024-12-13T13%3A32%3A52Z&sp=r&sv=2024-08-04&sr=b&rscd=inline&rsct=image/png&skoid=d505667d-d6c1-4a0a-bac7-5c84a87759f8&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2024-12-13T04%3A50%3A06Z&ske=2024-12-14T04%3A50%3A06Z&sks=b&skv=2024-08-04&sig=c0pAvexLPfIDr/NEFy6otNwnE80YUHj/9Sk062WlSG0%3D
+saveAudioFile called with: {
+  bufferSize: 945120,
+  originalFormat: 'mp3',
+  SUPPORTED_AUDIO_FORMATS: { mp3: 'audio/mpeg', m4a: 'audio/mp4', wav: 'audio/wav' }
+}
+Saving audio file: {
+  fileName: 'bccb4e79-b708-419d-a3a8-5e620d5f5877.mp3',
+  filePath: '/home/runner/CustomBedtimeStories/public/audio/bccb4e79-b708-419d-a3a8-5e620d5f5877.mp3',
+  exists: true
+}
+Successfully saved audio file: /audio/bccb4e79-b708-419d-a3a8-5e620d5f5877.mp3
+Downloaded image buffer size: 3237040
+saveImageFile called with: {
+  bufferSize: 3237040,
+  originalFormat: 'png',
+  maxSizeMB: 10,
+  quality: 90,
+  SUPPORTED_IMAGE_FORMATS: {
+    png: 'image/png',
+    jpg: 'image/jpeg',
+    jpeg: 'image/jpeg',
+    webp: 'image/webp'
+  },
+  timestamp: '2024-12-13T12:32:57.084Z'
+}
+Saving image file: {
+  fileName: '6eebaed0-0615-43fd-b04c-7b417685d438.png',
+  filePath: '/home/runner/CustomBedtimeStories/public/images/6eebaed0-0615-43fd-b04c-7b417685d438.png',
+  exists: true,
+  timestamp: '2024-12-13T12:32:57.084Z'
+}
+Image file saved successfully: {
+  fileName: '6eebaed0-0615-43fd-b04c-7b417685d438.png',
+  filePath: '/home/runner/CustomBedtimeStories/public/images/6eebaed0-0615-43fd-b04c-7b417685d438.png',
+  size: 3237040,
+  timestamp: '2024-12-13T12:32:57.088Z'
+}
+Returning image path: /images/6eebaed0-0615-43fd-b04c-7b417685d438.png
+Saved image locally at: /images/6eebaed0-0615-43fd-b04c-7b417685d438.png
+--- GENERATING SPEECH ---
+Speech Input Text: After the storm passed, sunlight broke through the clouds, illuminating the recovering village. Chris looked around at the blooming flowers and bright smiles of his fellow villagers. He turned to Mari...
+saveAudioFile called with: {
+  bufferSize: 827040,
+  originalFormat: 'mp3',
+  SUPPORTED_AUDIO_FORMATS: { mp3: 'audio/mpeg', m4a: 'audio/mp4', wav: 'audio/wav' }
+}
+Saving audio file: {
+  fileName: 'd6971051-d8c0-4aaa-8c40-a3eaccc38a44.mp3',
+  filePath: '/home/runner/CustomBedtimeStories/public/audio/d6971051-d8c0-4aaa-8c40-a3eaccc38a44.mp3',
+  exists: true
+}
+Successfully saved audio file: /audio/d6971051-d8c0-4aaa-8c40-a3eaccc38a44.mp3
