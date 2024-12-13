@@ -37,8 +37,18 @@ function AudioPlayerContent({ audioUrl, onAudioEnd }: AudioPlayerProps) {
       return;
     }
 
-    console.log('AudioPlayer: Initializing audio with URL:', audioUrl);
+    // Log the full URL and origin
+    console.log('AudioPlayer: Initializing audio with details:', {
+      audioUrl,
+      origin: window.location.origin,
+      hostname: window.location.hostname,
+      protocol: window.location.protocol
+    });
+
     const audio = new Audio();
+    
+    // Set CORS policy
+    audio.crossOrigin = "anonymous";
     audioRef.current = audio;
 
     const handleTimeUpdate = () => {

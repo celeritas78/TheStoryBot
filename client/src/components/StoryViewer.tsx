@@ -31,13 +31,21 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
   };
 
   const segment = story.segments[currentSegment];
+  const baseUrl = window.location.origin;
+  
+  // Ensure proper URL construction for media files
+  const imageUrl = segment.imageUrl ? new URL(segment.imageUrl, baseUrl).href : '';
+  const audioUrl = segment.audioUrl ? new URL(segment.audioUrl, baseUrl).href : '';
   
   console.log('StoryViewer: Current segment media details:', {
     segmentIndex: currentSegment,
-    imageUrl: segment.imageUrl,
-    audioUrl: segment.audioUrl,
+    originalImageUrl: segment.imageUrl,
+    originalAudioUrl: segment.audioUrl,
+    fullImageUrl: imageUrl,
+    fullAudioUrl: audioUrl,
     hasImage: Boolean(segment.imageUrl),
-    hasAudio: Boolean(segment.audioUrl)
+    hasAudio: Boolean(segment.audioUrl),
+    baseUrl
   });
 
   return (
@@ -57,7 +65,7 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
           {segment.imageUrl && (
             <div className="relative w-full aspect-video mb-6">
               <OptimizedImage
-                src={segment.imageUrl}
+                src={imageUrl}
                 alt={`Story scene ${currentSegment + 1}`}
                 className="absolute inset-0 w-full h-full object-cover rounded-md shadow-md"
                 priority={true}
@@ -74,7 +82,7 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
             </Button>
             <div className="flex-1 mx-6">
               <AudioPlayer
-                audioUrl={segment.audioUrl || ""}
+                audioUrl={audioUrl}
                 onAudioEnd={() => handleNext()}
               />
             </div>

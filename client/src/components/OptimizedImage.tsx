@@ -23,6 +23,17 @@ export function OptimizedImage({
   const [isError, setIsError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [imageSrc, setImageSrc] = useState<string>(priority ? src : '');
+  
+  // Log the initial image URL
+  useEffect(() => {
+    console.log('OptimizedImage: Initializing with props:', {
+      src,
+      priority,
+      className,
+      width,
+      height
+    });
+  }, [src, priority, className, width, height]);
 
   useEffect(() => {
     let mounted = true;
