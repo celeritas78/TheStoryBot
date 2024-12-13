@@ -354,10 +354,16 @@ export function setupRoutes(app: express.Application) {
     }
   });
 
-  // Image serving endpoint with minimal logging
+  // Image serving endpoint with enhanced headers and logging
   app.get("/images/:filename", async (req, res) => {
     try {
       const { filename } = req.params;
+      console.log('Image request received:', {
+        filename,
+        headers: req.headers,
+        url: req.url,
+        timestamp: new Date().toISOString()
+      });
       
       if (!isImageFormatSupported(filename)) {
         return res.status(400).json({ error: "Unsupported image format" });
@@ -365,6 +371,11 @@ export function setupRoutes(app: express.Application) {
 
       const filePath = getImageFilePath(filename);
       if (!imageFileExists(filePath)) {
+        console.error('Image file not found:', {
+          filename,
+          searchPath: filePath,
+          timestamp: new Date().toISOString()
+        });
         return res.status(404).json({ error: "Image not found" });
       }
 
@@ -375,20 +386,34 @@ export function setupRoutes(app: express.Application) {
         return res.status(304).end();
       }
 
-      // Set headers for optimal caching and performance
+      // Set comprehensive headers for image serving
       res.setHeader('Content-Type', getImageMimeType(filename));
+      res.setHeader('Content-Length', stat.size);
       res.setHeader('Cache-Control', 'public, max-age=31536000');
       res.setHeader('ETag', etag);
       res.setHeader('X-Content-Type-Options', 'nosniff');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Range');
+      
+      console.log('Serving image file:', {
+        filename,
+        size: stat.size,
+        path: filePath,
+        mimeType: getImageMimeType(filename),
+        timestamp: new Date().toISOString()
+      });
 
-      // Disable express debug logging and unnecessary headers
-      app.set('etag', false);
-      app.disable('x-powered-by');
-      app.set('env', process.env.NODE_ENV || 'production');
-      app.disable('verbose');
-
-      // Stream the file without logging
+      // Stream the file with error handling
       const stream = fs.createReadStream(filePath);
+      stream.on('error', (error) => {
+        console.error('Stream error:', {
+          error: error.message,
+          filename,
+          timestamp: new Date().toISOString()
+        });
+        res.status(500).json({ error: 'Failed to stream image file' });
+      });
       stream.pipe(res);
       
     } catch (error) {
@@ -399,10 +424,16 @@ export function setupRoutes(app: express.Application) {
     }
   });
 
-  // Audio serving endpoint
+  // Audio serving endpoint with enhanced headers and logging
   app.get("/audio/:filename", async (req, res) => {
     try {
       const { filename } = req.params;
+      console.log('Audio request received:', {
+        filename,
+        headers: req.headers,
+        url: req.url,
+        timestamp: new Date().toISOString()
+      });
       
       if (!isAudioFormatSupported(filename)) {
         return res.status(400).json({ error: "Unsupported audio format" });
@@ -410,17 +441,41 @@ export function setupRoutes(app: express.Application) {
 
       const filePath = getAudioFilePath(filename);
       if (!audioFileExists(filePath)) {
+        console.error('Audio file not found:', {
+          filename,
+          searchPath: filePath,
+          timestamp: new Date().toISOString()
+        });
         return res.status(404).json({ error: "Audio file not found" });
       }
 
       const stat = fs.statSync(filePath);
-      res.setHeader('Content-Type', getMimeType(filename));
+      
+      // Set comprehensive headers for audio streaming
+      res.setHeader('Content-Type', 'audio/mpeg');
       res.setHeader('Content-Length', stat.size);
+      res.setHeader('Accept-Ranges', 'bytes');
       res.setHeader('Cache-Control', 'public, max-age=31536000');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Range');
+      
+      console.log('Serving audio file:', {
+        filename,
+        size: stat.size,
+        path: filePath,
+        mimeType: 'audio/mpeg',
+        timestamp: new Date().toISOString()
+      });
 
       fs.createReadStream(filePath).pipe(res);
     } catch (error) {
-      console.error('Error serving audio:', error);
+      console.error('Error serving audio:', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        filename,
+        timestamp: new Date().toISOString()
+      });
       res.status(500).json({ error: 'Failed to serve audio file' });
     }
   });

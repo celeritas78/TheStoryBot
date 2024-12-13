@@ -1,0 +1,39 @@
+StoryViewer: Current segment media details: 
+Object {segmentIndex: 1, originalImageUrl: "/images/0d6a8788-20b0-4e22-818d-852243d9d968.png", originalAudioUrl: "/audio/0411dced-8c0a-44e4-92d6-8d1fb055e7d9.mp3", fullImageUrl: "https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/images/0d6a8788-20b0…", fullAudioUrl: "https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/audio/0411dced-8c0a-…", …}
+baseUrl: "https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev"
+fullAudioUrl: "https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/audio/0411dced-8c0a-44e4-92d6-8d1fb055e7d9.mp3"
+fullImageUrl: "https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/images/0d6a8788-20b0-4e22-818d-852243d9d968.png"
+hasAudio: true
+hasImage: true
+originalAudioUrl: "/audio/0411dced-8c0a-44e4-92d6-8d1fb055e7d9.mp3"
+originalImageUrl: "/images/0d6a8788-20b0-4e22-818d-852243d9d968.png"
+segmentIndex: 1
+[[Prototype]]: Object
+AudioPlayer: Started loading audio
+AudioPlayer: Audio error: 
+Object {errorCode: 4, errorMessage: "DEMUXER_ERROR_COULD_NOT_OPEN: FFmpegDemuxer: open context failed", networkState: 3, readyState: 0, src: "https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/audio/0411dced-8c0a-…", …}
+constructedUrl: "https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/audio/0411dced-8c0a-44e4-92d6-8d1fb055e7d9.mp3"
+crossOrigin: "anonymous"
+errorCode: 4
+errorMessage: "DEMUXER_ERROR_COULD_NOT_OPEN: FFmpegDemuxer: open context failed"
+networkState: 3
+originalUrl: "https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/audio/0411dced-8c0a-44e4-92d6-8d1fb055e7d9.mp3"
+publicPath: true
+readyState: 0
+src: "https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/audio/0411dced-8c0a-44e4-92d6-8d1fb055e7d9.mp3"
+[[Prototype]]: Object
+constructor: ƒ Object()
+hasOwnProperty: ƒ hasOwnProperty()
+isPrototypeOf: ƒ isPrototypeOf()
+propertyIsEnumerable: ƒ propertyIsEnumerable()
+toLocaleString: ƒ toLocaleString()
+toString: ƒ toString()
+valueOf: ƒ valueOf()
+__defineGetter__: ƒ __defineGetter__()
+__defineSetter__: ƒ __defineSetter__()
+__lookupGetter__: ƒ __lookupGetter__()
+__lookupSetter__: ƒ __lookupSetter__()
+__proto__: Object
+get __proto__: ƒ get __proto__()
+set __proto__: ƒ set __proto__()
+
