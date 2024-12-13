@@ -78,10 +78,24 @@ export function OptimizedImage({
             const fullImageUrl = src.startsWith('http') 
               ? src 
               : `${window.location.origin}${src}`;
-            console.log('OptimizedImage: Loading image:', {
+            console.log('OptimizedImage: Loading image with details:', {
               originalSrc: src,
               fullUrl: fullImageUrl,
-              publicPath: '/public'
+              corsMode: img.crossOrigin,
+              isComplete: img.complete,
+              naturalDimensions: {
+                width: img.naturalWidth,
+                height: img.naturalHeight
+              },
+              requestUrl: {
+                origin: window.location.origin,
+                pathname: new URL(fullImageUrl).pathname
+              },
+              mimeType: 'image/png',
+              headers: {
+                'Accept': 'image/png,image/*;q=0.9,*/*;q=0.8',
+                'Cache-Control': 'no-cache'
+              }
             });
             img.src = fullImageUrl;
           });

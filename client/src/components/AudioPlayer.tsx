@@ -123,10 +123,18 @@ function AudioPlayerContent({ audioUrl, onAudioEnd }: AudioPlayerProps) {
       : `${window.location.origin}${audioUrl}`;
     
     // Log the complete URL construction process
-    console.log('AudioPlayer: URL construction:', {
+    console.log('AudioPlayer: URL construction details:', {
       originalUrl: audioUrl,
       fullUrl: fullAudioUrl,
-      publicPath: '/public'
+      origin: window.location.origin,
+      finalUrl: audio.src,
+      corsMode: audio.crossOrigin,
+      headers: {
+        'Content-Type': 'audio/mpeg',
+        'Accept': 'audio/mpeg,audio/*;q=0.9,*/*;q=0.8',
+      },
+      networkState: audio.networkState,
+      readyState: audio.readyState
     });
     console.log('AudioPlayer: Setting up audio with:', {
       originalUrl: audioUrl,

@@ -37,12 +37,31 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
   const imageUrl = segment.imageUrl ? `${window.location.origin}${segment.imageUrl}` : '';
   const audioUrl = segment.audioUrl ? `${window.location.origin}${segment.audioUrl}` : '';
   
-  console.log('StoryViewer: Media URLs:', {
-    imageUrl,
-    audioUrl,
-    publicPath: '/public',
-    originalImageUrl: segment.imageUrl,
-    originalAudioUrl: segment.audioUrl
+  console.log('StoryViewer: Media loading lifecycle:', {
+    currentSegment,
+    segmentDetails: {
+      index: currentSegment,
+      total: story.segments.length,
+      hasImage: Boolean(segment.imageUrl),
+      hasAudio: Boolean(segment.audioUrl)
+    },
+    mediaUrls: {
+      originalImage: segment.imageUrl,
+      originalAudio: segment.audioUrl,
+      constructedImage: imageUrl,
+      constructedAudio: audioUrl
+    },
+    requestDetails: {
+      origin: window.location.origin,
+      protocol: window.location.protocol,
+      host: window.location.host,
+      baseUrl: baseUrl
+    },
+    timing: {
+      timestamp: new Date().toISOString(),
+      navigationStart: window.performance.timing.navigationStart,
+      loadEventEnd: window.performance.timing.loadEventEnd
+    }
   });
   
   console.log('StoryViewer: Constructed media URLs:', {
