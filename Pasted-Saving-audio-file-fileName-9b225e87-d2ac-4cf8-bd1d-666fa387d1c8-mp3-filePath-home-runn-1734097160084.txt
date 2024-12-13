@@ -1,0 +1,241 @@
+Saving audio file: {
+  fileName: '9b225e87-d2ac-4cf8-bd1d-666fa387d1c8.mp3',
+  filePath: '/home/runner/CustomBedtimeStories/public/audio/9b225e87-d2ac-4cf8-bd1d-666fa387d1c8.mp3',
+  exists: true
+}
+Successfully saved audio file: /audio/9b225e87-d2ac-4cf8-bd1d-666fa387d1c8.mp3
+2024-12-13T13:38:14.342Z [DEBUG] audio request: {
+  url: '/dae3fc6d-6b60-420e-954c-819a4dcfa460.mp3',
+  filename: 'dae3fc6d-6b60-420e-954c-819a4dcfa460.mp3',
+  filePath: '/home/runner/CustomBedtimeStories/public/audio/dae3fc6d-6b60-420e-954c-819a4dcfa460.mp3',
+  exists: true,
+  method: 'GET',
+  headers: {
+    host: '2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev',
+    'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+    accept: '*/*',
+    'accept-encoding': 'identity;q=1, *;q=0',
+    'accept-language': 'en-US,en;q=0.9',
+    cookie: 'sid=s%3At7cMg53y61FwDLhW_zohPQXfREa2U-mH.pVXY1dn5qoLAZ9B4e8GwyYFcP%2BdltD2bdO6cDBLA5CQ',
+    dnt: '1',
+    range: 'bytes=0-',
+    referer: 'https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/create',
+    'sec-ch-ua': '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
+    'sec-ch-ua-mobile': '?0',
+    'sec-ch-ua-platform': '"macOS"',
+    'sec-fetch-dest': 'audio',
+    'sec-fetch-mode': 'cors',
+    'sec-fetch-site': 'same-origin',
+    'x-forwarded-for': '103.197.75.253, 10.84.0.30',
+    'x-forwarded-proto': 'https',
+    'x-replit-user-bio': '',
+    'x-replit-user-id': '',
+    'x-replit-user-name': '',
+    'x-replit-user-profile-image': '',
+    'x-replit-user-roles': '',
+    'x-replit-user-teams': '',
+    'x-replit-user-url': ''
+  }
+}
+2024-12-13T13:38:14.343Z [DEBUG] audio response headers: {
+  filePath: '/home/runner/CustomBedtimeStories/public/audio/dae3fc6d-6b60-420e-954c-819a4dcfa460.mp3',
+  contentType: 'audio/mpeg',
+  headers: [Object: null prototype] {
+    'access-control-allow-origin': '*',
+    'access-control-allow-methods': 'GET, HEAD, OPTIONS',
+    'access-control-allow-headers': 'Origin, X-Requested-With, Content-Type, Accept, Range',
+    'x-content-type-options': 'nosniff',
+    'x-frame-options': 'SAMEORIGIN',
+    'accept-ranges': 'bytes',
+    'content-type': 'audio/mpeg',
+    'cache-control': 'public, max-age=31536000'
+  }
+}
+2024-12-13T13:38:14.406Z [DEBUG] images request: {
+  url: '/03cd2c38-d258-4bc9-b0ae-7c541fdf2620.png',
+  filename: '03cd2c38-d258-4bc9-b0ae-7c541fdf2620.png',
+  filePath: '/home/runner/CustomBedtimeStories/public/images/03cd2c38-d258-4bc9-b0ae-7c541fdf2620.png',
+  exists: true,
+  method: 'GET',
+  headers: {
+    host: '2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev',
+    'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+    accept: 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+    'accept-encoding': 'gzip, deflate, br, zstd',
+    'accept-language': 'en-US,en;q=0.9',
+    cookie: 'sid=s%3At7cMg53y61FwDLhW_zohPQXfREa2U-mH.pVXY1dn5qoLAZ9B4e8GwyYFcP%2BdltD2bdO6cDBLA5CQ',
+    dnt: '1',
+    referer: 'https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/create',
+    'sec-ch-ua': '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
+    'sec-ch-ua-mobile': '?0',
+    'sec-ch-ua-platform': '"macOS"',
+    'sec-fetch-dest': 'image',
+    'sec-fetch-mode': 'no-cors',
+    'sec-fetch-site': 'same-origin',
+    'x-forwarded-for': '103.197.75.253, 10.84.7.24',
+    'x-forwarded-proto': 'https',
+    'x-replit-user-bio': '',
+    'x-replit-user-id': '',
+    'x-replit-user-name': '',
+    'x-replit-user-profile-image': '',
+    'x-replit-user-roles': '',
+    'x-replit-user-teams': '',
+    'x-replit-user-url': ''
+  }
+}
+2024-12-13T13:38:14.407Z [DEBUG] images response headers: {
+  filePath: '/home/runner/CustomBedtimeStories/public/images/03cd2c38-d258-4bc9-b0ae-7c541fdf2620.png',
+  contentType: 'image/png',
+  headers: [Object: null prototype] {
+    'access-control-allow-origin': '*',
+    'access-control-allow-methods': 'GET, HEAD, OPTIONS',
+    'access-control-allow-headers': 'Origin, X-Requested-With, Content-Type, Accept, Range',
+    'x-content-type-options': 'nosniff',
+    'x-frame-options': 'SAMEORIGIN',
+    'accept-ranges': 'bytes',
+    vary: 'Accept',
+    'content-type': 'image/png',
+    'cache-control': 'public, max-age=31536000'
+  }
+}
+2024-12-13T13:38:14.647Z [DEBUG] audio request: {
+  url: '/dae3fc6d-6b60-420e-954c-819a4dcfa460.mp3',
+  filename: 'dae3fc6d-6b60-420e-954c-819a4dcfa460.mp3',
+  filePath: '/home/runner/CustomBedtimeStories/public/audio/dae3fc6d-6b60-420e-954c-819a4dcfa460.mp3',
+  exists: true,
+  method: 'GET',
+  headers: {
+    host: '2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev',
+    'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+    accept: '*/*',
+    'accept-encoding': 'identity;q=1, *;q=0',
+    'accept-language': 'en-US,en;q=0.9',
+    cookie: 'sid=s%3At7cMg53y61FwDLhW_zohPQXfREa2U-mH.pVXY1dn5qoLAZ9B4e8GwyYFcP%2BdltD2bdO6cDBLA5CQ',
+    dnt: '1',
+    range: 'bytes=0-',
+    referer: 'https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/create',
+    'sec-ch-ua': '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
+    'sec-ch-ua-mobile': '?0',
+    'sec-ch-ua-platform': '"macOS"',
+    'sec-fetch-dest': 'audio',
+    'sec-fetch-mode': 'cors',
+    'sec-fetch-site': 'same-origin',
+    'x-forwarded-for': '103.197.75.253, 10.84.0.30',
+    'x-forwarded-proto': 'https',
+    'x-replit-user-bio': '',
+    'x-replit-user-id': '',
+    'x-replit-user-name': '',
+    'x-replit-user-profile-image': '',
+    'x-replit-user-roles': '',
+    'x-replit-user-teams': '',
+    'x-replit-user-url': ''
+  }
+}
+2024-12-13T13:38:14.647Z [DEBUG] audio response headers: {
+  filePath: '/home/runner/CustomBedtimeStories/public/audio/dae3fc6d-6b60-420e-954c-819a4dcfa460.mp3',
+  contentType: 'audio/mpeg',
+  headers: [Object: null prototype] {
+    'access-control-allow-origin': '*',
+    'access-control-allow-methods': 'GET, HEAD, OPTIONS',
+    'access-control-allow-headers': 'Origin, X-Requested-With, Content-Type, Accept, Range',
+    'x-content-type-options': 'nosniff',
+    'x-frame-options': 'SAMEORIGIN',
+    'accept-ranges': 'bytes',
+    'content-type': 'audio/mpeg',
+    'cache-control': 'public, max-age=31536000'
+  }
+}
+2024-12-13T13:38:29.014Z [DEBUG] audio request: {
+  url: '/1d890fad-5781-4c63-8180-bdc121c11339.mp3',
+  filename: '1d890fad-5781-4c63-8180-bdc121c11339.mp3',
+  filePath: '/home/runner/CustomBedtimeStories/public/audio/1d890fad-5781-4c63-8180-bdc121c11339.mp3',
+  exists: true,
+  method: 'GET',
+  headers: {
+    host: '2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev',
+    'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+    accept: '*/*',
+    'accept-encoding': 'identity;q=1, *;q=0',
+    'accept-language': 'en-US,en;q=0.9',
+    cookie: 'sid=s%3At7cMg53y61FwDLhW_zohPQXfREa2U-mH.pVXY1dn5qoLAZ9B4e8GwyYFcP%2BdltD2bdO6cDBLA5CQ',
+    dnt: '1',
+    range: 'bytes=0-',
+    referer: 'https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/create',
+    'sec-ch-ua': '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
+    'sec-ch-ua-mobile': '?0',
+    'sec-ch-ua-platform': '"macOS"',
+    'sec-fetch-dest': 'audio',
+    'sec-fetch-mode': 'cors',
+    'sec-fetch-site': 'same-origin',
+    'x-forwarded-for': '103.197.75.253, 10.84.0.30',
+    'x-forwarded-proto': 'https',
+    'x-replit-user-bio': '',
+    'x-replit-user-id': '',
+    'x-replit-user-name': '',
+    'x-replit-user-profile-image': '',
+    'x-replit-user-roles': '',
+    'x-replit-user-teams': '',
+    'x-replit-user-url': ''
+  }
+}
+2024-12-13T13:38:29.014Z [DEBUG] audio response headers: {
+  filePath: '/home/runner/CustomBedtimeStories/public/audio/1d890fad-5781-4c63-8180-bdc121c11339.mp3',
+  contentType: 'audio/mpeg',
+  headers: [Object: null prototype] {
+    'access-control-allow-origin': '*',
+    'access-control-allow-methods': 'GET, HEAD, OPTIONS',
+    'access-control-allow-headers': 'Origin, X-Requested-With, Content-Type, Accept, Range',
+    'x-content-type-options': 'nosniff',
+    'x-frame-options': 'SAMEORIGIN',
+    'accept-ranges': 'bytes',
+    'content-type': 'audio/mpeg',
+    'cache-control': 'public, max-age=31536000'
+  }
+}
+2024-12-13T13:38:29.043Z [DEBUG] images request: {
+  url: '/905ac20c-f2f0-47a1-af60-bd7c5b08a0bc.png',
+  filename: '905ac20c-f2f0-47a1-af60-bd7c5b08a0bc.png',
+  filePath: '/home/runner/CustomBedtimeStories/public/images/905ac20c-f2f0-47a1-af60-bd7c5b08a0bc.png',
+  exists: true,
+  method: 'GET',
+  headers: {
+    host: '2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev',
+    'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+    accept: 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+    'accept-encoding': 'gzip, deflate, br, zstd',
+    'accept-language': 'en-US,en;q=0.9',
+    cookie: 'sid=s%3At7cMg53y61FwDLhW_zohPQXfREa2U-mH.pVXY1dn5qoLAZ9B4e8GwyYFcP%2BdltD2bdO6cDBLA5CQ',
+    dnt: '1',
+    referer: 'https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/create',
+    'sec-ch-ua': '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
+    'sec-ch-ua-mobile': '?0',
+    'sec-ch-ua-platform': '"macOS"',
+    'sec-fetch-dest': 'image',
+    'sec-fetch-mode': 'no-cors',
+    'sec-fetch-site': 'same-origin',
+    'x-forwarded-for': '103.197.75.253, 10.84.7.24',
+    'x-forwarded-proto': 'https',
+    'x-replit-user-bio': '',
+    'x-replit-user-id': '',
+    'x-replit-user-name': '',
+    'x-replit-user-profile-image': '',
+    'x-replit-user-roles': '',
+    'x-replit-user-teams': '',
+    'x-replit-user-url': ''
+  }
+}
+2024-12-13T13:38:29.043Z [DEBUG] images response headers: {
+  filePath: '/home/runner/CustomBedtimeStories/public/images/905ac20c-f2f0-47a1-af60-bd7c5b08a0bc.png',
+  contentType: 'image/png',
+  headers: [Object: null prototype] {
+    'access-control-allow-origin': '*',
+    'access-control-allow-methods': 'GET, HEAD, OPTIONS',
+    'access-control-allow-headers': 'Origin, X-Requested-With, Content-Type, Accept, Range',
+    'x-content-type-options': 'nosniff',
+    'x-frame-options': 'SAMEORIGIN',
+    'accept-ranges': 'bytes',
+    vary: 'Accept',
+    'content-type': 'image/png',
+    'cache-control': 'public, max-age=31536000'
+  }
+}
