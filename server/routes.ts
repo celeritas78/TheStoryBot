@@ -1,5 +1,6 @@
 import express from 'express';
 import fs from 'fs';
+import path from 'path';
 import { eq, desc } from 'drizzle-orm';
 import { z } from 'zod';
 import { db } from '../db';
@@ -369,8 +370,18 @@ export function setupRoutes(app: express.Application) {
         return res.status(400).json({ error: "Unsupported image format" });
       }
 
-      const filePath = getImageFilePath(filename);
-      if (!imageFileExists(filePath)) {
+      const imageDir = path.join(process.cwd(), 'images');
+      const filePath = path.join(imageDir, filename);
+      
+      console.log('Attempting to serve image:', {
+        filename,
+        filePath,
+        exists: fs.existsSync(filePath),
+        directoryExists: fs.existsSync(imageDir),
+        directoryContents: fs.existsSync(imageDir) ? fs.readdirSync(imageDir) : []
+      });
+
+      if (!fs.existsSync(filePath)) {
         console.error('Image file not found:', {
           filename,
           searchPath: filePath,
@@ -446,10 +457,11 @@ export function setupRoutes(app: express.Application) {
         return res.status(400).json({ error: "Unsupported audio format" });
       }
 
-      const filePath = getAudioFilePath(filename);
+      const audioDir = path.join(process.cwd(), 'audio');
+      const filePath = path.join(audioDir, filename);
       
       // Check if file exists and log directory contents for debugging
-      const directoryPath = path.dirname(filePath);
+      const directoryPath = audioDir;
       const directoryExists = fs.existsSync(directoryPath);
       const fileExists = fs.existsSync(filePath);
       
