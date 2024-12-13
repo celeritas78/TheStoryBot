@@ -33,9 +33,9 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
   const segment = story.segments[currentSegment];
   const baseUrl = window.location.origin;
   
-  // Files in public directory are served at root path
-  const imageUrl = segment.imageUrl ? `${window.location.origin}${segment.imageUrl}` : '';
-  const audioUrl = segment.audioUrl ? `${window.location.origin}${segment.audioUrl}` : '';
+  // Files are served directly from the root path
+  const imageUrl = segment.imageUrl || '';
+  const audioUrl = segment.audioUrl || '';
   
   console.log('StoryViewer: Media loading lifecycle:', {
     currentSegment,

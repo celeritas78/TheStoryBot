@@ -106,34 +106,33 @@ async function initializeServices() {
 
     // Setup static file serving and catch-all route for production
     if (!isDevelopment) {
-      // Configure static file serving for public directory and media files
-      const publicPath = path.resolve(process.cwd(), 'public');
-      const mediaPath = path.resolve(process.cwd(), '.');
+      // Configure static file serving for media files
+      const mediaPath = path.resolve(process.cwd());
       
       console.log('Setting up static file serving:', { 
-        publicPath,
         mediaPath,
-        exists: {
-          public: fs.existsSync(publicPath),
-          media: fs.existsSync(mediaPath)
+        exists: fs.existsSync(mediaPath),
+        directories: {
+          images: fs.existsSync(path.join(mediaPath, 'images')),
+          audio: fs.existsSync(path.join(mediaPath, 'audio'))
         },
         contents: {
-          public: fs.existsSync(publicPath) ? fs.readdirSync(publicPath) : [],
-          media: fs.existsSync(mediaPath) ? fs.readdirSync(mediaPath).filter(f => f === 'images' || f === 'audio') : []
+          images: fs.existsSync(path.join(mediaPath, 'images')) ? fs.readdirSync(path.join(mediaPath, 'images')) : [],
+          audio: fs.existsSync(path.join(mediaPath, 'audio')) ? fs.readdirSync(path.join(mediaPath, 'audio')) : []
         }
       });
 
-      // Serve media files (images and audio) from root directory
+      // Serve media files from root directory with proper CORS and caching headers
       app.use('/images', express.static(path.join(mediaPath, 'images'), {
         etag: true,
         lastModified: true,
         setHeaders: (res, filePath) => {
-          const ext = path.extname(filePath).toLowerCase();
           res.setHeader('Cache-Control', 'public, max-age=31536000');
           res.setHeader('Access-Control-Allow-Origin', '*');
           res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
           res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Range');
           
+          const ext = path.extname(filePath).toLowerCase();
           if (ext === '.png') {
             res.setHeader('Content-Type', 'image/png');
           } else if (ext === '.jpg' || ext === '.jpeg') {
