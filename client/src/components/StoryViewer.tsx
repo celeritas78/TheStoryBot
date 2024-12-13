@@ -31,6 +31,14 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
   };
 
   const segment = story.segments[currentSegment];
+  
+  console.log('StoryViewer: Current segment media details:', {
+    segmentIndex: currentSegment,
+    imageUrl: segment.imageUrl,
+    audioUrl: segment.audioUrl,
+    hasImage: Boolean(segment.imageUrl),
+    hasAudio: Boolean(segment.audioUrl)
+  });
 
   return (
     <div className="story-viewer flex flex-col items-center space-y-6">

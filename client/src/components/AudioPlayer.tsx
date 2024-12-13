@@ -26,32 +26,26 @@ function AudioPlayerContent({ audioUrl, onAudioEnd }: AudioPlayerProps) {
   const [isMuted, setIsMuted] = useState(false);
   const [progress, setProgress] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-
-  useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.src = audioUrl;
-      audioRef.current.load();
-      setProgress(0);
-      setIsPlaying(false);
-    }
-  }, [audioUrl]);
 
   useEffect(() => {
     if (!audioUrl) {
       console.log('AudioPlayer: No audio URL provided');
+      setError(new Error('No audio URL provided'));
+      setIsLoading(false);
       return;
     }
 
     console.log('AudioPlayer: Initializing audio with URL:', audioUrl);
-    const audio = new Audio(audioUrl);
+    const audio = new Audio();
     audioRef.current = audio;
 
     const handleTimeUpdate = () => {
-      if (audioRef.current && !isNaN(audioRef.current.duration)) {
-        const duration = audioRef.current.duration;
-        const currentTime = audioRef.current.currentTime;
+      if (audio && !isNaN(audio.duration)) {
+        const duration = audio.duration;
+        const currentTime = audio.currentTime;
+        
         console.log('AudioPlayer: Time update:', {
           currentTime,
           duration,
@@ -62,12 +56,6 @@ function AudioPlayerContent({ audioUrl, onAudioEnd }: AudioPlayerProps) {
         const currentProgress = (currentTime / duration) * 100;
         if (!isNaN(currentProgress)) {
           setProgress(currentProgress);
-        } else {
-          console.warn('AudioPlayer: Invalid progress calculation:', {
-            currentTime,
-            duration,
-            currentProgress
-          });
         }
       }
     };
@@ -78,18 +66,21 @@ function AudioPlayerContent({ audioUrl, onAudioEnd }: AudioPlayerProps) {
         readyState: audio.readyState
       });
       setIsLoading(false);
+      setError(null);
     };
 
-    const handleError = (e: ErrorEvent) => {
-      console.error('AudioPlayer: Audio error:', {
-        error: e,
+    const handleError = () => {
+      const errorDetails = {
         errorCode: audio.error?.code,
         errorMessage: audio.error?.message,
         networkState: audio.networkState,
         readyState: audio.readyState,
         src: audio.src
-      });
+      };
+      console.error('AudioPlayer: Audio error:', errorDetails);
+      setError(new Error(audio.error?.message || 'Failed to load audio'));
       setIsLoading(false);
+      setIsPlaying(false);
     };
 
     const handleEnded = () => {
@@ -102,53 +93,62 @@ function AudioPlayerContent({ audioUrl, onAudioEnd }: AudioPlayerProps) {
     const handleLoadStart = () => {
       console.log('AudioPlayer: Started loading audio');
       setIsLoading(true);
-    };
-
-    const handleLoadedMetadata = () => {
-      console.log('AudioPlayer: Loaded metadata:', {
-        duration: audio.duration,
-        readyState: audio.readyState
-      });
+      setError(null);
     };
 
     audio.addEventListener("loadstart", handleLoadStart);
-    audio.addEventListener("loadedmetadata", handleLoadedMetadata);
+    audio.addEventListener("loadedmetadata", () => console.log('AudioPlayer: Loaded metadata'));
     audio.addEventListener("timeupdate", handleTimeUpdate);
     audio.addEventListener("canplay", handleCanPlay);
     audio.addEventListener("ended", handleEnded);
-    audio.addEventListener("error", handleError as EventListener);
+    audio.addEventListener("error", handleError);
+
+    audio.src = audioUrl;
+    audio.load();
 
     return () => {
       console.log('AudioPlayer: Cleaning up audio element');
       audio.pause();
       audio.removeEventListener("loadstart", handleLoadStart);
-      audio.removeEventListener("loadedmetadata", handleLoadedMetadata);
+      audio.removeEventListener("loadedmetadata", () => {});
       audio.removeEventListener("timeupdate", handleTimeUpdate);
       audio.removeEventListener("canplay", handleCanPlay);
       audio.removeEventListener("ended", handleEnded);
-      audio.removeEventListener("error", handleError as EventListener);
+      audio.removeEventListener("error", handleError);
     };
   }, [audioUrl, onAudioEnd]);
 
-  const togglePlay = () => {
-    if (!audioRef.current) return;
+  const togglePlay = async () => {
+    if (!audioRef.current || error) return;
 
-    if (isPlaying) {
-      audioRef.current.pause();
-    } else {
-      audioRef.current.play().catch(() => {
-        console.error("Failed to play audio");
-      });
+    try {
+      if (isPlaying) {
+        audioRef.current.pause();
+        setIsPlaying(false);
+      } else {
+        await audioRef.current.play();
+        setIsPlaying(true);
+      }
+    } catch (err) {
+      console.error("Failed to play audio:", err);
+      setError(err instanceof Error ? err : new Error('Failed to play audio'));
     }
-    setIsPlaying(!isPlaying);
   };
 
   const toggleMute = () => {
     if (!audioRef.current) return;
-
     audioRef.current.muted = !isMuted;
     setIsMuted(!isMuted);
   };
+
+  if (error) {
+    return (
+      <Alert variant="destructive">
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>{error.message}</AlertDescription>
+      </Alert>
+    );
+  }
 
   return (
     <div className="flex items-center justify-center space-x-4 p-2 rounded-lg shadow-md">
@@ -157,8 +157,15 @@ function AudioPlayerContent({ audioUrl, onAudioEnd }: AudioPlayerProps) {
         variant="outline"
         className="h-12 w-12 border-2 border-gradient-to-r from-purple-500 to-pink-500"
         onClick={togglePlay}
+        disabled={isLoading || !!error}
       >
-        {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />}
+        {isLoading ? (
+          <Loader2 className="h-6 w-6 animate-spin" />
+        ) : isPlaying ? (
+          <Pause className="h-6 w-6" />
+        ) : (
+          <Play className="h-6 w-6" />
+        )}
       </Button>
       <Slider
         value={[progress]}
@@ -180,6 +187,7 @@ function AudioPlayerContent({ audioUrl, onAudioEnd }: AudioPlayerProps) {
         variant="outline"
         className="h-12 w-12 border-2 border-gradient-to-r from-purple-500 to-pink-500"
         onClick={toggleMute}
+        disabled={isLoading || !!error}
       >
         {isMuted ? <VolumeX className="h-6 w-6" /> : <Volume2 className="h-6 w-6" />}
       </Button>

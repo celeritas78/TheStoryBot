@@ -41,23 +41,25 @@ export function OptimizedImage({
           const img = new Image();
           
           // Create a promise to handle image loading
-          await new Promise((resolve, reject) => {
+          await new Promise<void>((resolve, reject) => {
             img.onload = () => {
-              console.log('OptimizedImage: Image loaded successfully:', src);
-              resolve();
-            };
-            img.onerror = (error) => {
-              console.error('OptimizedImage: Image load error details:', {
+              console.log('OptimizedImage: Image loaded successfully:', {
                 src,
-                error,
-                imgElement: img,
                 naturalWidth: img.naturalWidth,
                 naturalHeight: img.naturalHeight,
                 complete: img.complete
               });
-              reject(error);
+              resolve();
             };
-            console.log('OptimizedImage: Setting image src:', src);
+            img.onerror = () => {
+              console.error('OptimizedImage: Image load error:', {
+                src,
+                complete: img.complete,
+                naturalWidth: img.naturalWidth,
+                naturalHeight: img.naturalHeight
+              });
+              reject(new Error(`Failed to load image: ${src}`));
+            };
             img.src = src;
           });
 
@@ -66,12 +68,11 @@ export function OptimizedImage({
             setImageSrc(src);
             setIsLoading(false);
           }
-        } catch (error) {
+        } catch (error: unknown) {
           console.error('OptimizedImage: Failed to load image:', {
             src,
-            error,
-            errorType: error.constructor.name,
-            errorMessage: error.message
+            error: error instanceof Error ? error.message : 'Unknown error',
+            errorType: error instanceof Error ? error.name : 'Unknown',
           });
           if (mounted) {
             setIsError(true);
@@ -89,15 +90,17 @@ export function OptimizedImage({
   }, [src, priority]);
 
   const handleError = () => {
-    console.error(`Image load error: ${src}`);
+    console.error('OptimizedImage: Image error event triggered:', src);
     setIsError(true);
     setIsLoading(false);
   };
 
   const handleLoad = () => {
+    console.log('OptimizedImage: Image load event triggered:', src);
     setIsLoading(false);
   };
 
+  // Use priority src directly or loaded src
   const finalSrc = isError ? fallbackSrc : (priority ? src : imageSrc);
 
   return (
