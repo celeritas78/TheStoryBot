@@ -52,19 +52,22 @@ export function OptimizedImage({
           const img = new Image();
           
           // Create a promise to handle image loading
-          await new Promise<void>((resolve, reject) => {
+          await new Promise((resolve, reject) => {
             img.onload = () => {
               console.log('OptimizedImage: Image loaded successfully:', {
-                src,
+                originalSrc: src,
+                finalSrc: img.src,
                 naturalWidth: img.naturalWidth,
                 naturalHeight: img.naturalHeight,
                 complete: img.complete
               });
               resolve();
             };
-            img.onerror = () => {
+            img.onerror = (error) => {
               console.error('OptimizedImage: Image load error:', {
-                src,
+                originalSrc: src,
+                finalSrc: img.src,
+                error: error,
                 complete: img.complete,
                 naturalWidth: img.naturalWidth,
                 naturalHeight: img.naturalHeight

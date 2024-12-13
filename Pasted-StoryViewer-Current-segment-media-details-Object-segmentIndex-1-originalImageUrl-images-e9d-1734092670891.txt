@@ -1,0 +1,15 @@
+StoryViewer: Current segment media details: 
+Object {segmentIndex: 1, originalImageUrl: "/images/e9dbbc7a-db33-45ff-93e6-a160649aef60.png", originalAudioUrl: "/audio/a3d14fa4-a3c8-4fbe-9f15-d8d9d16fc3b9.mp3", fullImageUrl: "https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/images/e9dbbc7a-db33…", fullAudioUrl: "https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/audio/a3d14fa4-a3c8-…", …}
+AudioPlayer: Cleaning up audio element
+OptimizedImage: Initializing with props: 
+Object {src: "https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/images/e9dbbc7a-db33…", priority: true, className: "absolute inset-0 w-full h-full object-cover rounded-md shadow-md", width: undefined, height: undefined}
+AudioPlayer: Initializing audio with details: 
+Object {audioUrl: "https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/audio/a3d14fa4-a3c8-…", origin: "https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev", hostname: "2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev", protocol: "https:"}
+StoryViewer: Current segment media details: 
+Object {segmentIndex: 1, originalImageUrl: "/images/e9dbbc7a-db33-45ff-93e6-a160649aef60.png", originalAudioUrl: "/audio/a3d14fa4-a3c8-4fbe-9f15-d8d9d16fc3b9.mp3", fullImageUrl: "https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/images/e9dbbc7a-db33…", fullAudioUrl: "https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/audio/a3d14fa4-a3c8-…", …}
+StoryViewer: Current segment media details: 
+Object {segmentIndex: 1, originalImageUrl: "/images/e9dbbc7a-db33-45ff-93e6-a160649aef60.png", originalAudioUrl: "/audio/a3d14fa4-a3c8-4fbe-9f15-d8d9d16fc3b9.mp3", fullImageUrl: "https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/images/e9dbbc7a-db33…", fullAudioUrl: "https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/audio/a3d14fa4-a3c8-…", …}
+AudioPlayer: Started loading audio
+AudioPlayer: Audio error: 
+Object {errorCode: 4, errorMessage: "DEMUXER_ERROR_COULD_NOT_OPEN: FFmpegDemuxer: open context failed", networkState: 3, readyState: 0, src: "https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/audio/a3d14fa4-a3c8-…"}
+

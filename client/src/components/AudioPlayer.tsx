@@ -85,10 +85,14 @@ function AudioPlayerContent({ audioUrl, onAudioEnd }: AudioPlayerProps) {
         errorMessage: audio.error?.message,
         networkState: audio.networkState,
         readyState: audio.readyState,
-        src: audio.src
+        src: audio.src,
+        originalUrl: audioUrl,
+        constructedUrl: audio.src,
+        crossOrigin: audio.crossOrigin,
+        publicPath: true
       };
       console.error('AudioPlayer: Audio error:', errorDetails);
-      setError(new Error(audio.error?.message || 'Failed to load audio'));
+      setError(new Error(`Failed to load audio: ${audio.error?.message || 'Unknown error'}`));
       setIsLoading(false);
       setIsPlaying(false);
     };
