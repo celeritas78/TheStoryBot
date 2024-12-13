@@ -39,40 +39,90 @@ function AudioPlayerContent({ audioUrl, onAudioEnd }: AudioPlayerProps) {
   }, [audioUrl]);
 
   useEffect(() => {
-    if (!audioUrl) return;
+    if (!audioUrl) {
+      console.log('AudioPlayer: No audio URL provided');
+      return;
+    }
 
+    console.log('AudioPlayer: Initializing audio with URL:', audioUrl);
     const audio = new Audio(audioUrl);
     audioRef.current = audio;
 
     const handleTimeUpdate = () => {
       if (audioRef.current && !isNaN(audioRef.current.duration)) {
-        const currentProgress = (audioRef.current.currentTime / audioRef.current.duration) * 100;
-        setProgress(isNaN(currentProgress) ? 0 : currentProgress);
+        const duration = audioRef.current.duration;
+        const currentTime = audioRef.current.currentTime;
+        console.log('AudioPlayer: Time update:', {
+          currentTime,
+          duration,
+          readyState: audio.readyState,
+          networkState: audio.networkState
+        });
+        
+        const currentProgress = (currentTime / duration) * 100;
+        if (!isNaN(currentProgress)) {
+          setProgress(currentProgress);
+        } else {
+          console.warn('AudioPlayer: Invalid progress calculation:', {
+            currentTime,
+            duration,
+            currentProgress
+          });
+        }
       }
     };
 
     const handleCanPlay = () => {
+      console.log('AudioPlayer: Audio can play:', {
+        duration: audio.duration,
+        readyState: audio.readyState
+      });
       setIsLoading(false);
     };
 
     const handleError = (e: ErrorEvent) => {
-      console.error("Audio playback error:", e);
+      console.error('AudioPlayer: Audio error:', {
+        error: e,
+        errorCode: audio.error?.code,
+        errorMessage: audio.error?.message,
+        networkState: audio.networkState,
+        readyState: audio.readyState,
+        src: audio.src
+      });
       setIsLoading(false);
     };
 
     const handleEnded = () => {
+      console.log('AudioPlayer: Audio playback ended');
       setIsPlaying(false);
       setProgress(0);
       if (onAudioEnd) onAudioEnd();
     };
 
+    const handleLoadStart = () => {
+      console.log('AudioPlayer: Started loading audio');
+      setIsLoading(true);
+    };
+
+    const handleLoadedMetadata = () => {
+      console.log('AudioPlayer: Loaded metadata:', {
+        duration: audio.duration,
+        readyState: audio.readyState
+      });
+    };
+
+    audio.addEventListener("loadstart", handleLoadStart);
+    audio.addEventListener("loadedmetadata", handleLoadedMetadata);
     audio.addEventListener("timeupdate", handleTimeUpdate);
     audio.addEventListener("canplay", handleCanPlay);
     audio.addEventListener("ended", handleEnded);
     audio.addEventListener("error", handleError as EventListener);
 
     return () => {
+      console.log('AudioPlayer: Cleaning up audio element');
       audio.pause();
+      audio.removeEventListener("loadstart", handleLoadStart);
+      audio.removeEventListener("loadedmetadata", handleLoadedMetadata);
       audio.removeEventListener("timeupdate", handleTimeUpdate);
       audio.removeEventListener("canplay", handleCanPlay);
       audio.removeEventListener("ended", handleEnded);

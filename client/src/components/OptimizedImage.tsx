@@ -28,6 +28,7 @@ export function OptimizedImage({
     let mounted = true;
     
     if (!priority && src) {
+      console.log('OptimizedImage: Loading image with src:', src);
       // Reset states when src changes
       setIsLoading(true);
       setIsError(false);
@@ -35,22 +36,43 @@ export function OptimizedImage({
 
       const loadImage = async () => {
         try {
+          console.log('OptimizedImage: Creating new Image object for:', src);
           // Create new image object
           const img = new Image();
           
           // Create a promise to handle image loading
           await new Promise((resolve, reject) => {
-            img.onload = resolve;
-            img.onerror = reject;
+            img.onload = () => {
+              console.log('OptimizedImage: Image loaded successfully:', src);
+              resolve();
+            };
+            img.onerror = (error) => {
+              console.error('OptimizedImage: Image load error details:', {
+                src,
+                error,
+                imgElement: img,
+                naturalWidth: img.naturalWidth,
+                naturalHeight: img.naturalHeight,
+                complete: img.complete
+              });
+              reject(error);
+            };
+            console.log('OptimizedImage: Setting image src:', src);
             img.src = src;
           });
 
           if (mounted) {
+            console.log('OptimizedImage: Updating component state with loaded image');
             setImageSrc(src);
             setIsLoading(false);
           }
         } catch (error) {
-          console.error(`Failed to load image: ${src}`, error);
+          console.error('OptimizedImage: Failed to load image:', {
+            src,
+            error,
+            errorType: error.constructor.name,
+            errorMessage: error.message
+          });
           if (mounted) {
             setIsError(true);
             setIsLoading(false);
