@@ -4,6 +4,7 @@ import { setupVite, serveStatic } from "./vite";
 import { createServer } from "http";
 import { setupAuth } from "./auth";
 import path from "path";
+import fs from "fs";
 
 // Configure structured logging
 process.env.DEBUG = process.env.NODE_ENV === 'development' ? 'app:*' : 'false';
@@ -105,36 +106,56 @@ async function initializeServices() {
 
     // Setup static file serving and catch-all route for production
     if (!isDevelopment) {
+      // Configure static file serving for public directory and media files
       const publicPath = path.resolve(process.cwd(), 'public');
+      const mediaPath = path.resolve(process.cwd(), '.');
+      
       console.log('Setting up static file serving:', { 
         publicPath,
-        exists: fs.existsSync(publicPath),
-        contents: fs.existsSync(publicPath) ? fs.readdirSync(publicPath) : []
+        mediaPath,
+        exists: {
+          public: fs.existsSync(publicPath),
+          media: fs.existsSync(mediaPath)
+        },
+        contents: {
+          public: fs.existsSync(publicPath) ? fs.readdirSync(publicPath) : [],
+          media: fs.existsSync(mediaPath) ? fs.readdirSync(mediaPath).filter(f => f === 'images' || f === 'audio') : []
+        }
       });
-      
-      // Serve static files with proper MIME types and caching headers
-      app.use(express.static(publicPath, {
+
+      // Serve media files (images and audio) from root directory
+      app.use('/images', express.static(path.join(mediaPath, 'images'), {
         etag: true,
         lastModified: true,
         setHeaders: (res, filePath) => {
-          // Set cache control headers
+          const ext = path.extname(filePath).toLowerCase();
           res.setHeader('Cache-Control', 'public, max-age=31536000');
-          
-          // Set proper MIME types for audio and images
-          if (filePath.endsWith('.mp3')) {
-            res.setHeader('Content-Type', 'audio/mpeg');
-          } else if (filePath.endsWith('.png')) {
-            res.setHeader('Content-Type', 'image/png');
-          } else if (filePath.endsWith('.jpg') || filePath.endsWith('.jpeg')) {
-            res.setHeader('Content-Type', 'image/jpeg');
-          }
-          
-          // Set CORS headers
           res.setHeader('Access-Control-Allow-Origin', '*');
           res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
           res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Range');
+          
+          if (ext === '.png') {
+            res.setHeader('Content-Type', 'image/png');
+          } else if (ext === '.jpg' || ext === '.jpeg') {
+            res.setHeader('Content-Type', 'image/jpeg');
+          }
         }
       }));
+
+      app.use('/audio', express.static(path.join(mediaPath, 'audio'), {
+        etag: true,
+        lastModified: true,
+        setHeaders: (res, filePath) => {
+          res.setHeader('Cache-Control', 'public, max-age=31536000');
+          res.setHeader('Access-Control-Allow-Origin', '*');
+          res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+          res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Range');
+          res.setHeader('Content-Type', 'audio/mpeg');
+        }
+      }));
+
+      // Serve static files for public directory
+      app.use(express.static(publicPath));
 
       // Fallback route for SPA
       app.get('*', (_req, res) => {
