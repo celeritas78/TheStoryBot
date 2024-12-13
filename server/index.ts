@@ -55,7 +55,14 @@ app.disable('x-powered-by');
 const rootPath = process.cwd();
 const publicPath = path.join(rootPath, 'dist', 'public');
 const mediaPath = path.join(rootPath, 'public');
-const mediaDirs = ['images', 'audio'].map(dir => path.join(mediaPath, dir));
+const mediaDirs = ['images', 'audio'].map(dir => {
+  const dirPath = path.join(mediaPath, dir);
+  if (!fs.existsSync(dirPath)) {
+    fs.mkdirSync(dirPath, { recursive: true });
+    logger.info(`Created media directory: ${dirPath}`);
+  }
+  return dirPath;
+});
 
 // Configure media files serving with enhanced logging and proper headers
 function serveMediaFiles(mediaType: 'images' | 'audio') {
@@ -68,25 +75,35 @@ function serveMediaFiles(mediaType: 'images' | 'audio') {
   }
   
   return [
-    // CORS middleware
+    // CORS and basic headers middleware
     (req: Request, res: Response, next: NextFunction) => {
+      // Set CORS headers
       res.setHeader('Access-Control-Allow-Origin', '*');
       res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
       res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Range');
+      
+      // Handle preflight
       if (req.method === 'OPTIONS') {
         return res.sendStatus(200);
       }
+
+      // Set basic security headers
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+      res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+      
       next();
     },
 
-    // Debug middleware
+    // Debug and validation middleware
     (req: Request, res: Response, next: NextFunction) => {
-      const filePath = path.join(mediaDir, req.path);
+      const filename = req.path.startsWith('/') ? req.path.slice(1) : req.path;
+      const filePath = path.join(mediaDir, filename);
       const exists = fs.existsSync(filePath);
+      
       logger.debug(`${mediaType} request:`, {
         url: req.url,
-        path: req.path,
-        fullPath: filePath,
+        filename,
+        filePath,
         exists,
         method: req.method,
         headers: req.headers
@@ -94,44 +111,55 @@ function serveMediaFiles(mediaType: 'images' | 'audio') {
       
       if (!exists) {
         logger.error(`${mediaType} file not found:`, { 
-          path: req.path,
-          fullPath: filePath
+          url: req.url,
+          filename,
+          filePath
         });
         return res.status(404).json({ error: `${mediaType} file not found` });
       }
 
-      // For images, verify the file is readable and a valid image
-      if (mediaType === 'images') {
-        try {
-          const stats = fs.statSync(filePath);
-          if (!stats.isFile()) {
-            throw new Error('Not a file');
-          }
-          const ext = path.extname(filePath).toLowerCase();
-          if (!['.png', '.jpg', '.jpeg'].includes(ext)) {
-            throw new Error('Invalid image type');
-          }
-        } catch (error) {
-          logger.error(`Invalid image file:`, {
-            path: req.path,
-            fullPath: filePath,
-            error: error.message
-          });
-          return res.status(400).json({ error: `Invalid image file` });
+      try {
+        const stats = fs.statSync(filePath);
+        if (!stats.isFile()) {
+          throw new Error('Not a file');
         }
-      }
 
-      next();
+        const ext = path.extname(filePath).toLowerCase();
+        if (mediaType === 'images' && !['.png', '.jpg', '.jpeg'].includes(ext)) {
+          throw new Error('Invalid image type');
+        } else if (mediaType === 'audio' && ext !== '.mp3') {
+          throw new Error('Invalid audio type');
+        }
+
+        // Attach file info to request for later use
+        (req as any).fileInfo = {
+          path: filePath,
+          extension: ext,
+          size: stats.size
+        };
+
+        next();
+      } catch (error) {
+        const err = error as Error;
+        logger.error(`Invalid ${mediaType} file:`, {
+          url: req.url,
+          filename,
+          filePath,
+          error: err.message
+        });
+        return res.status(400).json({ error: `Invalid ${mediaType} file` });
+      }
     },
     
-    // Serve static files
+    // Static file serving middleware
     express.static(mediaDir, {
       etag: true,
       lastModified: true,
       maxAge: '1y',
       index: false,
+      dotfiles: 'deny',
+      fallthrough: false,
       setHeaders: (res: Response, filePath: string) => {
-        // Set content type based on file extension
         const ext = path.extname(filePath).toLowerCase();
         let contentType = 'application/octet-stream';
         
@@ -139,7 +167,6 @@ function serveMediaFiles(mediaType: 'images' | 'audio') {
           contentType = ext === '.png' ? 'image/png' : 
                        (ext === '.jpg' || ext === '.jpeg') ? 'image/jpeg' : 
                        'application/octet-stream';
-          // Additional image-specific headers
           res.setHeader('Accept-Ranges', 'bytes');
           res.setHeader('Vary', 'Accept');
         } else if (mediaType === 'audio') {
@@ -147,10 +174,8 @@ function serveMediaFiles(mediaType: 'images' | 'audio') {
           res.setHeader('Accept-Ranges', 'bytes');
         }
         
-        // Set required headers
         res.setHeader('Content-Type', contentType);
         res.setHeader('Cache-Control', 'public, max-age=31536000');
-        res.setHeader('X-Content-Type-Options', 'nosniff');
         
         logger.debug(`${mediaType} response headers:`, {
           filePath,
@@ -254,6 +279,40 @@ process.on('SIGINT', () => handleShutdown('SIGINT'));
       res.status(500).json({ error: 'Error serving audio file' });
     });
     
+    // Setup media file serving first
+    logger.info('Setting up media file serving paths:', {
+      rootPath,
+      publicPath,
+      mediaPath,
+      mediaDirs,
+      timestamp: new Date().toISOString()
+    });
+
+    // Log existing media files
+    ['images', 'audio'].forEach(dir => {
+      const mediaDir = path.join(mediaPath, dir);
+      if (fs.existsSync(mediaDir)) {
+        const files = fs.readdirSync(mediaDir);
+        logger.info(`Files in ${mediaDir}:`, files);
+      }
+    });
+
+    // Configure media routes with improved error handling
+    ['images', 'audio'].forEach(mediaType => {
+      const mediaPath = `/` + mediaType;
+      app.use(mediaPath, ...serveMediaFiles(mediaType as 'images' | 'audio'));
+      
+      // Add error handler for each media type
+      app.use(mediaPath, (error: Error, req: Request, res: Response, next: NextFunction) => {
+        logger.error(`Error serving ${mediaType}:`, {
+          url: req.url,
+          error: error.message,
+          stack: error.stack
+        });
+        res.status(500).json({ error: `Error serving ${mediaType} file` });
+      });
+    });
+
     // Setup Vite in development mode
     if (isDevelopment) {
       logger.info('Setting up Vite middleware...');
@@ -263,14 +322,6 @@ process.on('SIGINT', () => handleShutdown('SIGINT'));
     // Register API routes after middleware setup
     logger.info('Setting up API routes...');
     setupRoutes(app);
-
-    logger.info('Static file paths:', {
-      rootPath,
-      publicPath,
-      mediaPath,
-      timestamp: new Date().toISOString(),
-      isDevelopment: isDevelopment
-    });
 
 
     // Error handling middleware for media files
