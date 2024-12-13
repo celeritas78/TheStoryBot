@@ -1,4 +1,5 @@
-import express, { type Request, Response, NextFunction } from "express";
+import express, { type Request, Response, NextFunction, Static } from "express";
+import type { Server as HttpServer } from "http";
 import { setupRoutes } from "./routes";
 import { setupVite, serveStatic } from "./vite";
 import { createServer } from "http";
@@ -6,16 +7,25 @@ import { setupAuth } from "./auth";
 import path from "path";
 import fs from "fs";
 
-// Configure structured logging
-process.env.DEBUG = process.env.NODE_ENV === 'development' ? 'app:*' : 'false';
+// Configure structured logging with request details
+process.env.DEBUG = '*';
 const logger = {
   info: (...args: any[]) => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log(new Date().toISOString(), '[INFO]', ...args);
-    }
+    const timestamp = new Date().toISOString();
+    console.log(timestamp, '[INFO]', ...args);
   },
-  warn: (...args: any[]) => console.warn(new Date().toISOString(), '[WARN]', ...args),
-  error: (...args: any[]) => console.error(new Date().toISOString(), '[ERROR]', ...args)
+  warn: (...args: any[]) => {
+    const timestamp = new Date().toISOString();
+    console.warn(timestamp, '[WARN]', ...args);
+  },
+  error: (...args: any[]) => {
+    const timestamp = new Date().toISOString();
+    console.error(timestamp, '[ERROR]', ...args);
+  },
+  debug: (...args: any[]) => {
+    const timestamp = new Date().toISOString();
+    console.debug(timestamp, '[DEBUG]', ...args);
+  }
 };
 
 // Global error handler for unhandled promise rejections
@@ -112,11 +122,27 @@ process.on('SIGINT', () => handleShutdown('SIGINT'));
     const publicPath = path.join(rootPath, 'dist', 'public');
     const mediaPath = path.join(rootPath, 'public');
 
+    logger.info('Static file paths:', {
+      rootPath,
+      publicPath,
+      mediaPath,
+      timestamp: new Date().toISOString()
+    });
+
     // Create media directories if they don't exist
     const mediaDirs = ['images', 'audio'].map(dir => path.join(mediaPath, dir));
     mediaDirs.forEach(dir => {
       if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir, { recursive: true });
+        logger.info(`Created media directory: ${dir}`);
+      }
+    });
+
+    // Log existing media files
+    mediaDirs.forEach(dir => {
+      if (fs.existsSync(dir)) {
+        const files = fs.readdirSync(dir);
+        logger.info(`Files in ${dir}:`, files);
       }
     });
 
@@ -146,35 +172,89 @@ process.on('SIGINT', () => handleShutdown('SIGINT'));
     };
 
     // Serve media files with enhanced logging and proper headers
-    app.use('/images', express.static(path.join(mediaPath, 'images'), {
-      etag: true,
-      lastModified: true,
-      setHeaders: (res, filePath) => {
-        res.setHeader('Cache-Control', 'public, max-age=31536000');
-        res.setHeader('Access-Control-Allow-Origin', '*');
-        res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
-        res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Range');
-        
-        const ext = path.extname(filePath).toLowerCase();
-        if (ext === '.png') {
-          res.setHeader('Content-Type', 'image/png');
-        } else if (ext === '.jpg' || ext === '.jpeg') {
-          res.setHeader('Content-Type', 'image/jpeg');
-        }
-      }
-    }), handleStaticFileError);
+    app.use('/images', (req: Request, res: Response, next: NextFunction) => {
+      const requestedPath = req.path.replace(/^\/+/, '');
+      const filePath = path.join(mediaPath, 'images', requestedPath);
+      
+      logger.debug('Image request details:', {
+        originalUrl: req.originalUrl,
+        requestPath: req.path,
+        normalizedPath: requestedPath,
+        fullFilePath: filePath,
+        exists: fs.existsSync(filePath),
+        method: req.method,
+        headers: req.headers,
+      });
 
-    app.use('/audio', express.static(path.join(mediaPath, 'audio'), {
+      if (!fs.existsSync(filePath)) {
+        logger.error('Image file not found:', { filePath, originalUrl: req.originalUrl });
+        return res.status(404).json({ error: 'Image not found' });
+      }
+
+      next();
+    }, express.static(path.join(mediaPath, 'images'), {
       etag: true,
       lastModified: true,
-      setHeaders: (res, filePath) => {
+      maxAge: '1y',
+      setHeaders: (res: Response, filePath: string) => {
+        const ext = path.extname(filePath).toLowerCase();
+        const contentType = ext === '.png' ? 'image/png' : 'image/jpeg';
+        
+        res.setHeader('Content-Type', contentType);
         res.setHeader('Cache-Control', 'public, max-age=31536000');
         res.setHeader('Access-Control-Allow-Origin', '*');
         res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
         res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Range');
-        res.setHeader('Content-Type', 'audio/mpeg');
+        res.setHeader('X-Content-Type-Options', 'nosniff');
+        
+        logger.debug('Image response headers:', {
+          filePath,
+          contentType,
+          headers: res.getHeaders()
+        });
       }
-    }), handleStaticFileError);
+    }));
+
+    app.use('/audio', (req: Request, res: Response, next: NextFunction) => {
+      const requestedPath = req.path.replace(/^\/+/, '');
+      const filePath = path.join(mediaPath, 'audio', requestedPath);
+      
+      logger.debug('Audio request details:', {
+        originalUrl: req.originalUrl,
+        requestPath: req.path,
+        normalizedPath: requestedPath,
+        fullFilePath: filePath,
+        exists: fs.existsSync(filePath),
+        method: req.method,
+        headers: req.headers,
+      });
+
+      if (!fs.existsSync(filePath)) {
+        logger.error('Audio file not found:', { filePath, originalUrl: req.originalUrl });
+        return res.status(404).json({ error: 'Audio not found' });
+      }
+
+      next();
+    }, express.static(path.join(mediaPath, 'audio'), {
+      etag: true,
+      lastModified: true,
+      maxAge: '1y',
+      setHeaders: (res: Response, filePath: string) => {
+        res.setHeader('Content-Type', 'audio/mpeg');
+        res.setHeader('Cache-Control', 'public, max-age=31536000');
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+        res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Range');
+        res.setHeader('X-Content-Type-Options', 'nosniff');
+        res.setHeader('Accept-Ranges', 'bytes');
+        
+        logger.debug('Audio response headers:', {
+          filePath,
+          contentType: 'audio/mpeg',
+          headers: res.getHeaders()
+        });
+      }
+    }));
 
     // Serve static files for the client application
     app.use(express.static(publicPath));
