@@ -1,4 +1,4 @@
-import express, { type Request, Response, NextFunction, Static } from "express";
+import express, { type Request, Response, NextFunction } from "express";
 import type { Server as HttpServer } from "http";
 import { setupRoutes } from "./routes";
 import { setupVite, serveStatic } from "./vite";
@@ -50,6 +50,89 @@ app.disable('verbose');
 app.disable('log');
 app.set('env', 'production');
 app.disable('x-powered-by');
+
+// Define paths at the top level
+const rootPath = process.cwd();
+const publicPath = path.join(rootPath, 'dist', 'public');
+const mediaPath = path.join(rootPath, 'public');
+const mediaDirs = ['images', 'audio'].map(dir => path.join(mediaPath, dir));
+
+// Configure media files serving with enhanced logging and proper headers
+function serveMediaFiles(mediaType: 'images' | 'audio') {
+  const mediaDir = path.join(mediaPath, mediaType);
+
+  // Ensure directory exists
+  if (!fs.existsSync(mediaDir)) {
+    fs.mkdirSync(mediaDir, { recursive: true });
+    logger.info(`Created media directory: ${mediaDir}`);
+  }
+  
+  return [
+    // CORS middleware
+    (req: Request, res: Response, next: NextFunction) => {
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Range');
+      if (req.method === 'OPTIONS') {
+        return res.sendStatus(200);
+      }
+      next();
+    },
+
+    // Debug middleware
+    (req: Request, res: Response, next: NextFunction) => {
+      const filePath = path.join(mediaDir, req.path);
+      const exists = fs.existsSync(filePath);
+      logger.debug(`${mediaType} request:`, {
+        url: req.url,
+        path: req.path,
+        fullPath: filePath,
+        exists,
+        method: req.method,
+        headers: req.headers
+      });
+      if (!exists) {
+        logger.error(`${mediaType} file not found:`, { 
+          path: req.path,
+          fullPath: filePath
+        });
+        return res.status(404).json({ error: `${mediaType} file not found` });
+      }
+      next();
+    },
+    
+    // Serve static files
+    express.static(mediaDir, {
+      etag: true,
+      lastModified: true,
+      maxAge: '1y',
+      setHeaders: (res: Response, filePath: string) => {
+        // Set content type based on file extension
+        const ext = path.extname(filePath).toLowerCase();
+        const contentType = mediaType === 'audio' ? 'audio/mpeg' : 
+                       ext === '.png' ? 'image/png' : 
+                       ext === '.jpg' || ext === '.jpeg' ? 'image/jpeg' : 
+                       'application/octet-stream';
+        
+        // Set required headers
+        res.setHeader('Content-Type', contentType);
+        res.setHeader('Cache-Control', 'public, max-age=31536000');
+        res.setHeader('X-Content-Type-Options', 'nosniff');
+        
+        // Add Accept-Ranges for audio files
+        if (mediaType === 'audio') {
+          res.setHeader('Accept-Ranges', 'bytes');
+        }
+        
+        logger.debug(`${mediaType} response headers:`, {
+          filePath,
+          contentType,
+          headers: res.getHeaders()
+        });
+      }
+    })
+  ];
+}
 
 // Initialize application services
 async function initializeServices() {
@@ -107,154 +190,65 @@ process.on('SIGINT', () => handleShutdown('SIGINT'));
     // Initialize core services
     await initializeServices();
     
-    // Setup Vite in development mode first
+    // Setup static file serving and media paths
+    logger.info('Setting up static file serving...', {
+      rootPath,
+      publicPath,
+      mediaPath,
+      mediaDirs
+    });
+    
+
+    // Log existing media files
+    ['images', 'audio'].forEach(dir => {
+      const mediaDir = path.join(mediaPath, dir);
+      if (fs.existsSync(mediaDir)) {
+        const files = fs.readdirSync(mediaDir);
+        logger.info(`Files in ${mediaDir}:`, files);
+      }
+    });
+
+    // Apply media file serving middleware before any other routes
+    app.use('/images', ...serveMediaFiles('images'));
+    app.use('/audio', ...serveMediaFiles('audio'));
+    
+    // Setup Vite in development mode
     if (isDevelopment) {
-      console.log('Setting up Vite middleware...');
+      logger.info('Setting up Vite middleware...');
       await setupVite(app, server);
     }
     
     // Register API routes after middleware setup
-    console.log('Setting up API routes...');
+    logger.info('Setting up API routes...');
     setupRoutes(app);
-
-    // Setup static file serving
-    const rootPath = process.cwd();
-    const publicPath = path.join(rootPath, 'dist', 'public');
-    const mediaPath = path.join(rootPath, 'public');
 
     logger.info('Static file paths:', {
       rootPath,
       publicPath,
       mediaPath,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      isDevelopment: isDevelopment
     });
 
-    // Create media directories if they don't exist
-    const mediaDirs = ['images', 'audio'].map(dir => path.join(mediaPath, dir));
-    mediaDirs.forEach(dir => {
-      if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir, { recursive: true });
-        logger.info(`Created media directory: ${dir}`);
-      }
-    });
 
-    // Log existing media files
-    mediaDirs.forEach(dir => {
-      if (fs.existsSync(dir)) {
-        const files = fs.readdirSync(dir);
-        logger.info(`Files in ${dir}:`, files);
-      }
-    });
-
-    // Debug middleware for static file requests
-    app.use((req: Request, res: Response, next: NextFunction) => {
-      if (req.url.startsWith('/images/') || req.url.startsWith('/audio/')) {
-        console.log('Static file request:', {
-          url: req.url,
-          method: req.method,
-          timestamp: new Date().toISOString(),
-          mediaPath,
-          requestPath: req.path,
-          exists: fs.existsSync(path.join(mediaPath, req.path))
-        });
-      }
-      next();
-    });
-
-    // Custom error handler for static files
-    const handleStaticFileError = (err: Error, req: Request, res: Response, next: NextFunction) => {
-      console.error('Static file error:', {
+    // Error handling middleware for media files
+    const handleMediaError = (err: Error, req: Request, res: Response, next: NextFunction) => {
+      logger.error('Media file error:', {
         error: err.message,
         path: req.path,
         timestamp: new Date().toISOString()
       });
+      
+      if (err.message.includes('ENOENT')) {
+        return res.status(404).json({ error: 'Media file not found' });
+      }
+      
       next(err);
     };
 
-    // Serve media files with enhanced logging and proper headers
-    app.use('/images', (req: Request, res: Response, next: NextFunction) => {
-      const requestedPath = req.path.replace(/^\/+/, '');
-      const filePath = path.join(mediaPath, 'images', requestedPath);
-      
-      logger.debug('Image request details:', {
-        originalUrl: req.originalUrl,
-        requestPath: req.path,
-        normalizedPath: requestedPath,
-        fullFilePath: filePath,
-        exists: fs.existsSync(filePath),
-        method: req.method,
-        headers: req.headers,
-      });
-
-      if (!fs.existsSync(filePath)) {
-        logger.error('Image file not found:', { filePath, originalUrl: req.originalUrl });
-        return res.status(404).json({ error: 'Image not found' });
-      }
-
-      next();
-    }, express.static(path.join(mediaPath, 'images'), {
-      etag: true,
-      lastModified: true,
-      maxAge: '1y',
-      setHeaders: (res: Response, filePath: string) => {
-        const ext = path.extname(filePath).toLowerCase();
-        const contentType = ext === '.png' ? 'image/png' : 'image/jpeg';
-        
-        res.setHeader('Content-Type', contentType);
-        res.setHeader('Cache-Control', 'public, max-age=31536000');
-        res.setHeader('Access-Control-Allow-Origin', '*');
-        res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
-        res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Range');
-        res.setHeader('X-Content-Type-Options', 'nosniff');
-        
-        logger.debug('Image response headers:', {
-          filePath,
-          contentType,
-          headers: res.getHeaders()
-        });
-      }
-    }));
-
-    app.use('/audio', (req: Request, res: Response, next: NextFunction) => {
-      const requestedPath = req.path.replace(/^\/+/, '');
-      const filePath = path.join(mediaPath, 'audio', requestedPath);
-      
-      logger.debug('Audio request details:', {
-        originalUrl: req.originalUrl,
-        requestPath: req.path,
-        normalizedPath: requestedPath,
-        fullFilePath: filePath,
-        exists: fs.existsSync(filePath),
-        method: req.method,
-        headers: req.headers,
-      });
-
-      if (!fs.existsSync(filePath)) {
-        logger.error('Audio file not found:', { filePath, originalUrl: req.originalUrl });
-        return res.status(404).json({ error: 'Audio not found' });
-      }
-
-      next();
-    }, express.static(path.join(mediaPath, 'audio'), {
-      etag: true,
-      lastModified: true,
-      maxAge: '1y',
-      setHeaders: (res: Response, filePath: string) => {
-        res.setHeader('Content-Type', 'audio/mpeg');
-        res.setHeader('Cache-Control', 'public, max-age=31536000');
-        res.setHeader('Access-Control-Allow-Origin', '*');
-        res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
-        res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Range');
-        res.setHeader('X-Content-Type-Options', 'nosniff');
-        res.setHeader('Accept-Ranges', 'bytes');
-        
-        logger.debug('Audio response headers:', {
-          filePath,
-          contentType: 'audio/mpeg',
-          headers: res.getHeaders()
-        });
-      }
-    }));
+    // Apply error handler after media routes
+    app.use('/images', handleMediaError);
+    app.use('/audio', handleMediaError);
 
     // Serve static files for the client application
     app.use(express.static(publicPath));
