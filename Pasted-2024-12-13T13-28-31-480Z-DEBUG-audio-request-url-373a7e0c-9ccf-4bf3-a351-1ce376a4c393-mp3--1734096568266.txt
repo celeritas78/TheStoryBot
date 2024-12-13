@@ -1,0 +1,92 @@
+2024-12-13T13:28:31.480Z [DEBUG] audio request: {
+  url: '/373a7e0c-9ccf-4bf3-a351-1ce376a4c393.mp3',
+  path: '/373a7e0c-9ccf-4bf3-a351-1ce376a4c393.mp3',
+  fullPath: '/home/runner/CustomBedtimeStories/public/audio/373a7e0c-9ccf-4bf3-a351-1ce376a4c393.mp3',
+  exists: true,
+  method: 'GET',
+  headers: {
+    host: '2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev',
+    'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+    accept: '*/*',
+    'accept-encoding': 'identity;q=1, *;q=0',
+    'accept-language': 'en-US,en;q=0.9',
+    cookie: 'sid=s%3AkzEfP8DCHf6Zj1tA0hxzg_eHmVqkZNWt.4Mi8utwYH8aRf0Q0xCzeYWY4B8%2B0xSecBTz7G9UIpGE',
+    dnt: '1',
+    range: 'bytes=0-',
+    referer: 'https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/story/103',
+    'sec-ch-ua': '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
+    'sec-ch-ua-mobile': '?0',
+    'sec-ch-ua-platform': '"macOS"',
+    'sec-fetch-dest': 'audio',
+    'sec-fetch-mode': 'cors',
+    'sec-fetch-site': 'same-origin',
+    'x-forwarded-for': '103.197.75.253, 10.84.2.6',
+    'x-forwarded-proto': 'https',
+    'x-replit-user-bio': '',
+    'x-replit-user-id': '',
+    'x-replit-user-name': '',
+    'x-replit-user-profile-image': '',
+    'x-replit-user-roles': '',
+    'x-replit-user-teams': '',
+    'x-replit-user-url': ''
+  }
+}
+2024-12-13T13:28:31.481Z [DEBUG] audio response headers: {
+  filePath: '/home/runner/CustomBedtimeStories/public/audio/373a7e0c-9ccf-4bf3-a351-1ce376a4c393.mp3',
+  contentType: 'audio/mpeg',
+  headers: [Object: null prototype] {
+    'access-control-allow-origin': '*',
+    'access-control-allow-methods': 'GET, HEAD, OPTIONS',
+    'access-control-allow-headers': 'Origin, X-Requested-With, Content-Type, Accept, Range',
+    'content-type': 'audio/mpeg',
+    'cache-control': 'public, max-age=31536000',
+    'x-content-type-options': 'nosniff',
+    'accept-ranges': 'bytes'
+  }
+}
+2024-12-13T13:28:31.825Z [DEBUG] audio request: {
+  url: '/373a7e0c-9ccf-4bf3-a351-1ce376a4c393.mp3',
+  path: '/373a7e0c-9ccf-4bf3-a351-1ce376a4c393.mp3',
+  fullPath: '/home/runner/CustomBedtimeStories/public/audio/373a7e0c-9ccf-4bf3-a351-1ce376a4c393.mp3',
+  exists: true,
+  method: 'GET',
+  headers: {
+    host: '2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev',
+    'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+    accept: '*/*',
+    'accept-encoding': 'identity;q=1, *;q=0',
+    'accept-language': 'en-US,en;q=0.9',
+    cookie: 'sid=s%3AkzEfP8DCHf6Zj1tA0hxzg_eHmVqkZNWt.4Mi8utwYH8aRf0Q0xCzeYWY4B8%2B0xSecBTz7G9UIpGE',
+    dnt: '1',
+    range: 'bytes=0-',
+    referer: 'https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/story/103',
+    'sec-ch-ua': '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
+    'sec-ch-ua-mobile': '?0',
+    'sec-ch-ua-platform': '"macOS"',
+    'sec-fetch-dest': 'audio',
+    'sec-fetch-mode': 'cors',
+    'sec-fetch-site': 'same-origin',
+    'x-forwarded-for': '103.197.75.253, 10.84.6.6',
+    'x-forwarded-proto': 'https',
+    'x-replit-user-bio': '',
+    'x-replit-user-id': '',
+    'x-replit-user-name': '',
+    'x-replit-user-profile-image': '',
+    'x-replit-user-roles': '',
+    'x-replit-user-teams': '',
+    'x-replit-user-url': ''
+  }
+}
+2024-12-13T13:28:31.825Z [DEBUG] audio response headers: {
+  filePath: '/home/runner/CustomBedtimeStories/public/audio/373a7e0c-9ccf-4bf3-a351-1ce376a4c393.mp3',
+  contentType: 'audio/mpeg',
+  headers: [Object: null prototype] {
+    'access-control-allow-origin': '*',
+    'access-control-allow-methods': 'GET, HEAD, OPTIONS',
+    'access-control-allow-headers': 'Origin, X-Requested-With, Content-Type, Accept, Range',
+    'content-type': 'audio/mpeg',
+    'cache-control': 'public, max-age=31536000',
+    'x-content-type-options': 'nosniff',
+    'accept-ranges': 'bytes'
+  }
+}

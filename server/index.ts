@@ -91,6 +91,7 @@ function serveMediaFiles(mediaType: 'images' | 'audio') {
         method: req.method,
         headers: req.headers
       });
+      
       if (!exists) {
         logger.error(`${mediaType} file not found:`, { 
           path: req.path,
@@ -98,6 +99,28 @@ function serveMediaFiles(mediaType: 'images' | 'audio') {
         });
         return res.status(404).json({ error: `${mediaType} file not found` });
       }
+
+      // For images, verify the file is readable and a valid image
+      if (mediaType === 'images') {
+        try {
+          const stats = fs.statSync(filePath);
+          if (!stats.isFile()) {
+            throw new Error('Not a file');
+          }
+          const ext = path.extname(filePath).toLowerCase();
+          if (!['.png', '.jpg', '.jpeg'].includes(ext)) {
+            throw new Error('Invalid image type');
+          }
+        } catch (error) {
+          logger.error(`Invalid image file:`, {
+            path: req.path,
+            fullPath: filePath,
+            error: error.message
+          });
+          return res.status(400).json({ error: `Invalid image file` });
+        }
+      }
+
       next();
     },
     
@@ -106,23 +129,28 @@ function serveMediaFiles(mediaType: 'images' | 'audio') {
       etag: true,
       lastModified: true,
       maxAge: '1y',
+      index: false,
       setHeaders: (res: Response, filePath: string) => {
         // Set content type based on file extension
         const ext = path.extname(filePath).toLowerCase();
-        const contentType = mediaType === 'audio' ? 'audio/mpeg' : 
-                       ext === '.png' ? 'image/png' : 
-                       ext === '.jpg' || ext === '.jpeg' ? 'image/jpeg' : 
+        let contentType = 'application/octet-stream';
+        
+        if (mediaType === 'images') {
+          contentType = ext === '.png' ? 'image/png' : 
+                       (ext === '.jpg' || ext === '.jpeg') ? 'image/jpeg' : 
                        'application/octet-stream';
+          // Additional image-specific headers
+          res.setHeader('Accept-Ranges', 'bytes');
+          res.setHeader('Vary', 'Accept');
+        } else if (mediaType === 'audio') {
+          contentType = 'audio/mpeg';
+          res.setHeader('Accept-Ranges', 'bytes');
+        }
         
         // Set required headers
         res.setHeader('Content-Type', contentType);
         res.setHeader('Cache-Control', 'public, max-age=31536000');
         res.setHeader('X-Content-Type-Options', 'nosniff');
-        
-        // Add Accept-Ranges for audio files
-        if (mediaType === 'audio') {
-          res.setHeader('Accept-Ranges', 'bytes');
-        }
         
         logger.debug(`${mediaType} response headers:`, {
           filePath,
@@ -209,8 +237,22 @@ process.on('SIGINT', () => handleShutdown('SIGINT'));
     });
 
     // Apply media file serving middleware before any other routes
-    app.use('/images', ...serveMediaFiles('images'));
-    app.use('/audio', ...serveMediaFiles('audio'));
+    app.use('/images', ...serveMediaFiles('images'), (error: Error, req: Request, res: Response, next: NextFunction) => {
+      logger.error('Image serving error:', {
+        url: req.url,
+        error: error.message,
+        stack: error.stack
+      });
+      res.status(500).json({ error: 'Error serving image file' });
+    });
+    app.use('/audio', ...serveMediaFiles('audio'), (error: Error, req: Request, res: Response, next: NextFunction) => {
+      logger.error('Audio serving error:', {
+        url: req.url,
+        error: error.message,
+        stack: error.stack
+      });
+      res.status(500).json({ error: 'Error serving audio file' });
+    });
     
     // Setup Vite in development mode
     if (isDevelopment) {
