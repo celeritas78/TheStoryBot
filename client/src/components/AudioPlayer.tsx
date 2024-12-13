@@ -117,10 +117,10 @@ function AudioPlayerContent({ audioUrl, onAudioEnd }: AudioPlayerProps) {
     audio.addEventListener("ended", handleEnded);
     audio.addEventListener("error", handleError);
 
-    // Ensure we have a full URL for the audio file with public folder path
+    // Files in public directory are served at root path
     const fullAudioUrl = audioUrl.startsWith('http') 
       ? audioUrl 
-      : `${window.location.origin}/public${audioUrl}`;
+      : `${window.location.origin}${audioUrl}`;
     
     // Log the complete URL construction process
     console.log('AudioPlayer: URL construction:', {

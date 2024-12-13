@@ -77,7 +77,7 @@ export function OptimizedImage({
             // Ensure the URL includes the public folder path
             const fullImageUrl = src.startsWith('http') 
               ? src 
-              : `${window.location.origin}/public${src}`;
+              : `${window.location.origin}${src}`;
             console.log('OptimizedImage: Loading image:', {
               originalSrc: src,
               fullUrl: fullImageUrl,
