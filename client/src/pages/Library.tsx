@@ -141,10 +141,25 @@ export default function LibraryPage() {
                       </div>
                     )}
                   >
-                    <StoryImage
-                      src={story.firstSegment?.imageUrl || story.segments[0]?.imageUrl}
-                      alt={`Story about ${story.childName}`}
-                    />
+                    {(() => {
+                      const imageUrl = story.firstSegment?.imageUrl || story.segments[0]?.imageUrl;
+                      console.group('Library: Image Loading Debug');
+                      console.log('Story Thumbnail Data:', {
+                        storyId: story.id,
+                        imageUrl,
+                        childName: story.childName,
+                        hasFirstSegment: !!story.firstSegment,
+                        hasSegments: story.segments.length > 0
+                      });
+                      console.groupEnd();
+                      
+                      return (
+                        <StoryImage
+                          src={imageUrl}
+                          alt={`Story about ${story.childName}`}
+                        />
+                      );
+                    })()}
                   </ErrorBoundary>
                   <CardContent className="p-4">
                     <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 text-transparent bg-clip-text mb-2">

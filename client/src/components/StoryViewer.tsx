@@ -37,13 +37,37 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
   const imageUrl = segment.imageUrl 
     ? segment.imageUrl.startsWith('http') 
       ? segment.imageUrl 
-      : `${baseUrl}/${segment.imageUrl.replace(/^\/+/, '')}`
+      : `${baseUrl}${segment.imageUrl.startsWith('/') ? '' : '/'}${segment.imageUrl}`
     : '';
   const audioUrl = segment.audioUrl
     ? segment.audioUrl.startsWith('http')
       ? segment.audioUrl
-      : `${baseUrl}/${segment.audioUrl.replace(/^\/+/, '')}`
+      : `${baseUrl}${segment.audioUrl.startsWith('/') ? '' : '/'}${segment.audioUrl}`
     : '';
+
+  // Enhanced logging for debugging URL construction
+  console.group('StoryViewer: URL Construction Debug');
+  console.log('Segment Data:', {
+    index: currentSegment,
+    totalSegments: story.segments.length,
+    rawImageUrl: segment.imageUrl,
+    rawAudioUrl: segment.audioUrl,
+    processedImageUrl: imageUrl,
+    processedAudioUrl: audioUrl
+  });
+  
+  console.log('Server Environment:', {
+    baseUrl,
+    origin: window.location.origin,
+    pathname: window.location.pathname
+  });
+  
+  console.log('Story Context:', {
+    storyId: story.id,
+    totalSegments: story.segments.length,
+    currentSegment
+  });
+  console.groupEnd();
 
   // Add detailed logging for URL construction
   console.group('StoryViewer: Segment Media Loading');
