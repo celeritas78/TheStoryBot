@@ -37,12 +37,12 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
   const imageUrl = segment.imageUrl 
     ? segment.imageUrl.startsWith('http') 
       ? segment.imageUrl 
-      : `${baseUrl}/images/${segment.imageUrl.replace(/^\/+/, '')}`
+      : `${baseUrl}/${segment.imageUrl.replace(/^\/+/, '')}`
     : '';
   const audioUrl = segment.audioUrl
     ? segment.audioUrl.startsWith('http')
       ? segment.audioUrl
-      : `${baseUrl}/audio/${segment.audioUrl.replace(/^\/+/, '')}`
+      : `${baseUrl}/${segment.audioUrl.replace(/^\/+/, '')}`
     : '';
 
   // Add detailed logging for URL construction
