@@ -1,0 +1,71 @@
+User data received: {id: 1, email: 'sandeep@asterial.in', provider: 'local', providerId: null, displayName: 'Sandy', …}
+Console.js:61 Processed user data: {id: 1, email: 'sandeep@asterial.in', timestamp: '2024-12-15T11:40:38.417Z'}
+Console.js:61 User data received: {id: 1, email: 'sandeep@asterial.in', provider: 'local', providerId: null, displayName: 'Sandy', …}
+Console.js:61 Processed user data: {id: 1, email: 'sandeep@asterial.in', timestamp: '2024-12-15T11:40:38.443Z'}
+Console.js:61 Fetching user stories...
+Console.js:61 Fetching user data...
+Console.js:61 User data received: {id: 1, email: 'sandeep@asterial.in', provider: 'local', providerId: null, displayName: 'Sandy', …}
+Console.js:61 Processed user data: {id: 1, email: 'sandeep@asterial.in', timestamp: '2024-12-15T11:40:39.791Z'}
+Console.js:61 Stories fetched: 1
+Console.js:61 Library: Image Loading Debug
+Console.js:61 Story Thumbnail Data: {storyId: 1, imageUrl: '/images/373afb22-b130-47bc-be4e-5116bb5e106a.png', childName: 'Joe', hasFirstSegment: false, hasSegments: true}childName: "Joe"hasFirstSegment: falsehasSegments: trueimageUrl: "/images/373afb22-b130-47bc-be4e-5116bb5e106a.png"storyId: 1[[Prototype]]: Object
+Console.js:61 Library: Image Loading Debug
+Console.js:61 Story Thumbnail Data: {storyId: 1, imageUrl: '/images/373afb22-b130-47bc-be4e-5116bb5e106a.png', childName: 'Joe', hasFirstSegment: false, hasSegments: true}childName: "Joe"hasFirstSegment: falsehasSegments: trueimageUrl: "/images/373afb22-b130-47bc-be4e-5116bb5e106a.png"storyId: 1[[Prototype]]: Object
+Console.js:61 Fetching user data...
+Console.js:61 Fetching user data...
+Console.js:61 User data received: {id: 1, email: 'sandeep@asterial.in', provider: 'local', providerId: null, displayName: 'Sandy', …}
+Console.js:61 Processed user data: {id: 1, email: 'sandeep@asterial.in', timestamp: '2024-12-15T11:41:05.746Z'}
+Console.js:61 User data received: {id: 1, email: 'sandeep@asterial.in', provider: 'local', providerId: null, displayName: 'Sandy', …}
+Console.js:61 Processed user data: {id: 1, email: 'sandeep@asterial.in', timestamp: '2024-12-15T11:41:05.762Z'}
+Console.js:61 Library: Image Loading Debug
+Console.js:61 Story Thumbnail Data: {storyId: 1, imageUrl: '/images/373afb22-b130-47bc-be4e-5116bb5e106a.png', childName: 'Joe', hasFirstSegment: false, hasSegments: true}childName: "Joe"hasFirstSegment: falsehasSegments: trueimageUrl: "/images/373afb22-b130-47bc-be4e-5116bb5e106a.png"storyId: 1[[Prototype]]: Object
+Console.js:61 Library: Image Loading Debug
+Console.js:61 Story Thumbnail Data: {storyId: 1, imageUrl: '/images/373afb22-b130-47bc-be4e-5116bb5e106a.png', childName: 'Joe', hasFirstSegment: false, hasSegments: true}childName: "Joe"hasFirstSegment: falsehasSegments: trueimageUrl: "/images/373afb22-b130-47bc-be4e-5116bb5e106a.png"storyId: 1[[Prototype]]: Object
+Console.js:61 StoryViewer: URL Construction Debug
+Console.js:61 Segment Data: {index: 0, totalSegments: 3, rawImageUrl: '/images/373afb22-b130-47bc-be4e-5116bb5e106a.png', rawAudioUrl: '/audio/461befe8-e3fc-4718-8166-4dee7f37cc19.mp3', processedImageUrl: 'https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k…v/images/373afb22-b130-47bc-be4e-5116bb5e106a.png', …}index: 0processedAudioUrl: "https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/audio/461befe8-e3fc-4718-8166-4dee7f37cc19.mp3"processedImageUrl: "https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/images/373afb22-b130-47bc-be4e-5116bb5e106a.png"rawAudioUrl: "/audio/461befe8-e3fc-4718-8166-4dee7f37cc19.mp3"rawImageUrl: "/images/373afb22-b130-47bc-be4e-5116bb5e106a.png"totalSegments: 3[[Prototype]]: Object
+Console.js:61 Server Environment: {baseUrl: 'https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev', origin: 'https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev', pathname: '/story/1'}baseUrl: "https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev"origin: "https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev"pathname: "/story/1"[[Prototype]]: Object
+Console.js:61 Story Context: {storyId: 1, totalSegments: 3, currentSegment: 0}currentSegment: 0storyId: 1totalSegments: 3[[Prototype]]: Object
+Console.js:61 StoryViewer: Segment Media Loading
+Console.js:61 Current Segment Details: {index: 0, total: 3, storyId: 1, childName: 'Joe'}childName: "Joe"index: 0storyId: 1total: 3[[Prototype]]: Object
+Console.js:61 Image URL Construction: {originalUrl: '/images/373afb22-b130-47bc-be4e-5116bb5e106a.png', baseUrl: 'https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev', constructedUrl: 'https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k…v/images/373afb22-b130-47bc-be4e-5116bb5e106a.png', isAbsoluteUrl: false, hasImage: true}baseUrl: "https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev"constructedUrl: "https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/images/373afb22-b130-47bc-be4e-5116bb5e106a.png"hasImage: trueisAbsoluteUrl: falseoriginalUrl: "/images/373afb22-b130-47bc-be4e-5116bb5e106a.png"[[Prototype]]: Object
+Console.js:61 Environment Details: {origin: 'https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev', hostname: '2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev', protocol: 'https:', pathname: '/story/1'}hostname: "2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev"origin: "https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev"pathname: "/story/1"protocol: "https:"[[Prototype]]: Object
+Console.js:61 Performance Metrics: {timestamp: '2024-12-15T11:41:21.382Z', navigationStart: 1734262802238, loadEventEnd: 1734262809023}
+Console.js:61 StoryViewer: Segment Media Loading
+Console.js:61 Current Segment Details: {index: 0, total: 3, storyId: 1, childName: 'Joe'}
+Console.js:61 Image URL Construction: {originalUrl: '/images/373afb22-b130-47bc-be4e-5116bb5e106a.png', baseUrl: 'https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev', constructedUrl: 'https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k…v/images/373afb22-b130-47bc-be4e-5116bb5e106a.png', isAbsoluteUrl: false, hasImage: true}baseUrl: "https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev"constructedUrl: "https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/images/373afb22-b130-47bc-be4e-5116bb5e106a.png"hasImage: trueisAbsoluteUrl: falseoriginalUrl: "/images/373afb22-b130-47bc-be4e-5116bb5e106a.png"[[Prototype]]: Object
+Console.js:61 Environment Details: {origin: 'https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev', hostname: '2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev', protocol: 'https:', pathname: '/story/1'}hostname: "2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev"origin: "https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev"pathname: "/story/1"protocol: "https:"[[Prototype]]: Object
+Console.js:61 Performance Metrics: {timestamp: '2024-12-15T11:41:21.387Z', navigationStart: 1734262802238, loadEventEnd: 1734262809023}
+Console.js:61 StoryViewer: URL Construction Debug
+Console.js:61 Segment Data: {index: 0, totalSegments: 3, rawImageUrl: '/images/373afb22-b130-47bc-be4e-5116bb5e106a.png', rawAudioUrl: '/audio/461befe8-e3fc-4718-8166-4dee7f37cc19.mp3', processedImageUrl: 'https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k…v/images/373afb22-b130-47bc-be4e-5116bb5e106a.png', …}
+Console.js:61 Server Environment: {baseUrl: 'https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev', origin: 'https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev', pathname: '/story/1'}
+Console.js:61 Story Context: {storyId: 1, totalSegments: 3, currentSegment: 0}
+Console.js:61 StoryViewer: Segment Media Loading
+Console.js:61 Current Segment Details: {index: 0, total: 3, storyId: 1, childName: 'Joe'}
+Console.js:61 Image URL Construction: {originalUrl: '/images/373afb22-b130-47bc-be4e-5116bb5e106a.png', baseUrl: 'https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev', constructedUrl: 'https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k…v/images/373afb22-b130-47bc-be4e-5116bb5e106a.png', isAbsoluteUrl: false, hasImage: true}
+Console.js:61 Environment Details: {origin: 'https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev', hostname: '2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev', protocol: 'https:', pathname: '/story/1'}
+Console.js:61 Performance Metrics: {timestamp: '2024-12-15T11:41:21.399Z', navigationStart: 1734262802238, loadEventEnd: 1734262809023}
+Console.js:61 StoryViewer: Segment Media Loading
+Console.js:61 Current Segment Details: {index: 0, total: 3, storyId: 1, childName: 'Joe'}
+Console.js:61 Image URL Construction: {originalUrl: '/images/373afb22-b130-47bc-be4e-5116bb5e106a.png', baseUrl: 'https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev', constructedUrl: 'https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k…v/images/373afb22-b130-47bc-be4e-5116bb5e106a.png', isAbsoluteUrl: false, hasImage: true}
+Console.js:61 Environment Details: {origin: 'https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev', hostname: '2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev', protocol: 'https:', pathname: '/story/1'}
+Console.js:61 Performance Metrics: {timestamp: '2024-12-15T11:41:21.402Z', navigationStart: 1734262802238, loadEventEnd: 1734262809023}
+Console.js:61 OptimizedImage: Initialization
+Console.js:61 Component Props: {src: 'https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k…v/images/373afb22-b130-47bc-be4e-5116bb5e106a.png', priority: true, className: 'absolute inset-0 w-full h-full object-cover rounded-md shadow-md', width: undefined, height: undefined, …}
+Console.js:61 URL Validation: {isValidUrl: true, urlType: 'absolute', urlPath: 'images/373afb22-b130-47bc-be4e-5116bb5e106a.png', timestamp: '2024-12-15T11:41:21.420Z'}
+Console.js:61 AudioPlayer: Initializing audio with details: {audioUrl: 'https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k…ev/audio/461befe8-e3fc-4718-8166-4dee7f37cc19.mp3', origin: 'https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev', hostname: '2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev', protocol: 'https:'}
+Console.js:61 AudioPlayer: URL construction details: {originalUrl: 'https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k…ev/audio/461befe8-e3fc-4718-8166-4dee7f37cc19.mp3', fullUrl: 'https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k…ev/audio/461befe8-e3fc-4718-8166-4dee7f37cc19.mp3', origin: 'https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev', finalUrl: '', corsMode: 'anonymous', …}
+Console.js:61 AudioPlayer: Setting up audio with: {originalUrl: 'https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k…ev/audio/461befe8-e3fc-4718-8166-4dee7f37cc19.mp3', fullUrl: 'https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k…ev/audio/461befe8-e3fc-4718-8166-4dee7f37cc19.mp3', origin: 'https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev'}
+Console.js:61 OptimizedImage: Cleanup {src: 'https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k…v/images/373afb22-b130-47bc-be4e-5116bb5e106a.png', timestamp: '2024-12-15T11:41:21.429Z'}
+Console.js:61 AudioPlayer: Cleaning up audio element
+Console.js:61 OptimizedImage: Initialization
+Console.js:61 Component Props: {src: 'https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k…v/images/373afb22-b130-47bc-be4e-5116bb5e106a.png', priority: true, className: 'absolute inset-0 w-full h-full object-cover rounded-md shadow-md', width: undefined, height: undefined, …}
+Console.js:61 URL Validation: {isValidUrl: true, urlType: 'absolute', urlPath: 'images/373afb22-b130-47bc-be4e-5116bb5e106a.png', timestamp: '2024-12-15T11:41:21.435Z'}
+Console.js:61 AudioPlayer: Initializing audio with details: {audioUrl: 'https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k…ev/audio/461befe8-e3fc-4718-8166-4dee7f37cc19.mp3', origin: 'https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev', hostname: '2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev', protocol: 'https:'}
+Console.js:61 AudioPlayer: URL construction details: {originalUrl: 'https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k…ev/audio/461befe8-e3fc-4718-8166-4dee7f37cc19.mp3', fullUrl: 'https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k…ev/audio/461befe8-e3fc-4718-8166-4dee7f37cc19.mp3', origin: 'https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev', finalUrl: '', corsMode: 'anonymous', …}
+Console.js:61 AudioPlayer: Setting up audio with: {originalUrl: 'https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k…ev/audio/461befe8-e3fc-4718-8166-4dee7f37cc19.mp3', fullUrl: 'https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k…ev/audio/461befe8-e3fc-4718-8166-4dee7f37cc19.mp3', origin: 'https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev'}
+Console.js:61 AudioPlayer: Started loading audio
+Console.js:61 AudioPlayer: Loaded metadata
+Console.js:61 AudioPlayer: Audio can play: {duration: 30.048, readyState: 3}
+Console.js:61 OptimizedImage: Image load event triggered: https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k9mkisuk4qrd.sisko.replit.dev/images/373afb22-b130-47bc-be4e-5116bb5e106a.png
+Console.js:61 OptimizedImage: Cleanup {src: 'https://2ffe566c-cb05-4095-a6b7-b5a9faa249e5-00-3k…v/images/373afb22-b130-47bc-be4e-5116bb5e106a.png', timestamp: '2024-12-15T11:41:22.105Z'}
+Console.js:61 AudioPlayer: Loaded metadata

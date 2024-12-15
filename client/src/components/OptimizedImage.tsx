@@ -57,78 +57,82 @@ export function OptimizedImage({
     console.groupEnd();
   }, [src, priority, className, width, height, alt]);
 
-  useEffect(() => {
+useEffect(() => {
     let mounted = true;
+    const startTime = performance.now();
     
-    if (!priority && src) {
-      console.group('OptimizedImage: Loading Process');
-      console.log('Starting image load:', {
+    console.group('OptimizedImage: Loading Process');
+    console.log('Starting image load:', {
+      src,
+      timestamp: new Date().toISOString(),
+      priority,
+      currentState: { isLoading, isError }
+    });
+    
+    setIsLoading(true);
+    setIsError(false);
+    
+    const img = new Image();
+    
+    img.onload = () => {
+      const loadTime = performance.now() - startTime;
+      if (mounted) {
+        console.log('Image loaded successfully:', {
+          src,
+          loadTimeMs: Math.round(loadTime),
+          dimensions: `${img.width}x${img.height}`,
+          timestamp: new Date().toISOString(),
+          priority
+        });
+        setImageSrc(src);
+        setIsLoading(false);
+      }
+    };
+    
+    img.onerror = (event) => {
+      console.error('Image load failed:', {
         src,
+        errorEvent: event instanceof Event ? 'Event object received' : 'Unknown error',
         timestamp: new Date().toISOString(),
-        priority: false,
-        currentState: { isLoading, isError }
+        browserInfo: {
+          userAgent: navigator.userAgent,
+          platform: navigator.platform
+        },
+        imageDetails: {
+          naturalWidth: img.naturalWidth,
+          naturalHeight: img.naturalHeight,
+          currentSrc: img.currentSrc
+        }
       });
       
-      setIsLoading(true);
-      setIsError(false);
-      
-      const img = new Image();
-      const startTime = performance.now();
-      
-      img.onload = () => {
-        const loadTime = performance.now() - startTime;
-        if (mounted) {
-          console.log('Image loaded successfully:', {
-            src,
-            loadTimeMs: Math.round(loadTime),
-            dimensions: `${img.width}x${img.height}`,
-            timestamp: new Date().toISOString()
-          });
-          setIsLoading(false);
-        }
-      };
-      
-      img.onerror = (event) => {
-        console.error('Image load failed:', {
-          src,
-          errorEvent: event instanceof Event ? 'Event object received' : 'Unknown error',
-          timestamp: new Date().toISOString(),
-          browserInfo: {
-            userAgent: navigator.userAgent,
-            platform: navigator.platform
-          },
-          imageDetails: {
-            naturalWidth: img.naturalWidth,
-            naturalHeight: img.naturalHeight,
-            currentSrc: img.currentSrc
-          }
-        });
-        
-        if (mounted) {
-          setIsError(true);
-          setIsLoading(false);
-        }
-      };
-
-      // Attempt to load the image
-      try {
-        img.src = src;
-      } catch (err) {
-        console.error('Error setting image src:', {
-          error: err,
-          src,
-          timestamp: new Date().toISOString()
-        });
+      if (mounted) {
+        setIsError(true);
+        setIsLoading(false);
       }
-      
-      console.groupEnd();
+    };
+
+    // Always attempt to load the image regardless of priority
+    try {
+      img.src = src;
+    } catch (err) {
+      console.error('Error setting image src:', {
+        error: err,
+        src,
+        timestamp: new Date().toISOString()
+      });
+      if (mounted) {
+        setIsError(true);
+        setIsLoading(false);
+      }
     }
+    
+    console.groupEnd();
 
     return () => {
       mounted = false;
       console.log('OptimizedImage: Cleanup', { src, timestamp: new Date().toISOString() });
     };
-  }, [src, priority, isLoading, isError]);
+  }, [src, priority]);
 
   const handleError = () => {
     console.error('OptimizedImage: Image error event triggered:', src);
