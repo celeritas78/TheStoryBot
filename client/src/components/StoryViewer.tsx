@@ -33,73 +33,49 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
   const segment = story.segments[currentSegment];
   const baseUrl = window.location.origin;
   
-  // Ensure we have the full URL
-  const imageUrl = segment.imageUrl ? `${baseUrl}${segment.imageUrl}` : '';
-  const audioUrl = segment.audioUrl ? `${baseUrl}${segment.audioUrl}` : '';
-  
-  console.log('StoryViewer: Media loading lifecycle:', {
-    currentSegment,
-    segmentDetails: {
-      index: currentSegment,
-      total: story.segments.length,
-      hasImage: Boolean(segment.imageUrl),
-      hasAudio: Boolean(segment.audioUrl)
-    },
-    mediaUrls: {
-      originalImage: segment.imageUrl,
-      originalAudio: segment.audioUrl,
-      constructedImage: imageUrl,
-      constructedAudio: audioUrl
-    },
-    requestDetails: {
-      origin: window.location.origin,
-      protocol: window.location.protocol,
-      host: window.location.host,
-      baseUrl: baseUrl
-    },
-    timing: {
-      timestamp: new Date().toISOString(),
-      navigationStart: window.performance.timing.navigationStart,
-      loadEventEnd: window.performance.timing.loadEventEnd
-    }
+  // Handle image URL construction with proper path handling
+  const imageUrl = segment.imageUrl 
+    ? segment.imageUrl.startsWith('http') 
+      ? segment.imageUrl 
+      : `${baseUrl}${segment.imageUrl.startsWith('/') ? '' : '/'}${segment.imageUrl}`
+    : '';
+  const audioUrl = segment.audioUrl
+    ? segment.audioUrl.startsWith('http')
+      ? segment.audioUrl
+      : `${baseUrl}${segment.audioUrl.startsWith('/') ? '' : '/'}${segment.audioUrl}`
+    : '';
+
+  // Enhanced logging for debugging image loading
+  console.group('StoryViewer: Segment Media Loading');
+  console.log('Current Segment Details:', {
+    index: currentSegment,
+    total: story.segments.length,
+    storyId: story.id,
+    childName: story.childName
   });
-  
-  console.log('StoryViewer: Constructed media URLs:', {
-    originalImageUrl: segment.imageUrl,
-    originalAudioUrl: segment.audioUrl,
-    fullImageUrl: imageUrl,
-    fullAudioUrl: audioUrl,
-    origin: window.location.origin
+
+  console.log('Image URL Construction:', {
+    originalUrl: segment.imageUrl,
+    baseUrl: baseUrl,
+    constructedUrl: imageUrl,
+    isAbsoluteUrl: segment.imageUrl?.startsWith('http'),
+    hasImage: Boolean(segment.imageUrl)
   });
-  
-  console.log('StoryViewer: Constructing media URLs:', {
-    segmentIndex: currentSegment,
-    originalImageUrl: segment.imageUrl,
-    originalAudioUrl: segment.audioUrl,
-    finalImageUrl: imageUrl,
-    finalAudioUrl: audioUrl,
-    baseUrl: window.location.origin
+
+  console.log('Environment Details:', {
+    origin: window.location.origin,
+    hostname: window.location.hostname,
+    protocol: window.location.protocol,
+    pathname: window.location.pathname
   });
-  
-  console.log('StoryViewer: Constructed media URLs:', {
-    originalImageUrl: segment.imageUrl,
-    originalAudioUrl: segment.audioUrl,
-    constructedImageUrl: imageUrl,
-    constructedAudioUrl: audioUrl,
-    baseUrl,
-    publicPath: '/public'
+
+  console.log('Performance Metrics:', {
+    timestamp: new Date().toISOString(),
+    navigationStart: window.performance.timing.navigationStart,
+    loadEventEnd: window.performance.timing.loadEventEnd
   });
+  console.groupEnd();
   
-  console.log('StoryViewer: Current segment media details:', {
-    segmentIndex: currentSegment,
-    originalImageUrl: segment.imageUrl,
-    originalAudioUrl: segment.audioUrl,
-    fullImageUrl: imageUrl,
-    fullAudioUrl: audioUrl,
-    hasImage: Boolean(segment.imageUrl),
-    hasAudio: Boolean(segment.audioUrl),
-    baseUrl
-  });
 
   return (
     <div className="story-viewer flex flex-col items-center space-y-6">

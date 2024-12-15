@@ -24,53 +24,112 @@ export function OptimizedImage({
   const [isLoading, setIsLoading] = useState(true);
   const [imageSrc, setImageSrc] = useState<string>(priority ? src : '');
   
-  // Log the initial image URL
+  // Enhanced logging for image initialization and props
   useEffect(() => {
-    console.log('OptimizedImage: Initializing with props:', {
+    console.group('OptimizedImage: Initialization');
+    console.log('Component Props:', {
       src,
       priority,
       className,
       width,
-      height
+      height,
+      alt
     });
-  }, [src, priority, className, width, height]);
+    
+    // Validate image URL
+    const isValidUrl = src && (
+      src.startsWith('http') || 
+      src.startsWith('/') || 
+      src.startsWith('./') || 
+      src.startsWith('../')
+    );
+    
+    console.log('URL Validation:', {
+      isValidUrl,
+      urlType: src?.startsWith('http') ? 'absolute' : 'relative',
+      urlPath: src?.split('/').slice(-2).join('/'),
+      timestamp: new Date().toISOString()
+    });
+    
+    if (!isValidUrl) {
+      console.warn('OptimizedImage: Invalid or missing image URL:', src);
+    }
+    console.groupEnd();
+  }, [src, priority, className, width, height, alt]);
 
   useEffect(() => {
     let mounted = true;
     
     if (!priority && src) {
-      console.log('OptimizedImage: Loading image with src:', src);
+      console.group('OptimizedImage: Loading Process');
+      console.log('Starting image load:', {
+        src,
+        timestamp: new Date().toISOString(),
+        priority: false,
+        currentState: { isLoading, isError }
+      });
+      
       setIsLoading(true);
       setIsError(false);
       
       const img = new Image();
+      const startTime = performance.now();
       
       img.onload = () => {
+        const loadTime = performance.now() - startTime;
         if (mounted) {
-          console.log('OptimizedImage: Image loaded successfully:', src);
+          console.log('Image loaded successfully:', {
+            src,
+            loadTimeMs: Math.round(loadTime),
+            dimensions: `${img.width}x${img.height}`,
+            timestamp: new Date().toISOString()
+          });
           setIsLoading(false);
         }
       };
       
       img.onerror = (error) => {
-        console.error('OptimizedImage: Image load error:', {
+        console.error('Image load failed:', {
           src,
-          error: error,
+          errorType: error.type,
+          errorMessage: error.message,
+          timestamp: new Date().toISOString(),
+          browserInfo: {
+            userAgent: navigator.userAgent,
+            platform: navigator.platform
+          },
+          imageDetails: {
+            naturalWidth: img.naturalWidth,
+            naturalHeight: img.naturalHeight,
+            currentSrc: img.currentSrc
+          }
         });
+        
         if (mounted) {
           setIsError(true);
           setIsLoading(false);
         }
       };
 
-      // Use the src directly since we're already passing the full URL
-      img.src = src;
+      // Attempt to load the image
+      try {
+        img.src = src;
+      } catch (err) {
+        console.error('Error setting image src:', {
+          error: err,
+          src,
+          timestamp: new Date().toISOString()
+        });
+      }
+      
+      console.groupEnd();
     }
 
     return () => {
       mounted = false;
+      console.log('OptimizedImage: Cleanup', { src, timestamp: new Date().toISOString() });
     };
-  }, [src, priority]);
+  }, [src, priority, isLoading, isError]);
 
   const handleError = () => {
     console.error('OptimizedImage: Image error event triggered:', src);
