@@ -37,13 +37,44 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
   const imageUrl = segment.imageUrl 
     ? segment.imageUrl.startsWith('http') 
       ? segment.imageUrl 
-      : `${baseUrl}${segment.imageUrl.startsWith('/') ? '' : '/'}${segment.imageUrl}`
+      : `${baseUrl}/images/${segment.imageUrl.replace(/^\/+/, '')}`
     : '';
   const audioUrl = segment.audioUrl
     ? segment.audioUrl.startsWith('http')
       ? segment.audioUrl
-      : `${baseUrl}${segment.audioUrl.startsWith('/') ? '' : '/'}${segment.audioUrl}`
+      : `${baseUrl}/audio/${segment.audioUrl.replace(/^\/+/, '')}`
     : '';
+
+  // Add detailed logging for URL construction
+  console.group('StoryViewer: Segment Media Loading');
+  console.log('Current Segment Details:', {
+    index: currentSegment,
+    total: story.segments.length,
+    storyId: story.id,
+    childName: story.childName
+  });
+  
+  console.log('Image URL Construction:', {
+    originalUrl: segment.imageUrl,
+    baseUrl: baseUrl,
+    constructedUrl: imageUrl,
+    isAbsoluteUrl: segment.imageUrl?.startsWith('http'),
+    hasImage: Boolean(segment.imageUrl)
+  });
+  
+  console.log('Environment Details:', {
+    origin: window.location.origin,
+    hostname: window.location.hostname,
+    protocol: window.location.protocol,
+    pathname: window.location.pathname
+  });
+  
+  console.log('Performance Metrics:', {
+    timestamp: new Date().toISOString(),
+    navigationStart: window.performance.timing.navigationStart,
+    loadEventEnd: window.performance.timing.loadEventEnd
+  });
+  console.groupEnd();
 
   // Enhanced logging for debugging image loading
   console.group('StoryViewer: Segment Media Loading');

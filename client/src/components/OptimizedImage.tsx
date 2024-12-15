@@ -88,11 +88,10 @@ export function OptimizedImage({
         }
       };
       
-      img.onerror = (error) => {
+      img.onerror = (event) => {
         console.error('Image load failed:', {
           src,
-          errorType: error.type,
-          errorMessage: error.message,
+          errorEvent: event instanceof Event ? 'Event object received' : 'Unknown error',
           timestamp: new Date().toISOString(),
           browserInfo: {
             userAgent: navigator.userAgent,
