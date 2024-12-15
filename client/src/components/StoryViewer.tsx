@@ -147,11 +147,11 @@ export default function StoryViewer({ story, showHomeIcon = true }: StoryViewerP
       <div className="w-full max-w-4xl">
         <Card className="p-4">
           {segment.imageUrl && (
-            <div className="relative w-full aspect-video mb-6">
+            <div className="w-full h-[400px] mb-6 overflow-hidden rounded-lg">
               <OptimizedImage
                 src={imageUrl}
                 alt={`Story scene ${currentSegment + 1}`}
-                className="absolute inset-0 w-full h-full object-cover rounded-md shadow-md"
+                className="w-full h-full object-cover"
                 priority={true}
               />
             </div>
