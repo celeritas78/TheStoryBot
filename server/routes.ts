@@ -22,6 +22,12 @@ import {
   SUPPORTED_AUDIO_FORMATS,
   getMimeType 
 } from './services/audio-storage';
+import Stripe from 'stripe';
+
+// Initialize Stripe
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: '2024-11-20.acacia',
+});
 import { 
   getImageFilePath, 
   imageFileExists, 
@@ -551,6 +557,86 @@ export function setupRoutes(app: express.Application) {
       };
       console.error('Error serving audio:', errorDetails);
       res.status(500).json({ error: 'Failed to serve audio file', details: errorDetails });
+    }
+  });
+
+  // Create payment intent endpoint
+  app.post('/api/create-payment-intent', async (req, res) => {
+    try {
+      if (!req.isAuthenticated || !req.isAuthenticated()) {
+        return res.status(401).json({ error: "Not logged in" });
+      }
+
+      const { credits, amount } = req.body;
+      
+      if (!credits || credits < 1 || credits > 100) {
+        return res.status(400).json({ error: "Invalid credit amount" });
+      }
+
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount, // Amount in cents
+        currency: 'usd',
+        metadata: {
+          userId: req.user?.id,
+          credits: credits,
+        },
+      });
+
+      res.json({
+        clientSecret: paymentIntent.client_secret,
+      });
+    } catch (error) {
+      console.error('Error creating payment intent:', error);
+      res.status(500).json({ error: 'Failed to create payment' });
+    }
+  });
+
+  // Stripe webhook endpoint
+  app.post('/api/stripe-webhook', async (req, res) => {
+    const sig = req.headers['stripe-signature'];
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+    try {
+      if (!sig || !webhookSecret) {
+        throw new Error('Missing Stripe webhook signature or secret');
+      }
+
+      const event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
+
+      if (event.type === 'payment_intent.succeeded') {
+        const paymentIntent = event.data.object as Stripe.PaymentIntent;
+        const { userId, credits } = paymentIntent.metadata;
+
+        if (!userId || !credits) {
+          throw new Error('Missing user ID or credits in payment metadata');
+        }
+
+        // Update user's credits in database
+        await db.transaction(async (tx) => {
+          const [user] = await tx
+            .select()
+            .from(users)
+            .where(eq(users.id, parseInt(userId)))
+            .limit(1);
+
+          if (!user) {
+            throw new Error('User not found');
+          }
+
+          await tx
+            .update(users)
+            .set({ 
+              storyCredits: user.storyCredits + parseInt(credits),
+              updatedAt: new Date()
+            })
+            .where(eq(users.id, parseInt(userId)));
+        });
+      }
+
+      res.json({ received: true });
+    } catch (error) {
+      console.error('Webhook error:', error);
+      res.status(400).json({ error: 'Webhook error' });
     }
   });
 }

@@ -12,6 +12,7 @@ import LibraryPage from "./pages/Library";
 import StoryPage from "./pages/StoryPage";
 import ProfilePage from "./pages/ProfilePage";
 import EmailVerificationPage from "./pages/EmailVerificationPage";
+import Credits from "./pages/Credits";
 import { useUser } from "./hooks/use-user";
 import { Loader2 } from "lucide-react";
 import { ErrorBoundary } from "./components/ErrorBoundary";
@@ -89,6 +90,9 @@ function AppRoutes() {
           </Route>
           <Route path="/verify-email/:token">
             <EmailVerificationPage />
+          </Route>
+          <Route path="/credits">
+            <ProtectedRoute component={Credits} />
           </Route>
           <Route>404 - Page Not Found</Route>
         </Switch>
