@@ -616,6 +616,7 @@ export function setupRoutes(app: express.Application) {
     console.log('Stripe webhook received:', {
       hasSignature: !!sig,
       hasSecret: !!webhookSecret,
+      rawBody: typeof req.body === 'string' ? req.body.slice(0, 100) + '...' : 'Buffer/Object',
       headers: req.headers,
       timestamp: new Date().toISOString()
     });
@@ -634,6 +635,7 @@ export function setupRoutes(app: express.Application) {
       console.log('Stripe webhook event:', {
         type: event.type,
         id: event.id,
+        data: event.data,
         timestamp: new Date().toISOString()
       });
 
@@ -646,6 +648,7 @@ export function setupRoutes(app: express.Application) {
           userId,
           credits,
           amount: paymentIntent.amount,
+          metadata: paymentIntent.metadata,
           timestamp: new Date().toISOString()
         });
 
@@ -654,64 +657,88 @@ export function setupRoutes(app: express.Application) {
             userId,
             credits,
             paymentIntentId: paymentIntent.id,
+            metadata: paymentIntent.metadata,
             timestamp: new Date().toISOString()
           });
           throw new Error('Missing user ID or credits in payment metadata');
         }
 
-        // Update user's credits in database
-        await db.transaction(async (tx) => {
-          console.log('Starting credit update transaction:', {
+        try {
+          // Update user's credits in database
+          await db.transaction(async (tx) => {
+            console.log('Starting credit update transaction:', {
+              userId,
+              credits,
+              timestamp: new Date().toISOString()
+            });
+
+            const [user] = await tx
+              .select()
+              .from(users)
+              .where(eq(users.id, parseInt(userId)))
+              .limit(1);
+
+            if (!user) {
+              console.error('User not found in credit update:', {
+                userId,
+                timestamp: new Date().toISOString()
+              });
+              throw new Error('User not found');
+            }
+
+            console.log('Current user credits:', {
+              userId,
+              currentCredits: user.storyCredits,
+              toAdd: parseInt(credits),
+              newTotal: user.storyCredits + parseInt(credits),
+              timestamp: new Date().toISOString()
+            });
+
+            // Perform the update and get the result
+            const result = await tx
+              .update(users)
+              .set({ 
+                storyCredits: user.storyCredits + parseInt(credits),
+                updatedAt: new Date()
+              })
+              .where(eq(users.id, parseInt(userId)))
+              .returning();
+
+            console.log('Credit update SQL result:', {
+              userId,
+              result,
+              timestamp: new Date().toISOString()
+            });
+
+            if (!result || result.length === 0) {
+              throw new Error('Credit update failed - no rows updated');
+            }
+
+            const updatedUser = result[0];
+            console.log('Credit update completed:', {
+              userId,
+              oldCredits: user.storyCredits,
+              newCredits: updatedUser.storyCredits,
+              timestamp: new Date().toISOString()
+            });
+          });
+
+          console.log('Payment and credit update completed successfully:', {
+            paymentIntentId: paymentIntent.id,
             userId,
             credits,
             timestamp: new Date().toISOString()
           });
-
-          const [user] = await tx
-            .select()
-            .from(users)
-            .where(eq(users.id, parseInt(userId)))
-            .limit(1);
-
-          if (!user) {
-            console.error('User not found in credit update:', {
-              userId,
-              timestamp: new Date().toISOString()
-            });
-            throw new Error('User not found');
-          }
-
-          console.log('Current user credits:', {
+        } catch (dbError) {
+          console.error('Database error during credit update:', {
+            error: dbError instanceof Error ? dbError.message : 'Unknown error',
+            stack: dbError instanceof Error ? dbError.stack : undefined,
             userId,
-            currentCredits: user.storyCredits,
-            toAdd: parseInt(credits),
-            newTotal: user.storyCredits + parseInt(credits),
+            credits,
             timestamp: new Date().toISOString()
           });
-
-          const [updatedUser] = await tx
-            .update(users)
-            .set({ 
-              storyCredits: user.storyCredits + parseInt(credits),
-              updatedAt: new Date()
-            })
-            .where(eq(users.id, parseInt(userId)))
-            .returning();
-
-          console.log('Credit update completed:', {
-            userId,
-            oldCredits: user.storyCredits,
-            newCredits: updatedUser.storyCredits,
-            timestamp: new Date().toISOString()
-          });
-        });
-
-        console.log('Payment processing completed:', {
-          paymentIntentId: paymentIntent.id,
-          userId,
-          credits,
-          timestamp: new Date().toISOString()
-        });
+          throw dbError;
+        }
       }
 
       res.json({ received: true });
@@ -719,6 +746,7 @@ export function setupRoutes(app: express.Application) {
       console.error('Webhook error:', {
         error: error instanceof Error ? error.message : 'Unknown error',
         stack: error instanceof Error ? error.stack : undefined,
+        body: typeof req.body === 'string' ? req.body.slice(0, 100) + '...' : 'Buffer/Object',
         timestamp: new Date().toISOString()
       });
       res.status(400).json({ 

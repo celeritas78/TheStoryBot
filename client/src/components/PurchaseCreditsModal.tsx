@@ -49,6 +49,13 @@ export default function PurchaseCreditsModal({ isOpen, onClose }: PurchaseCredit
 
     try {
       // Create payment intent
+      console.log('Creating payment intent:', {
+        credits,
+        amount: credits * 100,
+        customer: customerDetails,
+        timestamp: new Date().toISOString()
+      });
+
       // Validate customer details
       const result = customerSchema.safeParse(customerDetails);
       if (!result.success) {
@@ -70,6 +77,13 @@ export default function PurchaseCreditsModal({ isOpen, onClose }: PurchaseCredit
 
       const data = await response.json();
 
+      console.log('Payment intent response:', {
+        status: response.status,
+        ok: response.ok,
+        data,
+        timestamp: new Date().toISOString()
+      });
+
       if (!response.ok) {
         throw new Error(data.message || 'Failed to create payment intent');
       }
@@ -80,13 +94,25 @@ export default function PurchaseCreditsModal({ isOpen, onClose }: PurchaseCredit
         throw new Error('Card element not found');
       }
 
+      console.log('Confirming card payment...', {
+        hasClientSecret: !!data.clientSecret,
+        timestamp: new Date().toISOString()
+      });
+
       const { error, paymentIntent } = await stripe.confirmCardPayment(
         data.clientSecret,
         {
           payment_method: {
             card: cardElement,
             billing_details: {
-              // You can add billing details here if needed
+              name: customerDetails.name,
+              address: {
+                line1: customerDetails.line1,
+                city: customerDetails.city,
+                state: customerDetails.state,
+                postal_code: customerDetails.postal_code,
+                country: customerDetails.country,
+              },
             },
           },
         }
