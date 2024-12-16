@@ -8,12 +8,41 @@ import { Button } from '@/components/ui/button';
 
 // Initialize Stripe with publishable key
 const STRIPE_PUBLISHABLE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+
+console.log('Stripe initialization:', {
+  hasKey: !!STRIPE_PUBLISHABLE_KEY,
+  keyPrefix: STRIPE_PUBLISHABLE_KEY?.substring(0, 7),
+  environment: import.meta.env.MODE,
+  isDevelopment: import.meta.env.DEV,
+  timestamp: new Date().toISOString()
+});
+
 const stripePromise = loadStripe(STRIPE_PUBLISHABLE_KEY);
 
 // Log error if Stripe key is missing (only in development)
-if (!STRIPE_PUBLISHABLE_KEY && import.meta.env.DEV) {
-  console.error('Missing Stripe publishable key');
+if (!STRIPE_PUBLISHABLE_KEY) {
+  console.error('Stripe Error: Missing publishable key', {
+    environment: import.meta.env.MODE,
+    isDevelopment: import.meta.env.DEV,
+    envVars: {
+      hasStripeKey: !!import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY,
+    },
+    timestamp: new Date().toISOString()
+  });
 }
+
+// Add debug logs for stripe promise
+stripePromise.then(stripe => {
+  console.log('Stripe loaded:', {
+    isLoaded: !!stripe,
+    timestamp: new Date().toISOString()
+  });
+}).catch(error => {
+  console.error('Stripe loading error:', {
+    error: error.message,
+    timestamp: new Date().toISOString()
+  });
+});
 
 export default function Credits() {
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
