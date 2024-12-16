@@ -147,6 +147,12 @@ export function setupAuth(app: Express) {
       const verificationToken = crypto.generateVerificationToken();
       const verificationTokenExpiry = new Date(now.getTime() + 24 * 60 * 60 * 1000); // 24 hours from now
 
+      console.log('\n=== User Registration ===');
+      console.log('Creating new user with email:', email);
+      console.log('Verification token:', verificationToken);
+      console.log('Token expires:', verificationTokenExpiry);
+      console.log('========================\n');
+
       // First create the user
       const [newUser] = await db.insert(users).values({
         email,

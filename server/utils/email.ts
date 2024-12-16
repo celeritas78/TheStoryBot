@@ -39,17 +39,24 @@ export const emailService = {
 
   sendVerificationEmail: async (to: string, token: string) => {
     try {
-      if (!SENDGRID_CONFIG.apiKey) {
-        throw new Error('SendGrid API key is not configured');
-      }
-
       // Get the current Repl URL from environment or use a default
       const appUrl = process.env.REPL_SLUG 
         ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`
-        : 'http://localhost:5000';
-      console.log('Constructing verification link with URL:', appUrl);
+        : 'http://localhost:3000';
       const verificationLink = `${appUrl}/verify-email/${token}`;
-      console.log('Generated verification link:', verificationLink);
+
+      // In development, always log the verification link
+      console.log('\n=== Email Verification Link ===');
+      console.log(`To: ${to}`);
+      console.log(`Link: ${verificationLink}`);
+      console.log('===============================\n');
+      
+      // If SendGrid is not configured, return true in development
+      if (!SENDGRID_CONFIG.apiKey) {
+        console.log('SendGrid not configured - skipping email send in development');
+        console.log('Please use the verification link above to verify the email');
+        return true;
+      }
       
       const msg: EmailOptions = {
         to,
