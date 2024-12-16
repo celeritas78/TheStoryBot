@@ -4,7 +4,7 @@ import StoryViewer from "../components/StoryViewer";
 import { Button } from "@/components/ui/button";
 import { Title } from "@/components/ui/title";
 import { useToast } from "@/hooks/use-toast";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { generateStory, type Story, type StoryFormData } from "../lib/api";
 import { Loader2, CreditCard } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -13,6 +13,7 @@ import { Link } from "wouter";
 export default function StoryGenerator() {
   const [story, setStory] = useState<Story | null>(null);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   
   // Fetch user data including credits
   const { data: userData } = useQuery({
