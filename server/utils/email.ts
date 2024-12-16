@@ -4,7 +4,7 @@ import { randomBytes } from 'crypto';
 // Initialize SendGrid configuration
 const SENDGRID_CONFIG = {
   apiKey: process.env.SENDGRID_API_KEY,
-  fromEmail: process.env.SENDGRID_FROM_EMAIL || 'sandeep@asterial.in'
+  fromEmail: process.env.SENDGRID_FROM_EMAIL || 'noreply@storybot.app'
 };
 
 // Configure SendGrid if API key is available
@@ -45,40 +45,69 @@ export const emailService = {
         : 'http://localhost:3000';
       const verificationLink = `${appUrl}/verify-email/${token}`;
 
-      // In development, always log the verification link
-      console.log('\n=== Email Verification Link ===');
-      console.log(`To: ${to}`);
-      console.log(`Link: ${verificationLink}`);
-      console.log('===============================\n');
+      // Always log verification details in development
+      console.log('\n=== Email Verification Details ===');
+      console.log('Recipient:', to);
+      console.log('Verification Link:', verificationLink);
+      console.log('SendGrid Status:', SENDGRID_CONFIG.apiKey ? 'Configured' : 'Not Configured');
+      console.log('============================\n');
       
-      // If SendGrid is not configured, return true in development
-      if (!SENDGRID_CONFIG.apiKey) {
-        console.log('SendGrid not configured - skipping email send in development');
-        console.log('Please use the verification link above to verify the email');
-        return true;
+      // Validate SendGrid configuration
+      const configErrors = validateEmailConfig();
+      if (configErrors.length > 0) {
+        console.warn('SendGrid Configuration Issues:');
+        configErrors.forEach(error => console.warn(`- ${error}`));
+        console.log('Using development fallback - verification link logged above\n');
+        return true; // Allow development testing without SendGrid
       }
       
       const msg: EmailOptions = {
         to,
-        subject: 'Verify your email - The Story Bot',
+        subject: 'Welcome to Story Bot - Verify Your Email',
         html: `
-          <div style="font-family: Arial, sans-serif;">
-            <h2>Welcome!</h2>
-            <p>Click the link below to verify your email:</p>
-            <p><a href="${verificationLink}">Verify Email</a></p>
-            <p>Link expires in 24 hours.</p>
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #6366f1; margin-bottom: 20px;">Welcome to Story Bot!</h2>
+            <p>Thank you for joining Story Bot! To start creating amazing stories, please verify your email address.</p>
+            <div style="margin: 30px 0;">
+              <a href="${verificationLink}" 
+                 style="background-color: #6366f1; color: white; padding: 12px 24px; 
+                        text-decoration: none; border-radius: 6px; display: inline-block;">
+                Verify Email Address
+              </a>
+            </div>
+            <p style="color: #666; font-size: 14px;">
+              This verification link will expire in 24 hours. If you didn't create an account with Story Bot, 
+              you can safely ignore this email.
+            </p>
+            <p style="color: #666; font-size: 14px;">
+              Or copy and paste this link into your browser:<br>
+              <span style="color: #6366f1;">${verificationLink}</span>
+            </p>
           </div>
         `,
       };
 
       const result = await sgMail.send({
         ...msg,
-        from: SENDGRID_CONFIG.fromEmail,
+        from: {
+          email: SENDGRID_CONFIG.fromEmail,
+          name: 'Story Bot'
+        },
+      });
+
+      console.log('SendGrid Response:', {
+        statusCode: result[0]?.statusCode,
+        timestamp: new Date().toISOString()
       });
 
       return result[0]?.statusCode === 202;
     } catch (error: any) {
-      console.error('Failed to send verification email:', error.message);
+      console.error('SendGrid Error:', {
+        message: error.message,
+        code: error.code,
+        response: error.response?.body,
+        timestamp: new Date().toISOString()
+      });
       return false;
     }
   }
