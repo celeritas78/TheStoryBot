@@ -4,7 +4,7 @@ import { randomBytes } from 'crypto';
 // Initialize SendGrid configuration
 const SENDGRID_CONFIG = {
   apiKey: process.env.SENDGRID_API_KEY,
-  fromEmail: process.env.SENDGRID_FROM_EMAIL || 'noreply@storybot.app'
+  fromEmail: 'sandeep@asterial.in'
 };
 
 // Configure SendGrid if API key is available
@@ -87,6 +87,13 @@ export const emailService = {
         `,
       };
 
+      console.log('Attempting to send email via SendGrid:', {
+        to,
+        from: SENDGRID_CONFIG.fromEmail,
+        subject: msg.subject,
+        timestamp: new Date().toISOString()
+      });
+
       const result = await sgMail.send({
         ...msg,
         from: {
@@ -97,6 +104,7 @@ export const emailService = {
 
       console.log('SendGrid Response:', {
         statusCode: result[0]?.statusCode,
+        headers: result[0]?.headers,
         timestamp: new Date().toISOString()
       });
 
@@ -106,8 +114,17 @@ export const emailService = {
         message: error.message,
         code: error.code,
         response: error.response?.body,
+        errors: error.response?.body?.errors,
         timestamp: new Date().toISOString()
       });
+
+      // Log development verification link even if SendGrid fails
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('\n=== Development Verification Link ===');
+        console.log('Since SendGrid sending failed, use this link for verification:');
+        console.log(verificationLink);
+        console.log('=====================================\n');
+      }
       return false;
     }
   }
