@@ -613,23 +613,60 @@ export function setupRoutes(app: express.Application) {
     const sig = req.headers['stripe-signature'];
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
+    console.log('Stripe webhook received:', {
+      hasSignature: !!sig,
+      hasSecret: !!webhookSecret,
+      headers: req.headers,
+      timestamp: new Date().toISOString()
+    });
+
     try {
       if (!sig || !webhookSecret) {
+        console.error('Webhook configuration error:', {
+          hasSignature: !!sig,
+          hasSecret: !!webhookSecret,
+          timestamp: new Date().toISOString()
+        });
         throw new Error('Missing Stripe webhook signature or secret');
       }
 
       const event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
+      console.log('Stripe webhook event:', {
+        type: event.type,
+        id: event.id,
+        timestamp: new Date().toISOString()
+      });
 
       if (event.type === 'payment_intent.succeeded') {
         const paymentIntent = event.data.object as Stripe.PaymentIntent;
         const { userId, credits } = paymentIntent.metadata;
 
+        console.log('Processing payment success:', {
+          paymentIntentId: paymentIntent.id,
+          userId,
+          credits,
+          amount: paymentIntent.amount,
+          timestamp: new Date().toISOString()
+        });
+
         if (!userId || !credits) {
+          console.error('Invalid payment metadata:', {
+            userId,
+            credits,
+            paymentIntentId: paymentIntent.id,
+            timestamp: new Date().toISOString()
+          });
           throw new Error('Missing user ID or credits in payment metadata');
         }
 
         // Update user's credits in database
         await db.transaction(async (tx) => {
+          console.log('Starting credit update transaction:', {
+            userId,
+            credits,
+            timestamp: new Date().toISOString()
+          });
+
           const [user] = await tx
             .select()
             .from(users)
@@ -637,23 +674,57 @@ export function setupRoutes(app: express.Application) {
             .limit(1);
 
           if (!user) {
+            console.error('User not found in credit update:', {
+              userId,
+              timestamp: new Date().toISOString()
+            });
             throw new Error('User not found');
           }
 
-          await tx
+          console.log('Current user credits:', {
+            userId,
+            currentCredits: user.storyCredits,
+            toAdd: parseInt(credits),
+            newTotal: user.storyCredits + parseInt(credits),
+            timestamp: new Date().toISOString()
+          });
+
+          const [updatedUser] = await tx
             .update(users)
             .set({ 
               storyCredits: user.storyCredits + parseInt(credits),
               updatedAt: new Date()
             })
-            .where(eq(users.id, parseInt(userId)));
+            .where(eq(users.id, parseInt(userId)))
+            .returning();
+
+          console.log('Credit update completed:', {
+            userId,
+            oldCredits: user.storyCredits,
+            newCredits: updatedUser.storyCredits,
+            timestamp: new Date().toISOString()
+          });
+        });
+
+        console.log('Payment processing completed:', {
+          paymentIntentId: paymentIntent.id,
+          userId,
+          credits,
+          timestamp: new Date().toISOString()
         });
       }
 
       res.json({ received: true });
     } catch (error) {
-      console.error('Webhook error:', error);
-      res.status(400).json({ error: 'Webhook error' });
+      console.error('Webhook error:', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        timestamp: new Date().toISOString()
+      });
+      res.status(400).json({ 
+        error: 'Webhook error',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   });
 }

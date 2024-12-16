@@ -102,14 +102,31 @@ export default function PurchaseCreditsModal({ isOpen, onClose }: PurchaseCredit
       }
 
       if (paymentIntent.status === 'succeeded') {
-        toast({
-          title: "Payment successful!",
-          description: `${credits} credits have been added to your account.`,
-        });
-        // Refresh user data to update credits
-        await queryClient.invalidateQueries({ queryKey: ['user'] });
-        onClose();
-      }
+          console.log('Payment succeeded:', {
+            paymentIntentId: paymentIntent.id,
+            status: paymentIntent.status,
+            timestamp: new Date().toISOString()
+          });
+
+          toast({
+            title: "Payment successful!",
+            description: `${credits} credits have been added to your account.`,
+          });
+
+          // Force refresh user data to update credits
+          console.log('Refreshing user data...', {
+            timestamp: new Date().toISOString()
+          });
+          
+          await queryClient.invalidateQueries({ queryKey: ['user'] });
+          await queryClient.refetchQueries({ queryKey: ['user'] });
+          
+          console.log('User data refresh completed', {
+            timestamp: new Date().toISOString()
+          });
+          
+          onClose();
+        }
     } catch (error) {
       console.error('Payment error:', {
         error,
