@@ -630,8 +630,35 @@ export function setupRoutes(app: express.Application) {
       bodyType: typeof req.body,
       isBuffer: Buffer.isBuffer(req.body),
       headers: req.headers,
+      bodyLength: req.body?.length,
       timestamp: new Date().toISOString()
     });
+
+    if (!webhookSecret) {
+      console.error('Webhook Error: Missing STRIPE_WEBHOOK_SECRET', {
+        environment: process.env.NODE_ENV,
+        timestamp: new Date().toISOString()
+      });
+      return res.status(500).json({ error: 'Webhook configuration error' });
+    }
+
+    if (!sig) {
+      console.error('Webhook Error: Missing stripe-signature header', {
+        headers: req.headers,
+        timestamp: new Date().toISOString()
+      });
+      return res.status(400).json({ error: 'Missing signature' });
+    }
+
+    if (!webhookSecret) {
+      console.error('Webhook Error: Missing STRIPE_WEBHOOK_SECRET');
+      return res.status(500).json({ error: 'Webhook configuration error' });
+    }
+
+    if (!sig) {
+      console.error('Webhook Error: Missing stripe-signature header');
+      return res.status(400).json({ error: 'Missing signature' });
+    }
 
     if (!webhookSecret) {
       console.error('Missing STRIPE_WEBHOOK_SECRET environment variable');
@@ -658,7 +685,8 @@ export function setupRoutes(app: express.Application) {
         const userId = paymentIntent.metadata?.userId;
         const credits = paymentIntent.metadata?.credits;
 
-        console.log('Processing payment success:', {
+        console.log('Processing payment success webhook:', {
+          type: event.type,
           paymentIntentId: paymentIntent.id,
           userId,
           credits,
@@ -666,6 +694,18 @@ export function setupRoutes(app: express.Application) {
           metadata: paymentIntent.metadata,
           timestamp: new Date().toISOString()
         });
+
+        // Validate the required data
+        if (!userId || !credits) {
+          console.error('Invalid webhook data:', {
+            userId,
+            credits,
+            paymentIntentId: paymentIntent.id,
+            metadata: paymentIntent.metadata,
+            timestamp: new Date().toISOString()
+          });
+          return res.status(400).json({ error: 'Invalid webhook data' });
+        }
 
         if (!userId || !credits) {
           console.error('Invalid payment metadata:', {
@@ -693,12 +733,13 @@ export function setupRoutes(app: express.Application) {
               const [user] = await tx
                 .select({
                   id: users.id,
-                  storyCredits: users.storyCredits
+                  storyCredits: users.storyCredits,
+                  email: users.email
                 })
                 .from(users)
                 .where(eq(users.id, parseInt(userId)))
                 .limit(1)
-                .for('update');  // Lock the row
+                .for('update');  // Lock the row for update
 
               if (!user) {
                 console.error('User not found in credit update:', {
@@ -712,10 +753,26 @@ export function setupRoutes(app: express.Application) {
               const creditsToAdd = parseInt(credits);
               
               if (isNaN(creditsToAdd)) {
+                console.error('Invalid credits value:', {
+                  credits,
+                  userId,
+                  paymentIntentId: paymentIntent.id,
+                  timestamp: new Date().toISOString()
+                });
                 throw new Error(`Invalid credits value: ${credits}`);
               }
               
               const newTotal = currentCredits + creditsToAdd;
+
+              console.log('Credit update calculation:', {
+                userId,
+                email: user.email,
+                currentCredits,
+                creditsToAdd,
+                newTotal,
+                paymentIntentId: paymentIntent.id,
+                timestamp: new Date().toISOString()
+              });
 
               console.log('Credit update details:', {
                 userId,
@@ -736,15 +793,37 @@ export function setupRoutes(app: express.Application) {
                 .where(eq(users.id, parseInt(userId)))
                 .returning({
                   id: users.id,
-                  storyCredits: users.storyCredits
+                  storyCredits: users.storyCredits,
+                  email: users.email
                 });
 
               if (!updatedUser) {
+                console.error('Failed to update user credits:', {
+                  userId,
+                  currentCredits,
+                  creditsToAdd,
+                  newTotal,
+                  paymentIntentId: paymentIntent.id,
+                  timestamp: new Date().toISOString()
+                });
                 throw new Error('Failed to update user credits');
+              }
+
+              if (updatedUser.storyCredits !== newTotal) {
+                console.error('Credit update mismatch:', {
+                  userId,
+                  email: updatedUser.email,
+                  expectedTotal: newTotal,
+                  actualTotal: updatedUser.storyCredits,
+                  paymentIntentId: paymentIntent.id,
+                  timestamp: new Date().toISOString()
+                });
+                throw new Error('Credit update verification failed');
               }
 
               console.log('Credit update successful:', {
                 userId,
+                email: updatedUser.email,
                 oldCredits: currentCredits,
                 newCredits: updatedUser.storyCredits,
                 paymentIntentId: paymentIntent.id,
