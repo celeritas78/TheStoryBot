@@ -7,7 +7,13 @@ import PurchaseCreditsModal from '@/components/PurchaseCreditsModal';
 import { Button } from '@/components/ui/button';
 
 // Initialize Stripe with publishable key
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY!);
+const STRIPE_PUBLISHABLE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+const stripePromise = loadStripe(STRIPE_PUBLISHABLE_KEY);
+
+// Log error if Stripe key is missing (only in development)
+if (!STRIPE_PUBLISHABLE_KEY && import.meta.env.DEV) {
+  console.error('Missing Stripe publishable key');
+}
 
 export default function Credits() {
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);

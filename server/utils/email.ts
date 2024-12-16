@@ -126,9 +126,13 @@ export const emailService = {
 
       // Log development verification link even if SendGrid fails
       if (process.env.NODE_ENV !== 'production') {
+        const appUrl = process.env.REPL_SLUG 
+          ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`
+          : 'http://localhost:3000';
+        const devVerificationLink = `${appUrl}/verify-email/${token}`;
         console.log('\n=== Development Verification Link ===');
         console.log('Since SendGrid sending failed, use this link for verification:');
-        console.log(verificationLink);
+        console.log(devVerificationLink);
         console.log('=====================================\n');
       }
       return false;
