@@ -88,6 +88,7 @@ async function fetchUser(): Promise<User | null> {
       resetTokenExpiry: userData.resetTokenExpiry ? new Date(userData.resetTokenExpiry) : null,
       lastLoginAt: userData.lastLoginAt ? new Date(userData.lastLoginAt) : null,
       active: typeof userData.active === 'boolean' ? userData.active : true,
+      storyCredits: userData.storyCredits || 0,
       createdAt: new Date(userData.createdAt),
       updatedAt: userData.updatedAt ? new Date(userData.updatedAt) : new Date()
     };

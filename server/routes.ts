@@ -120,6 +120,7 @@ export function setupRoutes(app: express.Application) {
         email,
         password: hashedPassword,
         displayName,
+        storyCredits: 3,
         createdAt: new Date(),
       }).returning();
 
@@ -150,6 +151,21 @@ export function setupRoutes(app: express.Application) {
       // Validate user permission
       if (!userId) {
         return res.status(401).json({ error: "User not authenticated" });
+      }
+
+      // Check if user has enough credits
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1);
+
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      if (user.storyCredits <= 0) {
+        return res.status(403).json({ error: "No story credits remaining. Please purchase more credits." });
       }
 
       if (!childName?.trim() || !childAge || !mainCharacter?.trim() || !theme?.trim()) {
@@ -192,21 +208,30 @@ export function setupRoutes(app: express.Application) {
 
       // Save story to database
       const result = await db.transaction(async (tx) => {
-        const [newStory] = await tx
-          .insert(stories)
-          .values({
-            userId, 
-            title: storyContent.title,
-            childName,
-            childAge: parsedAge,
-            characters: JSON.stringify({ mainCharacter }),
-            theme,
-            content: segments.map(s => s.content).join('\n\n'),
-            imageUrls: JSON.stringify(segments.map(s => s.imageUrl)),
-            parentApproved: false,
-            createdAt: new Date(),
-          })
-          .returning();
+          // Deduct one credit
+          await tx
+            .update(users)
+            .set({ 
+              storyCredits: user.storyCredits - 1,
+              updatedAt: new Date()
+            })
+            .where(eq(users.id, userId));
+
+          const [newStory] = await tx
+            .insert(stories)
+            .values({
+              userId, 
+              title: storyContent.title,
+              childName,
+              childAge: parsedAge,
+              characters: JSON.stringify({ mainCharacter }),
+              theme,
+              content: segments.map(s => s.content).join('\n\n'),
+              imageUrls: JSON.stringify(segments.map(s => s.imageUrl)),
+              parentApproved: false,
+              createdAt: new Date(),
+            })
+            .returning();
 
         if (!newStory || !newStory.id) {
           throw new Error("Failed to create story record");
