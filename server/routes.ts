@@ -576,6 +576,8 @@ export function setupRoutes(app: express.Application) {
       const paymentIntent = await stripe.paymentIntents.create({
         amount: amount, // Amount in cents
         currency: 'usd',
+        description: `Purchase of ${credits} story generation credits`,
+        statement_descriptor: 'STORYBOT CREDITS',
         metadata: {
           userId: req.user?.id,
           credits: credits,

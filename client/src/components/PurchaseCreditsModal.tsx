@@ -67,6 +67,11 @@ export default function PurchaseCreditsModal({ isOpen, onClose }: PurchaseCredit
       );
 
       if (error) {
+        console.error('Stripe payment confirmation error:', {
+          type: error.type,
+          message: error.message,
+          code: error.code
+        });
         throw new Error(error.message);
       }
 
@@ -80,10 +85,24 @@ export default function PurchaseCreditsModal({ isOpen, onClose }: PurchaseCredit
         onClose();
       }
     } catch (error) {
-      console.error('Payment error:', error);
+      console.error('Payment error:', {
+        error,
+        message: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      });
+      
+      let errorMessage = 'An unexpected error occurred during payment';
+      if (error instanceof Error) {
+        errorMessage = error.message;
+        // Handle specific Stripe error messages
+        if (errorMessage.includes('Indian regulations')) {
+          errorMessage = 'Payment failed due to regulatory requirements. Please try again.';
+        }
+      }
+      
       toast({
         title: "Payment failed",
-        description: error instanceof Error ? error.message : 'An error occurred',
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
