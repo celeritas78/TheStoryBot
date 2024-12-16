@@ -34,9 +34,12 @@ export default function StoryGenerator() {
       console.log("Submitting form data:", formData);
       return generateStory(formData);
     },
-    onSuccess: (data: Story) => {
+    onSuccess: async (data: Story) => {
       console.log("Story generated successfully:", data);
       setStory(data);
+      // Force refresh user data to update credits
+      await queryClient.invalidateQueries({ queryKey: ["user"] });
+      await queryClient.refetchQueries({ queryKey: ["user"] });
       toast({
         title: "Story created!",
         description: "Your magical story is ready to read.",
