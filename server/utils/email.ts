@@ -4,7 +4,8 @@ import { randomBytes } from 'crypto';
 // Initialize SendGrid configuration
 const SENDGRID_CONFIG = {
   apiKey: process.env.SENDGRID_API_KEY,
-  fromEmail: 'sandeep@asterial.in'
+  fromEmail: 'sandeep@asterial.in',
+  fromName: 'Story Bot'
 };
 
 // Configure SendGrid if API key is available
@@ -94,11 +95,16 @@ export const emailService = {
         timestamp: new Date().toISOString()
       });
 
+      // Set up email with verified sender
       const result = await sgMail.send({
         ...msg,
         from: {
           email: SENDGRID_CONFIG.fromEmail,
-          name: 'Story Bot'
+          name: SENDGRID_CONFIG.fromName
+        },
+        trackingSettings: {
+          clickTracking: { enable: true },
+          openTracking: { enable: true }
         },
       });
 
