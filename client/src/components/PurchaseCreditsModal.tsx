@@ -73,6 +73,7 @@ export default function PurchaseCreditsModal({ isOpen, onClose }: PurchaseCredit
           amount: credits * 100, // Amount in cents
           customer: customerDetails,
         }),
+        credentials: 'include', // Important for session cookie
       });
 
       const data = await response.json();

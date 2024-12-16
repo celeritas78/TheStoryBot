@@ -578,14 +578,25 @@ export function setupRoutes(app: express.Application) {
         return res.status(400).json({ error: "Customer details are required for export transactions" });
       }
 
+      // Ensure we have the user ID
+      const userId = req.user?.id;
+      if (!userId) {
+        console.error('Create payment intent - User ID missing:', {
+          session: req.session,
+          user: req.user,
+          timestamp: new Date().toISOString()
+        });
+        return res.status(401).json({ error: 'User ID not found in session' });
+      }
+
       const paymentIntent = await stripe.paymentIntents.create({
         amount: amount, // Amount in cents
         currency: 'usd',
         description: `Purchase of ${credits} story generation credits`,
         statement_descriptor: 'STORYBOT CREDITS',
         metadata: {
-          userId: req.user?.id,
-          credits: credits,
+          userId: userId.toString(), // Ensure userId is a string
+          credits: credits.toString(), // Ensure credits is a string
         },
         shipping: {
           name: customer.name,
@@ -635,13 +646,13 @@ export function setupRoutes(app: express.Application) {
       console.log('Stripe webhook event:', {
         type: event.type,
         id: event.id,
-        data: event.data,
         timestamp: new Date().toISOString()
       });
 
       if (event.type === 'payment_intent.succeeded') {
         const paymentIntent = event.data.object as Stripe.PaymentIntent;
-        const { userId, credits } = paymentIntent.metadata;
+        const userId = paymentIntent.metadata?.userId;
+        const credits = paymentIntent.metadata?.credits;
 
         console.log('Processing payment success:', {
           paymentIntentId: paymentIntent.id,
@@ -665,7 +676,7 @@ export function setupRoutes(app: express.Application) {
 
         try {
           // Update user's credits in database
-          await db.transaction(async (tx) => {
+          const result = await db.transaction(async (tx) => {
             console.log('Starting credit update transaction:', {
               userId,
               credits,
@@ -686,41 +697,56 @@ export function setupRoutes(app: express.Application) {
               throw new Error('User not found');
             }
 
-            console.log('Current user credits:', {
+            const currentCredits = user.storyCredits || 0;
+            const creditsToAdd = parseInt(credits);
+            const newTotal = currentCredits + creditsToAdd;
+
+            console.log('Credit update details:', {
               userId,
-              currentCredits: user.storyCredits,
-              toAdd: parseInt(credits),
-              newTotal: user.storyCredits + parseInt(credits),
+              currentCredits,
+              creditsToAdd,
+              newTotal,
               timestamp: new Date().toISOString()
             });
 
             // Perform the update and get the result
-            const result = await tx
+            const updatedUsers = await tx
               .update(users)
               .set({ 
-                storyCredits: user.storyCredits + parseInt(credits),
+                storyCredits: newTotal,
                 updatedAt: new Date()
               })
               .where(eq(users.id, parseInt(userId)))
               .returning();
 
-            console.log('Credit update SQL result:', {
-              userId,
-              result,
-              timestamp: new Date().toISOString()
-            });
-
-            if (!result || result.length === 0) {
-              throw new Error('Credit update failed - no rows updated');
+            if (!updatedUsers || updatedUsers.length === 0) {
+              const error = new Error('Credit update failed - no rows updated');
+              console.error('Update failure:', {
+                error,
+                userId,
+                currentCredits,
+                creditsToAdd,
+                timestamp: new Date().toISOString()
+              });
+              throw error;
             }
 
-            const updatedUser = result[0];
+            const updatedUser = updatedUsers[0];
             console.log('Credit update completed:', {
               userId,
-              oldCredits: user.storyCredits,
+              oldCredits: currentCredits,
               newCredits: updatedUser.storyCredits,
               timestamp: new Date().toISOString()
             });
+
+            return updatedUser;
+          });
+
+          console.log('Transaction completed:', {
+            success: true,
+            userId,
+            finalCredits: result.storyCredits,
+            timestamp: new Date().toISOString()
           });
 
           console.log('Payment and credit update completed successfully:', {
