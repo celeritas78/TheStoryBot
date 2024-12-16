@@ -620,26 +620,30 @@ export function setupRoutes(app: express.Application) {
   });
 
   // Stripe webhook endpoint
-  app.post('/api/stripe-webhook', async (req, res) => {
+  app.post('/api/stripe-webhook', express.raw({type: 'application/json'}), async (req, res) => {
     const sig = req.headers['stripe-signature'];
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
     console.log('Stripe webhook received:', {
       hasSignature: !!sig,
       hasSecret: !!webhookSecret,
-      rawBody: typeof req.body === 'string' ? req.body.slice(0, 100) + '...' : 'Buffer/Object',
+      bodyType: typeof req.body,
+      isBuffer: Buffer.isBuffer(req.body),
       headers: req.headers,
       timestamp: new Date().toISOString()
     });
 
+    if (!webhookSecret) {
+      console.error('Missing STRIPE_WEBHOOK_SECRET environment variable');
+      return res.status(500).json({ error: 'Webhook secret not configured' });
+    }
+
     try {
-      if (!sig || !webhookSecret) {
-        console.error('Webhook configuration error:', {
-          hasSignature: !!sig,
-          hasSecret: !!webhookSecret,
+      if (!sig) {
+        console.error('Missing Stripe signature', {
           timestamp: new Date().toISOString()
         });
-        throw new Error('Missing Stripe webhook signature or secret');
+        return res.status(400).json({ error: 'No Stripe signature found' });
       }
 
       const event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
@@ -677,69 +681,88 @@ export function setupRoutes(app: express.Application) {
         try {
           // Update user's credits in database
           const result = await db.transaction(async (tx) => {
-            console.log('Starting credit update transaction:', {
-              userId,
-              credits,
-              timestamp: new Date().toISOString()
-            });
-
-            const [user] = await tx
-              .select()
-              .from(users)
-              .where(eq(users.id, parseInt(userId)))
-              .limit(1);
-
-            if (!user) {
-              console.error('User not found in credit update:', {
+            try {
+              console.log('Starting credit update transaction:', {
                 userId,
+                credits,
+                paymentIntentId: paymentIntent.id,
                 timestamp: new Date().toISOString()
               });
-              throw new Error('User not found');
-            }
 
-            const currentCredits = user.storyCredits || 0;
-            const creditsToAdd = parseInt(credits);
-            const newTotal = currentCredits + creditsToAdd;
+              // First verify user exists and get current credits atomically
+              const [user] = await tx
+                .select({
+                  id: users.id,
+                  storyCredits: users.storyCredits
+                })
+                .from(users)
+                .where(eq(users.id, parseInt(userId)))
+                .limit(1)
+                .for('update');  // Lock the row
 
-            console.log('Credit update details:', {
-              userId,
-              currentCredits,
-              creditsToAdd,
-              newTotal,
-              timestamp: new Date().toISOString()
-            });
+              if (!user) {
+                console.error('User not found in credit update:', {
+                  userId,
+                  timestamp: new Date().toISOString()
+                });
+                throw new Error('User not found');
+              }
 
-            // Perform the update and get the result
-            const updatedUsers = await tx
-              .update(users)
-              .set({ 
-                storyCredits: newTotal,
-                updatedAt: new Date()
-              })
-              .where(eq(users.id, parseInt(userId)))
-              .returning();
+              const currentCredits = user.storyCredits || 0;
+              const creditsToAdd = parseInt(credits);
+              
+              if (isNaN(creditsToAdd)) {
+                throw new Error(`Invalid credits value: ${credits}`);
+              }
+              
+              const newTotal = currentCredits + creditsToAdd;
 
-            if (!updatedUsers || updatedUsers.length === 0) {
-              const error = new Error('Credit update failed - no rows updated');
-              console.error('Update failure:', {
-                error,
+              console.log('Credit update details:', {
                 userId,
                 currentCredits,
                 creditsToAdd,
+                newTotal,
+                paymentIntentId: paymentIntent.id,
+                timestamp: new Date().toISOString()
+              });
+
+              // Perform the update with explicit type casting and row locking
+              const [updatedUser] = await tx
+                .update(users)
+                .set({ 
+                  storyCredits: newTotal,
+                  updatedAt: new Date()
+                })
+                .where(eq(users.id, parseInt(userId)))
+                .returning({
+                  id: users.id,
+                  storyCredits: users.storyCredits
+                });
+
+              if (!updatedUser) {
+                throw new Error('Failed to update user credits');
+              }
+
+              console.log('Credit update successful:', {
+                userId,
+                oldCredits: currentCredits,
+                newCredits: updatedUser.storyCredits,
+                paymentIntentId: paymentIntent.id,
+                timestamp: new Date().toISOString()
+              });
+
+              return updatedUser;
+            } catch (error) {
+              console.error('Transaction error:', {
+                error: error instanceof Error ? error.message : 'Unknown error',
+                stack: error instanceof Error ? error.stack : undefined,
+                userId,
+                credits,
+                paymentIntentId: paymentIntent.id,
                 timestamp: new Date().toISOString()
               });
               throw error;
             }
-
-            const updatedUser = updatedUsers[0];
-            console.log('Credit update completed:', {
-              userId,
-              oldCredits: currentCredits,
-              newCredits: updatedUser.storyCredits,
-              timestamp: new Date().toISOString()
-            });
-
-            return updatedUser;
           });
 
           console.log('Transaction completed:', {
