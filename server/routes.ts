@@ -567,10 +567,15 @@ export function setupRoutes(app: express.Application) {
         return res.status(401).json({ error: "Not logged in" });
       }
 
-      const { credits, amount } = req.body;
+      const { credits, amount, customer } = req.body;
       
       if (!credits || credits < 1 || credits > 100) {
         return res.status(400).json({ error: "Invalid credit amount" });
+      }
+
+      if (!customer || !customer.name || !customer.line1 || !customer.city || 
+          !customer.state || !customer.postal_code || !customer.country) {
+        return res.status(400).json({ error: "Customer details are required for export transactions" });
       }
 
       const paymentIntent = await stripe.paymentIntents.create({
@@ -581,6 +586,16 @@ export function setupRoutes(app: express.Application) {
         metadata: {
           userId: req.user?.id,
           credits: credits,
+        },
+        shipping: {
+          name: customer.name,
+          address: {
+            line1: customer.line1,
+            city: customer.city,
+            state: customer.state,
+            postal_code: customer.postal_code,
+            country: customer.country,
+          },
         },
       });
 

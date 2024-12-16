@@ -1,20 +1,38 @@
 import React, { useState } from 'react';
 import { useStripe, useElements, CardElement } from '@stripe/react-stripe-js';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from '@tanstack/react-query';
+import { z } from 'zod';
 
 interface PurchaseCreditsModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
+const customerSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  line1: z.string().min(1, "Address line 1 is required"),
+  city: z.string().min(1, "City is required"),
+  state: z.string().min(1, "State is required"),
+  postal_code: z.string().min(6, "Postal code must be at least 6 characters"),
+  country: z.string().min(1, "Country is required"),
+});
+
 export default function PurchaseCreditsModal({ isOpen, onClose }: PurchaseCreditsModalProps) {
   const [credits, setCredits] = useState(10);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [customerDetails, setCustomerDetails] = useState({
+    name: '',
+    line1: '',
+    city: '',
+    state: '',
+    postal_code: '',
+    country: 'IN', // Default to India
+  });
   const stripe = useStripe();
   const elements = useElements();
   const { toast } = useToast();
@@ -31,6 +49,13 @@ export default function PurchaseCreditsModal({ isOpen, onClose }: PurchaseCredit
 
     try {
       // Create payment intent
+      // Validate customer details
+      const result = customerSchema.safeParse(customerDetails);
+      if (!result.success) {
+        const errors = result.error.errors.map(err => `${err.path.join('.')}: ${err.message}`).join(', ');
+        throw new Error(`Please complete all required fields: ${errors}`);
+      }
+
       const response = await fetch('/api/create-payment-intent', {
         method: 'POST',
         headers: {
@@ -38,7 +63,8 @@ export default function PurchaseCreditsModal({ isOpen, onClose }: PurchaseCredit
         },
         body: JSON.stringify({
           credits,
-          amount: credits * 100 // Amount in cents
+          amount: credits * 100, // Amount in cents
+          customer: customerDetails,
         }),
       });
 
@@ -140,25 +166,90 @@ export default function PurchaseCreditsModal({ isOpen, onClose }: PurchaseCredit
             </p>
           </div>
 
-          <div className="space-y-2">
-            <Label>Card Details</Label>
-            <div className="border rounded-md p-3">
-              <CardElement
-                options={{
-                  style: {
-                    base: {
-                      fontSize: '16px',
-                      color: '#424770',
-                      '::placeholder': {
-                        color: '#aab7c4',
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Full Name</Label>
+              <Input
+                id="name"
+                value={customerDetails.name}
+                onChange={(e) => setCustomerDetails(prev => ({ ...prev, name: e.target.value }))}
+                required
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="line1">Address Line 1</Label>
+              <Input
+                id="line1"
+                value={customerDetails.line1}
+                onChange={(e) => setCustomerDetails(prev => ({ ...prev, line1: e.target.value }))}
+                required
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="city">City</Label>
+                <Input
+                  id="city"
+                  value={customerDetails.city}
+                  onChange={(e) => setCustomerDetails(prev => ({ ...prev, city: e.target.value }))}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="state">State</Label>
+                <Input
+                  id="state"
+                  value={customerDetails.state}
+                  onChange={(e) => setCustomerDetails(prev => ({ ...prev, state: e.target.value }))}
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="postal_code">Postal Code</Label>
+                <Input
+                  id="postal_code"
+                  value={customerDetails.postal_code}
+                  onChange={(e) => setCustomerDetails(prev => ({ ...prev, postal_code: e.target.value }))}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="country">Country</Label>
+                <Input
+                  id="country"
+                  value={customerDetails.country}
+                  onChange={(e) => setCustomerDetails(prev => ({ ...prev, country: e.target.value }))}
+                  required
+                  disabled
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Card Details</Label>
+              <div className="border rounded-md p-3">
+                <CardElement
+                  options={{
+                    style: {
+                      base: {
+                        fontSize: '16px',
+                        color: '#424770',
+                        '::placeholder': {
+                          color: '#aab7c4',
+                        },
+                      },
+                      invalid: {
+                        color: '#9e2146',
                       },
                     },
-                    invalid: {
-                      color: '#9e2146',
-                    },
-                  },
-                }}
-              />
+                  }}
+                />
+              </div>
             </div>
           </div>
 
