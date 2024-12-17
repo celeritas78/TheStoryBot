@@ -668,17 +668,14 @@ export function setupRoutes(app: express.Application) {
         },
         payment_method_options: {
           card: {
-            installments: {
-              enabled: false
-            },
+            setup_future_usage: 'off_session',
             mandate_options: {
-              amount: amount,
-              amount_type: 'fixed',
+              amount_type: 'maximum',
+              amount: amount * 100, // Convert to smallest currency unit
               description: `Purchase of ${credits} story generation credits`,
               interval: 'sporadic',
-              reference: `credits-purchase-${new Date().getTime()}`,
-              start_date: Math.floor(Date.now() / 1000),
-              supported_types: ['india']
+              supported_types: ['india'],
+              reference: `credits-${userId}-${new Date().getTime()}`
             }
           }
         },
