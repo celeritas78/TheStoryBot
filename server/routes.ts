@@ -675,7 +675,8 @@ export function setupRoutes(app: express.Application) {
               description: `Purchase of ${credits} story generation credits`,
               interval: 'sporadic',
               supported_types: ['india'],
-              reference: `credits-${userId}-${new Date().getTime()}`
+              reference: `credits-${userId}-${new Date().getTime()}`,
+              start_date: Math.floor(Date.now() / 1000)
             }
           }
         },
