@@ -24,10 +24,26 @@ import {
 } from './services/audio-storage';
 import Stripe from 'stripe';
 
-// Initialize Stripe
+// Initialize Stripe with better error handling and logging
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2024-11-20.acacia',
+  typescript: true,
+  telemetry: false, // Disable telemetry in production
 });
+
+// Add CSP middleware for Stripe
+const stripeCSPMiddleware = (req: Request, res: Response, next: Function) => {
+  res.setHeader(
+    'Content-Security-Policy',
+    "default-src 'self' https://*.stripe.com https://*.stripe.network; " +
+    "frame-src 'self' https://*.stripe.com https://*.stripe.network; " +
+    "script-src 'self' https://*.stripe.com 'unsafe-inline' 'unsafe-eval'; " +
+    "style-src 'self' https://*.stripe.com 'unsafe-inline'; " +
+    "img-src 'self' https://*.stripe.com data: blob:; " +
+    "connect-src 'self' https://*.stripe.com https://*.stripe.network;"
+  );
+  next();
+};
 import { 
   getImageFilePath, 
   imageFileExists, 
@@ -560,7 +576,10 @@ export function setupRoutes(app: express.Application) {
     }
   });
 
-  // Create payment intent endpoint
+  // Apply CSP middleware for Stripe-related routes
+  app.use(['/api/create-payment-intent', '/api/stripe-webhook'], stripeCSPMiddleware);
+
+  // Create payment intent endpoint with enhanced error handling
   app.post('/api/create-payment-intent', async (req, res) => {
     try {
       if (!req.isAuthenticated || !req.isAuthenticated()) {
@@ -630,16 +649,30 @@ export function setupRoutes(app: express.Application) {
         description: `Purchase of ${credits} story generation credits`,
         statement_descriptor: 'STORYBOT CREDITS',
         metadata: {
-          userId: userId.toString(), // Ensure userId is a string
-          credits: credits.toString(), // Ensure credits is a string
+          userId: userId.toString(),
+          credits: credits.toString(),
           currentCredits: user.storyCredits?.toString() || '0',
           timestamp: new Date().toISOString(),
           customerName: customer.name,
           customerCity: customer.city
         },
+        payment_method_options: {
+          card: {
+            request_three_d_secure: 'any', // Always request 3D Secure
+            installments: {
+              enabled: false
+            },
+            mandate_options: {
+              amount: amount,
+              amount_type: 'fixed',
+              currency: 'usd',
+            }
+          }
+        },
+        setup_future_usage: 'off_session', // Enable future usage
         automatic_payment_methods: {
           enabled: true,
-          allow_redirects: 'never'
+          allow_redirects: 'always'
         },
         shipping: {
           name: customer.name,

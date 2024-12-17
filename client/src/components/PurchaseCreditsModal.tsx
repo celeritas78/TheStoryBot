@@ -111,6 +111,12 @@ export default function PurchaseCreditsModal({ isOpen, onClose }: PurchaseCredit
         timestamp: new Date().toISOString()
       });
 
+      console.log('Starting card payment confirmation...', {
+        hasClientSecret: !!data.clientSecret,
+        customerName: customerDetails.name,
+        timestamp: new Date().toISOString()
+      });
+
       const { error, paymentIntent } = await stripe.confirmCardPayment(
         data.clientSecret,
         {
@@ -127,8 +133,25 @@ export default function PurchaseCreditsModal({ isOpen, onClose }: PurchaseCredit
               },
             },
           },
+          payment_method_options: {
+            card: {
+              request_three_d_secure: 'any',
+            },
+          },
+          return_url: window.location.origin + '/credits',
         }
       );
+
+      // Log detailed payment confirmation response
+      console.log('Payment confirmation response:', {
+        hasError: !!error,
+        errorType: error?.type,
+        errorMessage: error?.message,
+        paymentIntentStatus: paymentIntent?.status,
+        requiresAction: paymentIntent?.status === 'requires_action',
+        nextAction: paymentIntent?.next_action?.type,
+        timestamp: new Date().toISOString()
+      });
 
       if (error) {
         console.error('Stripe payment confirmation error:', {
