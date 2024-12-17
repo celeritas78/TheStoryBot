@@ -664,7 +664,10 @@ export function setupRoutes(app: express.Application) {
             mandate_options: {
               amount: amount,
               amount_type: 'fixed',
-              description: `Purchase of ${credits} story generation credits`
+              description: `Purchase of ${credits} story generation credits`,
+              interval: 'one_time',
+              reference: `credits-purchase-${new Date().getTime()}`,
+              start_date: Math.floor(Date.now() / 1000),
             }
           }
         },
@@ -672,11 +675,7 @@ export function setupRoutes(app: express.Application) {
           enabled: true,
           allow_redirects: 'always'
         },
-        setup_future_usage: 'off_session', // Enable future usage
-        automatic_payment_methods: {
-          enabled: true,
-          allow_redirects: 'always'
-        },
+        // Remove duplicate configuration since it's already defined above
         shipping: {
           name: customer.name,
           address: {
