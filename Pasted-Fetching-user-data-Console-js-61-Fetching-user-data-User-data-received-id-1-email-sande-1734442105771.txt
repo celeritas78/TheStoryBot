@@ -1,0 +1,68 @@
+Fetching user data...
+Console.js:61 Fetching user data...
+ User data received: {id: 1, email: 'sandeep@asterial.in', provider: 'local', providerId: null, displayName: null, …}
+ Processed user data: {id: 1, email: 'sandeep@asterial.in', timestamp: '2024-12-17T13:24:03.714Z'}
+Console.js:61 User data received: {id: 1, email: 'sandeep@asterial.in', provider: 'local', providerId: null, displayName: null, …}
+Console.js:61 Processed user data: {id: 1, email: 'sandeep@asterial.in', timestamp: '2024-12-17T13:24:03.895Z'}
+ Creating payment intent: {credits: 1, amount: 100, customer: {…}, timestamp: '2024-12-17T13:24:39.725Z'}
+ Payment intent response: {status: 200, ok: true, data: {…}, timestamp: '2024-12-17T13:24:41.117Z'}
+ Credits updated from server: {newCredits: 3, timestamp: '2024-12-17T13:24:41.118Z'}
+ Fetching user data...
+ User data received: {id: 1, email: 'sandeep@asterial.in', provider: 'local', providerId: null, displayName: null, …}active: trueavatarUrl: nullbio: nullchildPhotoUrl: "/images/40e1c54a-b75c-4858-90a2-4d11250e2f5e.jpeg"createdAt: "2024-12-16T11:48:22.725Z"displayName: nullemail: "sandeep@asterial.in"emailVerified: trueid: 1lastLoginAt: nullprovider: "local"providerId: nullresetToken: nullresetTokenExpiry: nullstoryCredits: 3updatedAt: "2024-12-17T13:24:40.928Z"verificationToken: nullverificationTokenExpiry: null[[Prototype]]: Object
+ Processed user data: {id: 1, email: 'sandeep@asterial.in', timestamp: '2024-12-17T13:24:41.417Z'}email: "sandeep@asterial.in"id: 1timestamp: "2024-12-17T13:24:41.417Z"[[Prototype]]: Object
+ Confirming card payment... {hasClientSecret: true, timestamp: '2024-12-17T13:24:41.423Z'}hasClientSecret: truetimestamp: "2024-12-17T13:24:41.423Z"[[Prototype]]: Object
+lockdown-install.js:1 Removing unpermitted intrinsics
+js.stripe.com/v3/three-ds-2-fingerprint-70657cbf6ef26c9fbb255ea185cbaa40.html#intentId=pi_3QX0lQSBc9gulaWv1sD3XH8I&locale=en&hosted=false&referrer=https%3A%2F%2F465af56e-b012-4c75-81c7-a12f0bbe3f11-00-20y6feyfk92or.sisko.replit.dev%2Fcredits&controllerId=__privateStripeController3191:1 Refused to apply inline style because it violates the following Content Security Policy directive: "style-src 'self'". Either the 'unsafe-inline' keyword, a hash ('sha256-1bd1ss83rhoRESXnUSD+xUzVPZzKrKQPYKkWOj5TJIc='), or a nonce ('nonce-...') is required to enable inline execution. Note that hashes do not apply to event handlers, style attributes and javascript: navigations unless the 'unsafe-hashes' keyword is present.
+Understand this errorAI
+js.stripe.com/v3/three-ds-2-fingerprint-70657cbf6ef26c9fbb255ea185cbaa40.html#intentId=pi_3QX0lQSBc9gulaWv1sD3XH8I&locale=en&hosted=false&referrer=https%3A%2F%2F465af56e-b012-4c75-81c7-a12f0bbe3f11-00-20y6feyfk92or.sisko.replit.dev%2Fcredits&controllerId=__privateStripeController3191:1 [Report Only] Refused to apply inline style because it violates the following Content Security Policy directive: "style-src 'self'". Either the 'unsafe-inline' keyword, a hash ('sha256-1bd1ss83rhoRESXnUSD+xUzVPZzKrKQPYKkWOj5TJIc='), or a nonce ('nonce-...') is required to enable inline execution. Note that hashes do not apply to event handlers, style attributes and javascript: navigations unless the 'unsafe-hashes' keyword is present.
+Understand this errorAI
+lockdown-install.js:1 Removing unpermitted intrinsics
+netsafe.hdfcbank.com/acsmethodurl/v1/acs/services/threeDSMethod/8888?cardType=V:1 
+        
+        
+       Failed to load resource: the server responded with a status of 405 (Method Not Allowed)Understand this errorAI
+netsafe.hdfcbank.com/acsmethodurl/v1/acs/services/threeDSMethod/8888?cardType=V:1 Invalid 'X-Frame-Options' header encountered when loading 'https://netsafe.hdfcbank.com/': 'ALLOW-FROM https://api.pa.tatapayments.com' is not a recognized directive. The header will be ignored.Understand this errorAI
+lockdown-install.js:1 Removing unpermitted intrinsics
+ Stripe payment confirmation error: {type: 'invalid_request_error', message: 'We are unable to authenticate your payment method.… choose a different payment method and try again.', code: 'payment_intent_authentication_failure'}code: "payment_intent_authentication_failure"message: "We are unable to authenticate your payment method. Please choose a different payment method and try again."type: "invalid_request_error"[[Prototype]]: Object
+Mt.forEach.n.<computed> @ eruda.js:2
+handleSubmit @ PurchaseCreditsModal.tsx:128
+await in handleSubmit
+callCallback2 @ chunk-WERSD76P.js?v=99a6fdd9:3674
+invokeGuardedCallbackDev @ chunk-WERSD76P.js?v=99a6fdd9:3699
+invokeGuardedCallback @ chunk-WERSD76P.js?v=99a6fdd9:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-WERSD76P.js?v=99a6fdd9:3736
+executeDispatch @ chunk-WERSD76P.js?v=99a6fdd9:7014
+processDispatchQueueItemsInOrder @ chunk-WERSD76P.js?v=99a6fdd9:7034
+processDispatchQueue @ chunk-WERSD76P.js?v=99a6fdd9:7043
+dispatchEventsForPlugins @ chunk-WERSD76P.js?v=99a6fdd9:7051
+(anonymous) @ chunk-WERSD76P.js?v=99a6fdd9:7174
+batchedUpdates$1 @ chunk-WERSD76P.js?v=99a6fdd9:18913
+batchedUpdates @ chunk-WERSD76P.js?v=99a6fdd9:3579
+dispatchEventForPluginEventSystem @ chunk-WERSD76P.js?v=99a6fdd9:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-WERSD76P.js?v=99a6fdd9:5478
+dispatchEvent @ chunk-WERSD76P.js?v=99a6fdd9:5472
+dispatchDiscreteEvent @ chunk-WERSD76P.js?v=99a6fdd9:5449Understand this errorAI
+ Payment error: {error: Error: We are unable to authenticate your payment method. Please choose a different payment method …, message: 'We are unable to authenticate your payment method.… choose a different payment method and try again.', timestamp: '2024-12-17T13:24:58.589Z'}error: Error: We are unable to authenticate your payment method. Please choose a different payment method and try again.
+    at handleSubmit (https://465af56e-b012-4c75-81c7-a12f0bbe3f11-00-20y6feyfk92or.sisko.replit.dev/src/components/PurchaseCreditsModal.tsx:133:15)message: "We are unable to authenticate your payment method. Please choose a different payment method and try again."timestamp: "2024-12-17T13:24:58.589Z"[[Prototype]]: Object
+Mt.forEach.n.<computed> @ eruda.js:2
+handleSubmit @ PurchaseCreditsModal.tsx:156
+await in handleSubmit
+callCallback2 @ chunk-WERSD76P.js?v=99a6fdd9:3674
+invokeGuardedCallbackDev @ chunk-WERSD76P.js?v=99a6fdd9:3699
+invokeGuardedCallback @ chunk-WERSD76P.js?v=99a6fdd9:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-WERSD76P.js?v=99a6fdd9:3736
+executeDispatch @ chunk-WERSD76P.js?v=99a6fdd9:7014
+processDispatchQueueItemsInOrder @ chunk-WERSD76P.js?v=99a6fdd9:7034
+processDispatchQueue @ chunk-WERSD76P.js?v=99a6fdd9:7043
+dispatchEventsForPlugins @ chunk-WERSD76P.js?v=99a6fdd9:7051
+(anonymous) @ chunk-WERSD76P.js?v=99a6fdd9:7174
+batchedUpdates$1 @ chunk-WERSD76P.js?v=99a6fdd9:18913
+batchedUpdates @ chunk-WERSD76P.js?v=99a6fdd9:3579
+dispatchEventForPluginEventSystem @ chunk-WERSD76P.js?v=99a6fdd9:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-WERSD76P.js?v=99a6fdd9:5478
+dispatchEvent @ chunk-WERSD76P.js?v=99a6fdd9:5472
+dispatchDiscreteEvent @ chunk-WERSD76P.js?v=99a6fdd9:5449Understand this errorAI
+ Fetching user data...
+Console.js:61 Fetching user data...
+ User data received: {id: 1, email: 'sandeep@asterial.in', provider: 'local', providerId: null, displayName: null, …}active: trueavatarUrl: nullbio: nullchildPhotoUrl: "/images/40e1c54a-b75c-4858-90a2-4d11250e2f5e.jpeg"createdAt: "2024-12-16T11:48:22.725Z"displayName: nullemail: "sandeep@asterial.in"emailVerified: trueid: 1lastLoginAt: nullprovider: "local"providerId: nullresetToken: nullresetTokenExpiry: nullstoryCredits: 3updatedAt: "2024-12-17T13:24:40.928Z"verificationToken: nullverificationTokenExpiry: null[[Prototype]]: Object
+ Processed user data: {id: 1, email: 'sandeep@asterial.in', timestamp: '2024-12-17T13:25:51.480Z'}
