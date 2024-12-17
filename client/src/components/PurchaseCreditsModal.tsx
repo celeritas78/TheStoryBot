@@ -133,19 +133,6 @@ export default function PurchaseCreditsModal({ isOpen, onClose }: PurchaseCredit
               },
             },
           },
-          payment_method: {
-            card: cardElement,
-            billing_details: {
-              name: customerDetails.name,
-              address: {
-                line1: customerDetails.line1,
-                city: customerDetails.city,
-                state: customerDetails.state,
-                postal_code: customerDetails.postal_code,
-                country: customerDetails.country,
-              },
-            },
-          },
           return_url: window.location.origin + '/credits',
         }
       );
