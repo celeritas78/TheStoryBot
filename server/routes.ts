@@ -666,10 +666,16 @@ export function setupRoutes(app: express.Application) {
     
     try {
       event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
+      console.log('Webhook signature verified successfully:', {
+        eventType: event.type,
+        eventId: event.id,
+        timestamp: new Date().toISOString()
+      });
     } catch (err) {
       console.error('Webhook signature verification failed:', {
         error: err instanceof Error ? err.message : 'Unknown error',
         signature: sig,
+        rawBody: req.body?.toString(),
         timestamp: new Date().toISOString()
       });
       return res.status(400).json({
@@ -684,7 +690,8 @@ export function setupRoutes(app: express.Application) {
       id: event.id,
       object: event.data.object,
       created: event.created,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      rawEvent: JSON.stringify(event)
     });
 
     // Handle payment success
@@ -698,6 +705,7 @@ export function setupRoutes(app: express.Application) {
         credits,
         amount: paymentIntent.amount,
         metadata: paymentIntent.metadata,
+        rawPaymentIntent: JSON.stringify(paymentIntent),
         timestamp: new Date().toISOString()
       });
 
@@ -705,6 +713,7 @@ export function setupRoutes(app: express.Application) {
         console.error('Missing payment metadata:', {
           metadata: paymentIntent.metadata,
           paymentIntentId: paymentIntent.id,
+          rawPaymentIntent: JSON.stringify(paymentIntent),
           timestamp: new Date().toISOString()
         });
         return res.status(400).json({ 
@@ -715,6 +724,16 @@ export function setupRoutes(app: express.Application) {
 
       const userIdNum = Number(userId);
       const creditsNum = Number(credits);
+
+      console.log('Parsed payment metadata:', {
+        originalUserId: userId,
+        originalCredits: credits,
+        parsedUserId: userIdNum,
+        parsedCredits: creditsNum,
+        isUserIdValid: !isNaN(userIdNum),
+        isCreditsValid: !isNaN(creditsNum),
+        timestamp: new Date().toISOString()
+      });
 
       if (isNaN(userIdNum) || isNaN(creditsNum)) {
         console.error('Invalid metadata values:', {
@@ -731,10 +750,29 @@ export function setupRoutes(app: express.Application) {
         });
       }
 
+      // Log the payment intent ID to track duplicates
+      console.log('Starting credit update transaction:', {
+        paymentIntentId: paymentIntent.id,
+        userId: userIdNum,
+        credits: creditsNum,
+        timestamp: new Date().toISOString()
+      });
+
       try {
         // Implement idempotency check
         const idempotencyKey = `payment_${paymentIntent.id}`;
+        console.log('Starting database transaction:', {
+          idempotencyKey,
+          paymentIntentId: paymentIntent.id,
+          timestamp: new Date().toISOString()
+        });
+
         const result = await db.transaction(async (tx) => {
+          console.log('Fetching user data with lock:', {
+            userId: userIdNum,
+            timestamp: new Date().toISOString()
+          });
+
           // Get current user data with row lock
           const [user] = await tx
             .select()
@@ -743,6 +781,13 @@ export function setupRoutes(app: express.Application) {
             .limit(1)
             .for('update');
 
+          console.log('User data retrieved:', {
+            userId: userIdNum,
+            userFound: !!user,
+            currentCredits: user?.storyCredits,
+            timestamp: new Date().toISOString()
+          });
+
           if (!user) {
             throw new Error(`User ${userIdNum} not found`);
           }
@@ -750,7 +795,7 @@ export function setupRoutes(app: express.Application) {
           const currentCredits = user.storyCredits || 0;
           const newTotal = currentCredits + creditsNum;
 
-          console.log('Updating credits:', {
+          console.log('Calculating new credit total:', {
             userId: userIdNum,
             currentCredits,
             addingCredits: creditsNum,
@@ -760,6 +805,12 @@ export function setupRoutes(app: express.Application) {
           });
 
           // Update credits
+          console.log('Executing update query:', {
+            userId: userIdNum,
+            newTotal,
+            timestamp: new Date().toISOString()
+          });
+
           const [updatedUser] = await tx
             .update(users)
             .set({
@@ -769,6 +820,12 @@ export function setupRoutes(app: express.Application) {
             .where(eq(users.id, userIdNum))
             .returning();
 
+          console.log('Update query completed:', {
+            success: !!updatedUser,
+            newCredits: updatedUser?.storyCredits,
+            timestamp: new Date().toISOString()
+          });
+
           if (!updatedUser) {
             throw new Error('Failed to update user credits');
           }
@@ -776,7 +833,7 @@ export function setupRoutes(app: express.Application) {
           return updatedUser;
         });
 
-        console.log('Credits updated successfully:', {
+        console.log('Transaction completed successfully:', {
           userId: result.id,
           newTotal: result.storyCredits,
           paymentIntentId: paymentIntent.id,
