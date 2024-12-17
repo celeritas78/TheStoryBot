@@ -640,6 +640,17 @@ export function setupRoutes(app: express.Application) {
         credits,
         amount,
         customerDetails: customer,
+        timestamp: new Date().toISOString(),
+        stripeVersion: stripe.VERSION,
+        environment: process.env.NODE_ENV,
+        currency: 'usd'
+      });
+
+      // Log Stripe configuration
+      console.log('Stripe configuration:', {
+        hasSecretKey: !!process.env.STRIPE_SECRET_KEY,
+        apiVersion: stripe.getApiField('version'),
+        hasWebhookSecret: !!process.env.STRIPE_WEBHOOK_SECRET,
         timestamp: new Date().toISOString()
       });
 
