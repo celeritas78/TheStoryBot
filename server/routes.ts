@@ -589,6 +589,14 @@ export function setupRoutes(app: express.Application) {
         return res.status(401).json({ error: 'User ID not found in session' });
       }
 
+      // Create payment intent with better logging
+      console.log('Creating payment intent with metadata:', {
+        userId,
+        credits,
+        amount,
+        timestamp: new Date().toISOString()
+      });
+
       const paymentIntent = await stripe.paymentIntents.create({
         amount: amount, // Amount in cents
         currency: 'usd',
@@ -597,6 +605,7 @@ export function setupRoutes(app: express.Application) {
         metadata: {
           userId: userId.toString(), // Ensure userId is a string
           credits: credits.toString(), // Ensure credits is a string
+          timestamp: new Date().toISOString(),
         },
         shipping: {
           name: customer.name,
@@ -608,6 +617,13 @@ export function setupRoutes(app: express.Application) {
             country: customer.country,
           },
         },
+      });
+
+      console.log('Payment intent created:', {
+        id: paymentIntent.id,
+        clientSecret: !!paymentIntent.client_secret,
+        metadata: paymentIntent.metadata,
+        timestamp: new Date().toISOString()
       });
 
       res.json({
@@ -634,253 +650,163 @@ export function setupRoutes(app: express.Application) {
       timestamp: new Date().toISOString()
     });
 
-    if (!webhookSecret) {
-      console.error('Webhook Error: Missing STRIPE_WEBHOOK_SECRET', {
-        environment: process.env.NODE_ENV,
+    if (!webhookSecret || !sig) {
+      console.error('Webhook configuration error:', {
+        hasSecret: !!webhookSecret,
+        hasSignature: !!sig,
         timestamp: new Date().toISOString()
       });
-      return res.status(500).json({ error: 'Webhook configuration error' });
-    }
-
-    if (!sig) {
-      console.error('Webhook Error: Missing stripe-signature header', {
-        headers: req.headers,
-        timestamp: new Date().toISOString()
+      return res.status(400).json({ 
+        error: !webhookSecret ? 'Missing webhook secret' : 'Missing signature',
+        details: 'Please ensure webhook is properly configured'
       });
-      return res.status(400).json({ error: 'Missing signature' });
     }
 
-    if (!webhookSecret) {
-      console.error('Webhook Error: Missing STRIPE_WEBHOOK_SECRET');
-      return res.status(500).json({ error: 'Webhook configuration error' });
-    }
-
-    if (!sig) {
-      console.error('Webhook Error: Missing stripe-signature header');
-      return res.status(400).json({ error: 'Missing signature' });
-    }
-
-    if (!webhookSecret) {
-      console.error('Missing STRIPE_WEBHOOK_SECRET environment variable');
-      return res.status(500).json({ error: 'Webhook secret not configured' });
-    }
-
+    let event: Stripe.Event;
+    
     try {
-      if (!sig) {
-        console.error('Missing Stripe signature', {
+      event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
+    } catch (err) {
+      console.error('Webhook signature verification failed:', {
+        error: err instanceof Error ? err.message : 'Unknown error',
+        signature: sig,
+        timestamp: new Date().toISOString()
+      });
+      return res.status(400).json({
+        error: 'Webhook signature verification failed',
+        details: err instanceof Error ? err.message : 'Unknown error'
+      });
+    }
+
+    // Log full event data for debugging
+    console.log('Webhook event details:', {
+      type: event.type,
+      id: event.id,
+      object: event.data.object,
+      created: event.created,
+      timestamp: new Date().toISOString()
+    });
+
+    // Handle payment success
+    if (event.type === 'payment_intent.succeeded') {
+      const paymentIntent = event.data.object as Stripe.PaymentIntent;
+      const { userId, credits } = paymentIntent.metadata || {};
+
+      console.log('Processing payment success:', {
+        paymentIntentId: paymentIntent.id,
+        userId,
+        credits,
+        amount: paymentIntent.amount,
+        metadata: paymentIntent.metadata,
+        timestamp: new Date().toISOString()
+      });
+
+      if (!userId || !credits) {
+        console.error('Missing payment metadata:', {
+          metadata: paymentIntent.metadata,
+          paymentIntentId: paymentIntent.id,
           timestamp: new Date().toISOString()
         });
-        return res.status(400).json({ error: 'No Stripe signature found' });
+        return res.status(400).json({ 
+          error: 'Invalid payment metadata',
+          details: 'Missing userId or credits in payment metadata'
+        });
       }
 
-      const event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
-      console.log('Stripe webhook event:', {
-        type: event.type,
-        id: event.id,
-        timestamp: new Date().toISOString()
-      });
+      const userIdNum = Number(userId);
+      const creditsNum = Number(credits);
 
-      if (event.type === 'payment_intent.succeeded') {
-        const paymentIntent = event.data.object as Stripe.PaymentIntent;
-        const userId = paymentIntent.metadata?.userId;
-        const credits = paymentIntent.metadata?.credits;
-
-        console.log('Processing payment success webhook:', {
-          type: event.type,
-          paymentIntentId: paymentIntent.id,
+      if (isNaN(userIdNum) || isNaN(creditsNum)) {
+        console.error('Invalid metadata values:', {
           userId,
           credits,
-          amount: paymentIntent.amount,
-          metadata: paymentIntent.metadata,
+          userIdNum,
+          creditsNum,
+          paymentIntentId: paymentIntent.id,
+          timestamp: new Date().toISOString()
+        });
+        return res.status(400).json({ 
+          error: 'Invalid payment metadata',
+          details: 'userId or credits are not valid numbers'
+        });
+      }
+
+      try {
+        // Implement idempotency check
+        const idempotencyKey = `payment_${paymentIntent.id}`;
+        const result = await db.transaction(async (tx) => {
+          // Get current user data with row lock
+          const [user] = await tx
+            .select()
+            .from(users)
+            .where(eq(users.id, userIdNum))
+            .limit(1)
+            .for('update');
+
+          if (!user) {
+            throw new Error(`User ${userIdNum} not found`);
+          }
+
+          const currentCredits = user.storyCredits || 0;
+          const newTotal = currentCredits + creditsNum;
+
+          console.log('Updating credits:', {
+            userId: userIdNum,
+            currentCredits,
+            addingCredits: creditsNum,
+            newTotal,
+            idempotencyKey,
+            timestamp: new Date().toISOString()
+          });
+
+          // Update credits
+          const [updatedUser] = await tx
+            .update(users)
+            .set({
+              storyCredits: newTotal,
+              updatedAt: new Date()
+            })
+            .where(eq(users.id, userIdNum))
+            .returning();
+
+          if (!updatedUser) {
+            throw new Error('Failed to update user credits');
+          }
+
+          return updatedUser;
+        });
+
+        console.log('Credits updated successfully:', {
+          userId: result.id,
+          newTotal: result.storyCredits,
+          paymentIntentId: paymentIntent.id,
           timestamp: new Date().toISOString()
         });
 
-        // Validate the required data
-        if (!userId || !credits) {
-          console.error('Invalid webhook data:', {
-            userId,
-            credits,
-            paymentIntentId: paymentIntent.id,
-            metadata: paymentIntent.metadata,
-            timestamp: new Date().toISOString()
-          });
-          return res.status(400).json({ error: 'Invalid webhook data' });
-        }
-
-        if (!userId || !credits) {
-          console.error('Invalid payment metadata:', {
-            userId,
-            credits,
-            paymentIntentId: paymentIntent.id,
-            metadata: paymentIntent.metadata,
-            timestamp: new Date().toISOString()
-          });
-          throw new Error('Missing user ID or credits in payment metadata');
-        }
-
-        try {
-          // Update user's credits in database
-          const result = await db.transaction(async (tx) => {
-            try {
-              console.log('Starting credit update transaction:', {
-                userId,
-                credits,
-                paymentIntentId: paymentIntent.id,
-                timestamp: new Date().toISOString()
-              });
-
-              // First verify user exists and get current credits atomically
-              const [user] = await tx
-                .select({
-                  id: users.id,
-                  storyCredits: users.storyCredits,
-                  email: users.email
-                })
-                .from(users)
-                .where(eq(users.id, parseInt(userId)))
-                .limit(1)
-                .for('update');  // Lock the row for update
-
-              if (!user) {
-                console.error('User not found in credit update:', {
-                  userId,
-                  timestamp: new Date().toISOString()
-                });
-                throw new Error('User not found');
-              }
-
-              const currentCredits = user.storyCredits || 0;
-              const creditsToAdd = parseInt(credits);
-              
-              if (isNaN(creditsToAdd)) {
-                console.error('Invalid credits value:', {
-                  credits,
-                  userId,
-                  paymentIntentId: paymentIntent.id,
-                  timestamp: new Date().toISOString()
-                });
-                throw new Error(`Invalid credits value: ${credits}`);
-              }
-              
-              const newTotal = currentCredits + creditsToAdd;
-
-              console.log('Credit update calculation:', {
-                userId,
-                email: user.email,
-                currentCredits,
-                creditsToAdd,
-                newTotal,
-                paymentIntentId: paymentIntent.id,
-                timestamp: new Date().toISOString()
-              });
-
-              console.log('Credit update details:', {
-                userId,
-                currentCredits,
-                creditsToAdd,
-                newTotal,
-                paymentIntentId: paymentIntent.id,
-                timestamp: new Date().toISOString()
-              });
-
-              // Perform the update with explicit type casting and row locking
-              const [updatedUser] = await tx
-                .update(users)
-                .set({ 
-                  storyCredits: newTotal,
-                  updatedAt: new Date()
-                })
-                .where(eq(users.id, parseInt(userId)))
-                .returning({
-                  id: users.id,
-                  storyCredits: users.storyCredits,
-                  email: users.email
-                });
-
-              if (!updatedUser) {
-                console.error('Failed to update user credits:', {
-                  userId,
-                  currentCredits,
-                  creditsToAdd,
-                  newTotal,
-                  paymentIntentId: paymentIntent.id,
-                  timestamp: new Date().toISOString()
-                });
-                throw new Error('Failed to update user credits');
-              }
-
-              if (updatedUser.storyCredits !== newTotal) {
-                console.error('Credit update mismatch:', {
-                  userId,
-                  email: updatedUser.email,
-                  expectedTotal: newTotal,
-                  actualTotal: updatedUser.storyCredits,
-                  paymentIntentId: paymentIntent.id,
-                  timestamp: new Date().toISOString()
-                });
-                throw new Error('Credit update verification failed');
-              }
-
-              console.log('Credit update successful:', {
-                userId,
-                email: updatedUser.email,
-                oldCredits: currentCredits,
-                newCredits: updatedUser.storyCredits,
-                paymentIntentId: paymentIntent.id,
-                timestamp: new Date().toISOString()
-              });
-
-              return updatedUser;
-            } catch (error) {
-              console.error('Transaction error:', {
-                error: error instanceof Error ? error.message : 'Unknown error',
-                stack: error instanceof Error ? error.stack : undefined,
-                userId,
-                credits,
-                paymentIntentId: paymentIntent.id,
-                timestamp: new Date().toISOString()
-              });
-              throw error;
-            }
-          });
-
-          console.log('Transaction completed:', {
-            success: true,
-            userId,
-            finalCredits: result.storyCredits,
-            timestamp: new Date().toISOString()
-          });
-
-          console.log('Payment and credit update completed successfully:', {
-            paymentIntentId: paymentIntent.id,
-            userId,
-            credits,
-            timestamp: new Date().toISOString()
-          });
-        } catch (dbError) {
-          console.error('Database error during credit update:', {
-            error: dbError instanceof Error ? dbError.message : 'Unknown error',
-            stack: dbError instanceof Error ? dbError.stack : undefined,
-            userId,
-            credits,
-            timestamp: new Date().toISOString()
-          });
-          throw dbError;
-        }
+        return res.json({
+          received: true,
+          type: event.type,
+          credits: result.storyCredits
+        });
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        console.error('Failed to update credits:', {
+          error: errorMessage,
+          stack: error instanceof Error ? error.stack : undefined,
+          userId: userIdNum,
+          credits: creditsNum,
+          paymentIntentId: paymentIntent.id,
+          timestamp: new Date().toISOString()
+        });
+        
+        return res.status(500).json({
+          error: 'Failed to process payment',
+          details: 'Error updating credits. Please contact support if credits are not reflected.'
+        });
       }
-
-      res.json({ received: true });
-    } catch (error) {
-      console.error('Webhook error:', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined,
-        body: typeof req.body === 'string' ? req.body.slice(0, 100) + '...' : 'Buffer/Object',
-        timestamp: new Date().toISOString()
-      });
-      res.status(400).json({ 
-        error: 'Webhook error',
-        message: error instanceof Error ? error.message : 'Unknown error'
-      });
     }
+
+    // Acknowledge receipt of the event
+    res.json({ received: true, type: event.type });
   });
 }
