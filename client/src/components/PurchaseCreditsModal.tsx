@@ -135,7 +135,7 @@ export default function PurchaseCreditsModal({ isOpen, onClose }: PurchaseCredit
           },
           payment_method_options: {
             card: {
-              request_three_d_secure: 'any',
+              setup_future_usage: 'off_session'
             },
           },
           return_url: window.location.origin + '/credits',

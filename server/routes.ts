@@ -658,16 +658,19 @@ export function setupRoutes(app: express.Application) {
         },
         payment_method_options: {
           card: {
-            request_three_d_secure: 'any', // Always request 3D Secure
             installments: {
               enabled: false
             },
             mandate_options: {
               amount: amount,
               amount_type: 'fixed',
-              currency: 'usd',
+              description: `Purchase of ${credits} story generation credits`
             }
           }
+        },
+        automatic_payment_methods: {
+          enabled: true,
+          allow_redirects: 'always'
         },
         setup_future_usage: 'off_session', // Enable future usage
         automatic_payment_methods: {
