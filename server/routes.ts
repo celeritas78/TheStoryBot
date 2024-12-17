@@ -589,11 +589,38 @@ export function setupRoutes(app: express.Application) {
         return res.status(401).json({ error: 'User ID not found in session' });
       }
 
+      // Get current user data
+      console.log('Fetching current user credits:', {
+        userId,
+        timestamp: new Date().toISOString()
+      });
+
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1);
+
+      if (!user) {
+        console.error('User not found:', {
+          userId,
+          timestamp: new Date().toISOString()
+        });
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      console.log('Current user credits:', {
+        userId,
+        currentCredits: user.storyCredits,
+        timestamp: new Date().toISOString()
+      });
+
       // Create payment intent with better logging
       console.log('Creating payment intent with metadata:', {
         userId,
         credits,
         amount,
+        customerDetails: customer,
         timestamp: new Date().toISOString()
       });
 
@@ -605,7 +632,14 @@ export function setupRoutes(app: express.Application) {
         metadata: {
           userId: userId.toString(), // Ensure userId is a string
           credits: credits.toString(), // Ensure credits is a string
+          currentCredits: user.storyCredits?.toString() || '0',
           timestamp: new Date().toISOString(),
+          customerName: customer.name,
+          customerCity: customer.city
+        },
+        automatic_payment_methods: {
+          enabled: true,
+          allow_redirects: 'never'
         },
         shipping: {
           name: customer.name,
@@ -626,8 +660,34 @@ export function setupRoutes(app: express.Application) {
         timestamp: new Date().toISOString()
       });
 
+      // Update credits immediately after creating payment intent
+      const newCredits = (user.storyCredits || 0) + credits;
+      console.log('Updating user credits:', {
+        userId,
+        oldCredits: user.storyCredits,
+        newCredits,
+        timestamp: new Date().toISOString()
+      });
+
+      const [updatedUser] = await db
+        .update(users)
+        .set({
+          storyCredits: newCredits,
+          updatedAt: new Date()
+        })
+        .where(eq(users.id, userId))
+        .returning();
+
+      console.log('Credits updated:', {
+        userId,
+        newCredits: updatedUser.storyCredits,
+        paymentIntentId: paymentIntent.id,
+        timestamp: new Date().toISOString()
+      });
+
       res.json({
         clientSecret: paymentIntent.client_secret,
+        credits: updatedUser.storyCredits
       });
     } catch (error) {
       console.error('Error creating payment intent:', error);
@@ -636,19 +696,22 @@ export function setupRoutes(app: express.Application) {
   });
 
   // Stripe webhook endpoint
-  app.post('/api/stripe-webhook', express.raw({type: 'application/json'}), async (req, res) => {
-    const sig = req.headers['stripe-signature'];
-    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  app.post('/api/stripe-webhook', 
+    express.raw({type: 'application/json'}),
+    async (req, res) => {
+      const sig = req.headers['stripe-signature'];
+      const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
-    console.log('Stripe webhook received:', {
-      hasSignature: !!sig,
-      hasSecret: !!webhookSecret,
-      bodyType: typeof req.body,
-      isBuffer: Buffer.isBuffer(req.body),
-      headers: req.headers,
-      bodyLength: req.body?.length,
-      timestamp: new Date().toISOString()
-    });
+      console.log('Stripe webhook received:', {
+        hasSignature: !!sig,
+        hasSecret: !!webhookSecret,
+        bodyType: typeof req.body,
+        isBuffer: Buffer.isBuffer(req.body),
+        headers: req.headers,
+        bodyLength: req.body?.length,
+        rawBody: req.body?.toString(),
+        timestamp: new Date().toISOString()
+      });
 
     if (!webhookSecret || !sig) {
       console.error('Webhook configuration error:', {

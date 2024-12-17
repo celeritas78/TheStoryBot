@@ -89,6 +89,17 @@ export default function PurchaseCreditsModal({ isOpen, onClose }: PurchaseCredit
         throw new Error(data.message || 'Failed to create payment intent');
       }
 
+      // Update local state with new credits
+      if (data.credits !== undefined) {
+        console.log('Credits updated from server:', {
+          newCredits: data.credits,
+          timestamp: new Date().toISOString()
+        });
+        
+        // Force refresh user data to reflect new credits
+        await queryClient.invalidateQueries({ queryKey: ['user'] });
+      }
+
       // Complete payment
       const cardElement = elements.getElement(CardElement);
       if (!cardElement) {
