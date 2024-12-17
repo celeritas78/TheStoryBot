@@ -1,0 +1,23 @@
+Fetching user data...
+Console.js:61 User data received: Objectactive: trueavatarUrl: nullbio: nullchildPhotoUrl: "/images/40e1c54a-b75c-4858-90a2-4d11250e2f5e.jpeg"createdAt: "2024-12-16T11:48:22.725Z"displayName: nullemail: "sandeep@asterial.in"emailVerified: trueid: 1lastLoginAt: nullprovider: "local"providerId: nullresetToken: nullresetTokenExpiry: nullstoryCredits: 0updatedAt: "2024-12-16T13:41:13.459Z"verificationToken: nullverificationTokenExpiry: null[[Prototype]]: Object
+Console.js:61 Processed user data: Objectemail: "sandeep@asterial.in"id: 1timestamp: "2024-12-17T07:17:45.982Z"[[Prototype]]: Object
+2Console.js:61 Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+Mt.forEach.n.<computed> @ Console.js:61Understand this warningAI
+ Removing unpermitted intrinsics
+ Removing unpermitted intrinsics
+lockdown-install.js:1 Removing unpermitted intrinsics
+ Removing unpermitted intrinsics
+lockdown-install.js:1 Removing unpermitted intrinsics
+Console.js:61 Creating payment intent: Objectamount: 1000credits: 10customer: city: "Pune"country: "IN"line1: "C1401 Vallonia Bavdhan"name: "Sandeep Khomne"postal_code: "411021"state: "MH"[[Prototype]]: Objecttimestamp: "2024-12-17T07:18:27.137Z"[[Prototype]]: Object
+Console.js:61 Payment intent response: Objectdata: {clientSecret: 'pi_3QWv31SBc9gulaWv0u47E59g_secret_pj3hFNB02RFEtAnkZ9mQtY9w8'}ok: truestatus: 200timestamp: "2024-12-17T07:18:27.991Z"[[Prototype]]: Object
+Console.js:61 Confirming card payment... ObjecthasClientSecret: truetimestamp: "2024-12-17T07:18:27.991Z"[[Prototype]]: Object
+Console.js:61 Payment succeeded: ObjectpaymentIntentId: "pi_3QWv31SBc9gulaWv0u47E59g"status: "succeeded"timestamp: "2024-12-17T07:18:30.941Z"[[Prototype]]: Object
+Console.js:61 Refreshing user data... Objecttimestamp: "2024-12-17T07:18:30.943Z"[[Prototype]]: Object
+Console.js:61 Fetching user data...
+Console.js:61 User data received: Objectactive: trueavatarUrl: nullbio: nullchildPhotoUrl: "/images/40e1c54a-b75c-4858-90a2-4d11250e2f5e.jpeg"createdAt: "2024-12-16T11:48:22.725Z"displayName: nullemail: "sandeep@asterial.in"emailVerified: trueid: 1lastLoginAt: nullprovider: "local"providerId: nullresetToken: nullresetTokenExpiry: nullstoryCredits: 0updatedAt: "2024-12-16T13:41:13.459Z"verificationToken: nullverificationTokenExpiry: null[[Prototype]]: Object
+Console.js:61 Processed user data: Objectemail: "sandeep@asterial.in"id: 1timestamp: "2024-12-17T07:18:31.530Z"[[Prototype]]: Object
+Console.js:61 Fetching user data...
+Console.js:61 User data received: Objectactive: trueavatarUrl: nullbio: nullchildPhotoUrl: "/images/40e1c54a-b75c-4858-90a2-4d11250e2f5e.jpeg"createdAt: "2024-12-16T11:48:22.725Z"displayName: nullemail: "sandeep@asterial.in"emailVerified: trueid: 1lastLoginAt: nullprovider: "local"providerId: nullresetToken: nullresetTokenExpiry: nullstoryCredits: 0updatedAt: "2024-12-16T13:41:13.459Z"verificationToken: nullverificationTokenExpiry: null[[Prototype]]: Object
+Console.js:61 Processed user data: Objectemail: "sandeep@asterial.in"id: 1timestamp: "2024-12-17T07:18:31.819Z"[[Prototype]]: Object
+Console.js:61 User data refresh completed Objecttimestamp: "2024-12-17T07:18:31.819Z"[[Prototype]]: Object
+545Chrome is moving towards a new experience that allows users to choose to browse without third-party cookies.
