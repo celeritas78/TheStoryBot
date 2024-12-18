@@ -60,6 +60,15 @@ const registrationSchema = z.object({
   displayName: z.string().min(2, "Display name too short").max(255, "Display name too long"),
 });
 
+// Extend the Express Request type to include rawBody and originalUrl
+declare module 'express-serve-static-core' {
+  interface Request {
+    rawBody?: Buffer;
+    originalUrl?: string;
+  }
+}
+
+
 export function setupRoutes(app: express.Application) {
   // Configure multer for handling file uploads
   const upload = multer({
@@ -743,22 +752,23 @@ export function setupRoutes(app: express.Application) {
   // Stripe webhook endpoint must come before any body parsers
   app.post('/api/stripe-webhook', 
     express.raw({type: 'application/json', verify: (req, res, buf) => {
+      console.log("Verifying Stripe webhook request...");
       if (req.originalUrl === '/api/stripe-webhook') {
+        console.log("Setting rawBody...");
         req.rawBody = buf;
       }
     }}),
-    async (req, res) => {
-      const sig = req.headers['stripe-signature'];
+    async (req: express.Request & {rawBody?: Buffer; originalUrl?: string}, res: express.Response) => {
+      const sig = req.headers['stripe-signature'] as string | undefined;
       const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-
-      // Enhanced request logging
-      console.log('Production webhook received:', {
+      
+      console.log('Webhook validation:', {
         hasSignature: !!sig,
         hasSecret: !!webhookSecret,
-        bodyType: typeof req.body,
-        isBuffer: Buffer.isBuffer(req.body),
-        contentType: req.headers['content-type'],
-        timestamp: new Date().toISOString()
+        body: typeof req.body,
+        bodyIsBuffer: Buffer.isBuffer(req.body),
+        timestamp: new Date().toISOString(),
+        originalUrl: req.originalUrl
       });
 
       if (!webhookSecret || !sig) {
@@ -776,7 +786,7 @@ export function setupRoutes(app: express.Application) {
       
       try {
         event = stripe.webhooks.constructEvent(
-          req.body,
+          req.rawBody!,
           sig,
           webhookSecret
         );
@@ -797,6 +807,12 @@ export function setupRoutes(app: express.Application) {
       }
 
       try {
+        console.log('Processing webhook event:', {
+          eventType: event.type,
+          eventId: event.id,
+          timestamp: new Date().toISOString()
+        });
+
         switch (event.type) {
           case 'checkout.session.completed': {
             const session = event.data.object as Stripe.Checkout.Session;
