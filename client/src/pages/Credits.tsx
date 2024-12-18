@@ -8,6 +8,16 @@ const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/7sIcO0aiG8D09I46oC';
 
 export default function Credits() {
   const { user } = useUser();
+  const [showSuccess, setShowSuccess] = React.useState(false);
+
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('payment_success') === 'true') {
+      setShowSuccess(true);
+      // Clean up URL
+      window.history.replaceState({}, '', '/credits');
+    }
+  }, []);
 
   const handlePurchaseClick = () => {
     // Open Stripe Payment Link in a new window
@@ -25,6 +35,12 @@ export default function Credits() {
             </p>
           </header>
 
+          {showSuccess && (
+            <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
+              <strong className="font-bold">Payment Successful! </strong>
+              <span className="block sm:inline">Your credits have been updated.</span>
+            </div>
+          )}
           <div className="bg-white rounded-lg shadow-lg p-8 mb-8">
             <div className="flex justify-between items-center mb-6">
               <div>

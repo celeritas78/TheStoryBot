@@ -133,7 +133,7 @@ export default function PurchaseCreditsModal({ isOpen, onClose }: PurchaseCredit
               },
             },
           },
-          return_url: window.location.origin + '/credits',
+          return_url: `${window.location.origin}/credits?payment_success=true`,
         }
       );
 
