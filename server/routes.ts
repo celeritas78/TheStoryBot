@@ -740,9 +740,13 @@ export function setupRoutes(app: express.Application) {
     }
   });
 
-  // Production Stripe webhook endpoint with enhanced security and comprehensive handling
+  // Stripe webhook endpoint must come before any body parsers
   app.post('/api/stripe-webhook', 
-    express.raw({type: 'application/json'}),
+    express.raw({type: 'application/json', verify: (req, res, buf) => {
+      if (req.originalUrl === '/api/stripe-webhook') {
+        req.rawBody = buf;
+      }
+    }}),
     async (req, res) => {
       const sig = req.headers['stripe-signature'];
       const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
