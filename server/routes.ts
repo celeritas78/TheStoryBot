@@ -29,6 +29,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2024-11-20.acacia',
   typescript: true,
   telemetry: false, // Disable telemetry in production
+  maxNetworkRetries: 3, // Add retry logic for better reliability
 });
 
 // Add CSP middleware for Stripe
