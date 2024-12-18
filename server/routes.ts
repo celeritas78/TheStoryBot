@@ -26,7 +26,7 @@ import Stripe from 'stripe';
 
 // Initialize Stripe with better error handling and logging
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2023-08-16',
+  apiVersion: '2024-11-20.acacia',
   typescript: true,
   telemetry: false, // Disable telemetry in production
   maxNetworkRetries: 3, // Add retry logic for better reliability
