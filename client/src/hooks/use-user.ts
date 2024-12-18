@@ -195,6 +195,7 @@ export function useUser() {
     user,
     isLoading,
     error,
+    refetch: queryClient.refetchQueries,
     login: loginMutation.mutateAsync,
     logout: logoutMutation.mutateAsync,
     register: registerMutation.mutateAsync,
