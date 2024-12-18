@@ -761,13 +761,16 @@ export function setupRoutes(app: express.Application) {
         timestamp: new Date().toISOString()
       });
 
-      // Store raw body for signature verification
-      req.rawBody = Buffer.from(JSON.stringify(req.body));
+      // Store raw body directly without modification
+      req.rawBody = req.body;
       
-      console.log('Raw body prepared:', {
+      console.log('Raw body details:', {
         hasBody: !!req.rawBody,
         bodyLength: req.rawBody?.length,
-        timestamp: new Date().toISOString()
+        bodyType: typeof req.rawBody,
+        isBuffer: Buffer.isBuffer(req.rawBody),
+        timestamp: new Date().toISOString(),
+        snippet: Buffer.isBuffer(req.rawBody) ? req.rawBody.toString().substring(0, 100) : 'Not a buffer'
       });
       
       next();
@@ -803,23 +806,34 @@ export function setupRoutes(app: express.Application) {
       let event: Stripe.Event;
       
       try {
-        // Log Stripe configuration
-        console.log('Stripe configuration:', {
-          hasSecretKey: !!process.env.STRIPE_SECRET_KEY,
-          apiVersion: '2024-11-20.acacia',
-          hasWebhookSecret: !!process.env.STRIPE_WEBHOOK_SECRET,
+        // Enhanced logging for debugging
+        console.log('Webhook verification attempt:', {
+          hasRawBody: !!req.rawBody,
+          rawBodyLength: req.rawBody?.length,
+          signatureHeader: sig?.substring(0, 20) + '...',
+          hasWebhookSecret: !!webhookSecret,
+          contentType: req.headers['content-type'],
           timestamp: new Date().toISOString()
         });
 
+        // Double-check raw body integrity
+        if (!req.rawBody || !Buffer.isBuffer(req.rawBody)) {
+          throw new Error('Missing or invalid raw body');
+        }
+
+        // Construct and verify the event
         event = stripe.webhooks.constructEvent(
-          req.rawBody!,
-          sig,
+          req.rawBody,
+          sig!,
           webhookSecret
         );
         
-        console.log('Webhook signature verified:', {
-          eventType: event.type,
-          eventId: event.id,
+        console.log('Webhook event constructed:', {
+          id: event.id,
+          type: event.type,
+          apiVersion: event.api_version,
+          account: event.account || 'none',
+          created: new Date(event.created * 1000).toISOString(),
           timestamp: new Date().toISOString()
         });
       } catch (err) {
