@@ -60,11 +60,10 @@ const registrationSchema = z.object({
   displayName: z.string().min(2, "Display name too short").max(255, "Display name too long"),
 });
 
-// Extend the Express Request type to include rawBody and originalUrl
+// Extend the Express Request type to include rawBody
 declare module 'express-serve-static-core' {
   interface Request {
     rawBody?: Buffer;
-    originalUrl?: string;
   }
 }
 
@@ -768,7 +767,7 @@ export function setupRoutes(app: express.Application) {
         body: typeof req.body,
         bodyIsBuffer: Buffer.isBuffer(req.body),
         timestamp: new Date().toISOString(),
-        originalUrl: req.originalUrl
+        originalUrl: req.url
       });
 
       if (!webhookSecret || !sig) {
