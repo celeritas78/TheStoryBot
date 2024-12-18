@@ -19,14 +19,16 @@ export default function Credits() {
       // Clean up URL
       window.history.replaceState({}, '', '/credits');
       // Refresh user data to get updated credits
-      refetch();
+      refetch?.().catch(console.error);
     }
   }, [refetch]);
 
   // Poll for credit updates
   React.useEffect(() => {
+    if (!refetch) return;
+    
     const interval = setInterval(() => {
-      refetch();
+      refetch().catch(console.error);
     }, 5000); // Check every 5 seconds
     
     return () => clearInterval(interval);
