@@ -751,14 +751,14 @@ export function setupRoutes(app: express.Application) {
 
   // Stripe webhook endpoint must come before any body parsers
   app.post('/api/stripe-webhook', 
-    express.raw({type: 'application/json', verify: (req, res, buf) => {
+    express.raw({type: 'application/json', verify: (req: any, res, buf) => {
       console.log("Verifying Stripe webhook request...");
-      if (req.originalUrl === '/api/stripe-webhook') {
+      if (req.url === '/api/stripe-webhook') {
         console.log("Setting rawBody...");
         req.rawBody = buf;
       }
     }}),
-    async (req: express.Request & {rawBody?: Buffer; originalUrl?: string}, res: express.Response) => {
+    async (req: express.Request, res: express.Response) => {
       const sig = req.headers['stripe-signature'] as string | undefined;
       const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
       
