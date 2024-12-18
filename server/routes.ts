@@ -751,24 +751,24 @@ export function setupRoutes(app: express.Application) {
   // Stripe webhook endpoint must come before any body parsers
   app.post('/api/stripe-webhook', 
     express.raw({type: 'application/json'}),
-    (req, res, next) => {
+    async (req, res, next) => {
       const sig = req.headers['stripe-signature'];
+      const rawBody = req.body;
+
       console.log('Webhook request received:', {
         signature: sig,
         contentType: req.headers['content-type'],
-        bodyLength: req.body?.length,
-        isBuffer: Buffer.isBuffer(req.body),
+        bodyLength: rawBody?.length,
+        isBuffer: Buffer.isBuffer(rawBody),
         timestamp: new Date().toISOString()
       });
 
-      // Use the raw body directly from the request
-      req.rawBody = req.body;
-      
-      if (!Buffer.isBuffer(req.rawBody)) {
+      if (!Buffer.isBuffer(rawBody)) {
         console.error('Invalid request body format');
         return res.status(400).json({ error: 'Invalid request body format' });
       }
-      
+
+      req.rawBody = rawBody;
       next();
     },
     async (req: express.Request, res: express.Response) => {

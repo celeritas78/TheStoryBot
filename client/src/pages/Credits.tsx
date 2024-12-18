@@ -10,14 +10,27 @@ export default function Credits() {
   const { user } = useUser();
   const [showSuccess, setShowSuccess] = React.useState(false);
 
+  const { refetch } = useUser();
+
   React.useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('payment_success') === 'true') {
       setShowSuccess(true);
       // Clean up URL
       window.history.replaceState({}, '', '/credits');
+      // Refresh user data to get updated credits
+      refetch();
     }
-  }, []);
+  }, [refetch]);
+
+  // Poll for credit updates
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      refetch();
+    }, 5000); // Check every 5 seconds
+    
+    return () => clearInterval(interval);
+  }, [refetch]);
 
   const handlePurchaseClick = () => {
     // Open Stripe Payment Link in a new window
