@@ -750,23 +750,28 @@ export function setupRoutes(app: express.Application) {
 
   // Stripe webhook endpoint must come before any body parsers
   app.post('/api/stripe-webhook', 
-    express.raw({type: 'application/json', verify: (req: any, res, buf) => {
+    express.raw({type: 'application/json'}),
+    (req, res, next) => {
+      // Log the full request details for debugging
       console.log('Webhook request received:', {
         url: req.url,
         method: req.method,
         host: req.headers.host,
-        timestamp: new Date().toISOString(),
-        environment: process.env.NODE_ENV || 'development'
-      });
-      
-      // Always set rawBody for webhook requests
-      req.rawBody = buf;
-      console.log('Raw body set:', {
-        hasBody: !!buf,
-        bodyLength: buf?.length,
+        headers: req.headers,
         timestamp: new Date().toISOString()
       });
-    }}),
+
+      // Store raw body for signature verification
+      req.rawBody = Buffer.from(JSON.stringify(req.body));
+      
+      console.log('Raw body prepared:', {
+        hasBody: !!req.rawBody,
+        bodyLength: req.rawBody?.length,
+        timestamp: new Date().toISOString()
+      });
+      
+      next();
+    },
     async (req: express.Request, res: express.Response) => {
       const sig = req.headers['stripe-signature'] as string | undefined;
       const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -776,10 +781,11 @@ export function setupRoutes(app: express.Application) {
         hasSecret: !!webhookSecret,
         body: typeof req.body,
         bodyIsBuffer: Buffer.isBuffer(req.body),
+        bodyString: req.rawBody?.toString().substring(0, 100) + '...',
         timestamp: new Date().toISOString(),
         url: req.url,
         host: req.headers.host,
-        origin: req.headers.origin,
+        headers: req.headers,
         environment: process.env.NODE_ENV || 'development'
       });
 
