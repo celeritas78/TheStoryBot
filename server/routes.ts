@@ -752,26 +752,22 @@ export function setupRoutes(app: express.Application) {
   app.post('/api/stripe-webhook', 
     express.raw({type: 'application/json'}),
     (req, res, next) => {
-      // Log the full request details for debugging
+      const sig = req.headers['stripe-signature'];
       console.log('Webhook request received:', {
-        url: req.url,
-        method: req.method,
-        host: req.headers.host,
-        headers: req.headers,
+        signature: sig,
+        contentType: req.headers['content-type'],
+        bodyLength: req.body?.length,
+        isBuffer: Buffer.isBuffer(req.body),
         timestamp: new Date().toISOString()
       });
 
-      // Store raw body directly without modification
+      // Use the raw body directly from the request
       req.rawBody = req.body;
       
-      console.log('Raw body details:', {
-        hasBody: !!req.rawBody,
-        bodyLength: req.rawBody?.length,
-        bodyType: typeof req.rawBody,
-        isBuffer: Buffer.isBuffer(req.rawBody),
-        timestamp: new Date().toISOString(),
-        snippet: Buffer.isBuffer(req.rawBody) ? req.rawBody.toString().substring(0, 100) : 'Not a buffer'
-      });
+      if (!Buffer.isBuffer(req.rawBody)) {
+        console.error('Invalid request body format');
+        return res.status(400).json({ error: 'Invalid request body format' });
+      }
       
       next();
     },
