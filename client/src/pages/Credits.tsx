@@ -1,52 +1,18 @@
-import React, { useState } from 'react';
-import { loadStripe } from '@stripe/stripe-js';
-import { Elements } from '@stripe/react-stripe-js';
+import React from 'react';
 import { Title } from "@/components/ui/title";
 import { useUser } from '@/hooks/use-user';
-import PurchaseCreditsModal from '@/components/PurchaseCreditsModal';
 import { Button } from '@/components/ui/button';
 
-// Initialize Stripe with publishable key
-const STRIPE_PUBLISHABLE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
-
-console.log('Stripe initialization:', {
-  hasKey: !!STRIPE_PUBLISHABLE_KEY,
-  keyPrefix: STRIPE_PUBLISHABLE_KEY?.substring(0, 7),
-  environment: import.meta.env.MODE,
-  isDevelopment: import.meta.env.DEV,
-  timestamp: new Date().toISOString()
-});
-
-const stripePromise = loadStripe(STRIPE_PUBLISHABLE_KEY);
-
-// Log error if Stripe key is missing (only in development)
-if (!STRIPE_PUBLISHABLE_KEY) {
-  console.error('Stripe Error: Missing publishable key', {
-    environment: import.meta.env.MODE,
-    isDevelopment: import.meta.env.DEV,
-    envVars: {
-      hasStripeKey: !!import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY,
-    },
-    timestamp: new Date().toISOString()
-  });
-}
-
-// Add debug logs for stripe promise
-stripePromise.then(stripe => {
-  console.log('Stripe loaded:', {
-    isLoaded: !!stripe,
-    timestamp: new Date().toISOString()
-  });
-}).catch(error => {
-  console.error('Stripe loading error:', {
-    error: error.message,
-    timestamp: new Date().toISOString()
-  });
-});
+// Stripe Payment Link URL
+const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/7sIcO0aiG8D09I46oC';
 
 export default function Credits() {
-  const [showPurchaseModal, setShowPurchaseModal] = useState(false);
   const { user } = useUser();
+
+  const handlePurchaseClick = () => {
+    // Open Stripe Payment Link in a new window
+    window.open(STRIPE_PAYMENT_LINK, '_blank');
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-purple-50 to-purple-100 p-8">
@@ -66,7 +32,7 @@ export default function Credits() {
                 <p className="text-gray-600">You have {user?.storyCredits || 0} credits remaining</p>
               </div>
               <Button
-                onClick={() => setShowPurchaseModal(true)}
+                onClick={handlePurchaseClick}
                 className="bg-gradient-to-r from-purple-600 to-pink-600 text-white"
               >
                 Purchase Credits
@@ -85,15 +51,6 @@ export default function Credits() {
           </div>
         </div>
       </div>
-
-      {showPurchaseModal && (
-        <Elements stripe={stripePromise}>
-          <PurchaseCreditsModal
-            isOpen={showPurchaseModal}
-            onClose={() => setShowPurchaseModal(false)}
-          />
-        </Elements>
-      )}
     </div>
   );
 }

@@ -753,123 +753,90 @@ export function setupRoutes(app: express.Application) {
         bodyType: typeof req.body,
         isBuffer: Buffer.isBuffer(req.body),
         contentType: req.headers['content-type'],
-        stripeIdempotencyKey: req.headers['stripe-idempotency-key'],
-        method: req.method,
-        path: req.path,
         timestamp: new Date().toISOString()
       });
 
-      // Validate webhook configuration
       if (!webhookSecret || !sig) {
-        console.error('Production webhook configuration error:', {
+        console.error('Webhook configuration error:', {
           hasSecret: !!webhookSecret,
           hasSignature: !!sig,
           timestamp: new Date().toISOString()
         });
         return res.status(400).json({ 
-          error: !webhookSecret ? 'Missing webhook secret' : 'Missing signature',
-          details: 'Please ensure webhook is properly configured'
+          error: !webhookSecret ? 'Missing webhook secret' : 'Missing signature'
         });
       }
 
       let event: Stripe.Event;
       
       try {
-        // Parse and verify webhook signature
         event = stripe.webhooks.constructEvent(
           req.body,
-          Array.isArray(sig) ? sig[0] : sig,
+          sig,
           webhookSecret
         );
         
-        console.log('Production webhook signature verified:', {
+        console.log('Webhook signature verified:', {
           eventType: event.type,
           eventId: event.id,
           timestamp: new Date().toISOString()
         });
       } catch (err) {
-        // Enhanced error logging for signature verification failures
-        console.error('Production webhook signature verification failed:', {
+        console.error('Webhook signature verification failed:', {
           error: err instanceof Error ? err.message : 'Unknown error',
-          signature: Array.isArray(sig) ? sig[0]?.substring(0, 10) : sig?.substring(0, 10),
-          timestamp: new Date().toISOString(),
-          headers: {
-            ...req.headers,
-            authorization: undefined // Don't log auth headers
-          }
+          timestamp: new Date().toISOString()
         });
         return res.status(400).json({
-          error: 'Webhook signature verification failed',
-          details: err instanceof Error ? err.message : 'Unknown error'
+          error: 'Webhook signature verification failed'
         });
       }
 
-      // Process different event types with enhanced error handling and logging
       try {
         switch (event.type) {
-          case 'payment_intent.created': {
-            const paymentIntent = event.data.object as Stripe.PaymentIntent;
-            console.log('Payment intent created:', {
-              paymentIntentId: paymentIntent.id,
-              metadata: paymentIntent.metadata,
-              amount: paymentIntent.amount,
-              currency: paymentIntent.currency,
-              timestamp: new Date().toISOString()
-            });
-            return res.json({ received: true, type: event.type });
-          }
-
-          case 'payment_intent.succeeded': {
-            const paymentIntent = event.data.object as Stripe.PaymentIntent;
-            const { userId, credits, currentCredits } = paymentIntent.metadata || {};
-
-            console.log('Processing production payment success:', {
-              paymentIntentId: paymentIntent.id,
-              userId,
-              credits,
-              currentCredits,
-              amount: paymentIntent.amount,
+          case 'checkout.session.completed': {
+            const session = event.data.object as Stripe.Checkout.Session;
+            console.log('Checkout session completed:', {
+              sessionId: session.id,
+              customerId: session.customer,
+              amount: session.amount_total,
               timestamp: new Date().toISOString()
             });
 
-            if (!userId || !credits) {
-              throw new Error('Missing required payment metadata');
+            // Get the customer email from the session
+            const customerEmail = session.customer_details?.email;
+            if (!customerEmail) {
+              throw new Error('Customer email not found in session');
             }
 
-            const userIdNum = Number(userId);
-            const creditsNum = Number(credits);
+            // Find user by email
+            const [user] = await db
+              .select()
+              .from(users)
+              .where(eq(users.email, customerEmail))
+              .limit(1);
 
-            if (isNaN(userIdNum) || isNaN(creditsNum)) {
-              throw new Error('Invalid payment metadata values');
+            if (!user) {
+              throw new Error(`User with email ${customerEmail} not found`);
             }
-            
+
+            // Calculate credits based on amount paid (100 cents = $1 = 1 credit)
+            const creditsToAdd = Math.floor((session.amount_total || 0) / 100);
+
             const result = await db.transaction(async (tx) => {
               // Lock the user record for update
-              const [user] = await tx
+              const [userToUpdate] = await tx
                 .select()
                 .from(users)
-                .where(eq(users.id, userIdNum))
+                .where(eq(users.id, user.id))
                 .limit(1)
                 .for('update');
 
-              if (!user) {
-                throw new Error(`User ${userIdNum} not found`);
+              if (!userToUpdate) {
+                throw new Error(`User ${user.id} not found during update`);
               }
 
-              const storedCredits = user.storyCredits || 0;
-              const newTotal = storedCredits + creditsNum;
-
-              // Verify we haven't already processed this payment
-              if (currentCredits && Number(currentCredits) !== storedCredits) {
-                console.warn('Potential duplicate payment detected:', {
-                  paymentIntentId: paymentIntent.id,
-                  userId: userIdNum,
-                  storedCredits,
-                  metadataCredits: currentCredits,
-                  timestamp: new Date().toISOString()
-                });
-                // Still proceed with the update as Stripe ensures idempotency
-              }
+              const currentCredits = userToUpdate.storyCredits || 0;
+              const newTotal = currentCredits + creditsToAdd;
 
               // Update credits with retry mechanism
               let retryCount = 0;
@@ -884,7 +851,7 @@ export function setupRoutes(app: express.Application) {
                       storyCredits: newTotal,
                       updatedAt: new Date()
                     })
-                    .where(eq(users.id, userIdNum))
+                    .where(eq(users.id, user.id))
                     .returning();
                   break;
                 } catch (error) {
@@ -899,10 +866,10 @@ export function setupRoutes(app: express.Application) {
               }
 
               console.log('Credits updated successfully:', {
-                paymentIntentId: paymentIntent.id,
-                userId: userIdNum,
-                oldCredits: storedCredits,
+                userId: user.id,
+                oldCredits: currentCredits,
                 newCredits: updatedUser.storyCredits,
+                sessionId: session.id,
                 timestamp: new Date().toISOString()
               });
 
@@ -914,47 +881,6 @@ export function setupRoutes(app: express.Application) {
               type: event.type,
               credits: result.storyCredits
             });
-          }
-
-          case 'payment_intent.payment_failed': {
-            const paymentIntent = event.data.object as Stripe.PaymentIntent;
-            console.error('Payment failed:', {
-              paymentIntentId: paymentIntent.id,
-              error: paymentIntent.last_payment_error,
-              metadata: paymentIntent.metadata,
-              amount: paymentIntent.amount,
-              currency: paymentIntent.currency,
-              timestamp: new Date().toISOString()
-            });
-            return res.json({ received: true, type: event.type });
-          }
-
-          case 'charge.dispute.created': {
-            const dispute = event.data.object as Stripe.Dispute;
-            console.error('Dispute created:', {
-              disputeId: dispute.id,
-              paymentIntent: dispute.payment_intent,
-              amount: dispute.amount,
-              currency: dispute.currency,
-              reason: dispute.reason,
-              status: dispute.status,
-              timestamp: new Date().toISOString()
-            });
-            return res.json({ received: true, type: event.type });
-          }
-
-          case 'charge.refunded': {
-            const charge = event.data.object as Stripe.Charge;
-            console.log('Charge refunded:', {
-              chargeId: charge.id,
-              paymentIntent: charge.payment_intent,
-              amount: charge.amount,
-              amountRefunded: charge.amount_refunded,
-              currency: charge.currency,
-              reason: charge.refunds?.data[0]?.reason,
-              timestamp: new Date().toISOString()
-            });
-            return res.json({ received: true, type: event.type });
           }
 
           default:
