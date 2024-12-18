@@ -4,7 +4,7 @@ import { Request as ExpressRequest } from 'express';
 declare global {
   namespace Express {
     interface Request {
-      rawBody: Buffer;
+      rawBody: Buffer | any;
       isAuthenticated: () => boolean;
       user?: any;
       logout: (callback: (err?: Error) => void) => void;
