@@ -751,11 +751,21 @@ export function setupRoutes(app: express.Application) {
   // Stripe webhook endpoint must come before any body parsers
   app.post('/api/stripe-webhook', 
     express.raw({type: 'application/json', verify: (req: any, res, buf) => {
-      console.log("Verifying Stripe webhook request...");
-      if (req.url === '/api/stripe-webhook') {
-        console.log("Setting rawBody...");
-        req.rawBody = buf;
-      }
+      console.log('Webhook request received:', {
+        url: req.url,
+        method: req.method,
+        host: req.headers.host,
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV || 'development'
+      });
+      
+      // Always set rawBody for webhook requests
+      req.rawBody = buf;
+      console.log('Raw body set:', {
+        hasBody: !!buf,
+        bodyLength: buf?.length,
+        timestamp: new Date().toISOString()
+      });
     }}),
     async (req: express.Request, res: express.Response) => {
       const sig = req.headers['stripe-signature'] as string | undefined;
@@ -767,7 +777,10 @@ export function setupRoutes(app: express.Application) {
         body: typeof req.body,
         bodyIsBuffer: Buffer.isBuffer(req.body),
         timestamp: new Date().toISOString(),
-        originalUrl: req.url
+        url: req.url,
+        host: req.headers.host,
+        origin: req.headers.origin,
+        environment: process.env.NODE_ENV || 'development'
       });
 
       if (!webhookSecret || !sig) {
@@ -784,6 +797,14 @@ export function setupRoutes(app: express.Application) {
       let event: Stripe.Event;
       
       try {
+        // Log Stripe configuration
+        console.log('Stripe configuration:', {
+          hasSecretKey: !!process.env.STRIPE_SECRET_KEY,
+          apiVersion: '2024-11-20.acacia',
+          hasWebhookSecret: !!process.env.STRIPE_WEBHOOK_SECRET,
+          timestamp: new Date().toISOString()
+        });
+
         event = stripe.webhooks.constructEvent(
           req.rawBody!,
           sig,
@@ -796,12 +817,16 @@ export function setupRoutes(app: express.Application) {
           timestamp: new Date().toISOString()
         });
       } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Unknown error';
         console.error('Webhook signature verification failed:', {
-          error: err instanceof Error ? err.message : 'Unknown error',
+          error: errorMessage,
+          signature: sig,
+          rawBody: req.rawBody?.toString().substring(0, 100) + '...',
           timestamp: new Date().toISOString()
         });
         return res.status(400).json({
-          error: 'Webhook signature verification failed'
+          error: 'Webhook signature verification failed',
+          details: process.env.NODE_ENV === 'development' ? errorMessage : undefined
         });
       }
 
@@ -815,18 +840,30 @@ export function setupRoutes(app: express.Application) {
         switch (event.type) {
           case 'checkout.session.completed': {
             const session = event.data.object as Stripe.Checkout.Session;
-            console.log('Checkout session completed:', {
+            console.log('Processing checkout session:', {
               sessionId: session.id,
               customerId: session.customer,
               amount: session.amount_total,
+              customerEmail: session.customer_details?.email,
+              environment: process.env.NODE_ENV,
               timestamp: new Date().toISOString()
             });
 
             // Get the customer email from the session
             const customerEmail = session.customer_details?.email;
             if (!customerEmail) {
+              console.error('Customer email missing from session:', {
+                sessionId: session.id,
+                customerDetails: session.customer_details,
+                timestamp: new Date().toISOString()
+              });
               throw new Error('Customer email not found in session');
             }
+
+            console.log('Looking up user by email:', {
+              email: customerEmail,
+              timestamp: new Date().toISOString()
+            });
 
             // Find user by email
             const [user] = await db
@@ -836,13 +873,35 @@ export function setupRoutes(app: express.Application) {
               .limit(1);
 
             if (!user) {
+              console.error('User not found for checkout session:', {
+                email: customerEmail,
+                sessionId: session.id,
+                timestamp: new Date().toISOString()
+              });
               throw new Error(`User with email ${customerEmail} not found`);
             }
 
+            console.log('User found:', {
+              userId: user.id,
+              currentCredits: user.storyCredits,
+              timestamp: new Date().toISOString()
+            });
+
             // Calculate credits based on amount paid (100 cents = $1 = 1 credit)
             const creditsToAdd = Math.floor((session.amount_total || 0) / 100);
+            console.log('Calculating credits to add:', {
+              amountPaid: session.amount_total,
+              creditsToAdd,
+              timestamp: new Date().toISOString()
+            });
 
             const result = await db.transaction(async (tx) => {
+              console.log('Starting credit update transaction:', {
+                userId: user.id,
+                sessionId: session.id,
+                timestamp: new Date().toISOString()
+              });
+
               // Lock the user record for update
               const [userToUpdate] = await tx
                 .select()
@@ -852,11 +911,25 @@ export function setupRoutes(app: express.Application) {
                 .for('update');
 
               if (!userToUpdate) {
+                console.error('User not found during transaction:', {
+                  userId: user.id,
+                  sessionId: session.id,
+                  timestamp: new Date().toISOString()
+                });
                 throw new Error(`User ${user.id} not found during update`);
               }
 
               const currentCredits = userToUpdate.storyCredits || 0;
               const newTotal = currentCredits + creditsToAdd;
+
+              console.log('Updating user credits:', {
+                userId: user.id,
+                currentCredits,
+                creditsToAdd,
+                newTotal,
+                sessionId: session.id,
+                timestamp: new Date().toISOString()
+              });
 
               // Update credits with retry mechanism
               let retryCount = 0;
@@ -865,6 +938,12 @@ export function setupRoutes(app: express.Application) {
 
               while (retryCount < maxRetries) {
                 try {
+                  console.log(`Attempt ${retryCount + 1} to update credits:`, {
+                    userId: user.id,
+                    sessionId: session.id,
+                    timestamp: new Date().toISOString()
+                  });
+
                   [updatedUser] = await tx
                     .update(users)
                     .set({
@@ -876,12 +955,31 @@ export function setupRoutes(app: express.Application) {
                   break;
                 } catch (error) {
                   retryCount++;
-                  if (retryCount === maxRetries) throw error;
+                  console.error(`Update attempt ${retryCount} failed:`, {
+                    error: error instanceof Error ? error.message : 'Unknown error',
+                    userId: user.id,
+                    sessionId: session.id,
+                    timestamp: new Date().toISOString()
+                  });
+                  
+                  if (retryCount === maxRetries) {
+                    console.error('Max retries reached, failing transaction:', {
+                      userId: user.id,
+                      sessionId: session.id,
+                      timestamp: new Date().toISOString()
+                    });
+                    throw error;
+                  }
                   await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
                 }
               }
 
               if (!updatedUser) {
+                console.error('Failed to update user credits:', {
+                  userId: user.id,
+                  sessionId: session.id,
+                  timestamp: new Date().toISOString()
+                });
                 throw new Error('Failed to update user credits');
               }
 
@@ -890,6 +988,7 @@ export function setupRoutes(app: express.Application) {
                 oldCredits: currentCredits,
                 newCredits: updatedUser.storyCredits,
                 sessionId: session.id,
+                environment: process.env.NODE_ENV,
                 timestamp: new Date().toISOString()
               });
 
