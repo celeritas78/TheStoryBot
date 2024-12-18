@@ -1,0 +1,88 @@
+2024-12-18 17:06:05.74
+c3f7914c
+User
+apiVersion: '2024-11-20.acacia',
+2024-12-18 17:06:05.74
+c3f7914c
+User
+hasWebhookSecret: true,
+2024-12-18 17:06:05.74
+c3f7914c
+User
+timestamp: '2024-12-18T11:36:05.746Z'
+2024-12-18 17:06:05.74
+c3f7914c
+User
+}
+2024-12-18 17:06:05.74
+c3f7914c
+User
+Webhook signature verification failed: {
+2024-12-18 17:06:05.74
+c3f7914c
+User
+error: 'No signatures found matching the expected signature for payload. Are you passing the raw request body you received from Stripe? \n' +
+2024-12-18 17:06:05.74
+c3f7914c
+User
+' If a webhook request is being forwarded by a third-party tool, ensure that the exact request body, including JSON formatting and new line style, is preserved.\n' +
+2024-12-18 17:06:05.74
+c3f7914c
+User
+'\n' +
+2024-12-18 17:06:05.74
+c3f7914c
+User
+'Learn more about webhook signing and explore webhook integration examples for various frameworks at https://docs.stripe.com/webhooks/signature\n',
+2024-12-18 17:06:05.74
+c3f7914c
+User
+signature: 't=1734521765,v1=ccc014b0f54c82a51e40d3c27197ac0be055e31f9f6aec124b901140c075fb60',
+2024-12-18 17:06:05.74
+c3f7914c
+User
+rawBody: '{"id":"evt_3QXLXpSBc9gulaWv1oGFJ0ru","object":"event","api_version":"2024-11-20.acacia","created":17...',
+2024-12-18 17:06:05.74
+c3f7914c
+User
+timestamp: '2024-12-18T11:36:05.747Z'
+2024-12-18 17:06:05.74
+c3f7914c
+User
+}
+2024-12-18 17:06:36.05
+c3f7914c
+User
+Webhook signature verification failed: {
+2024-12-18 17:06:36.05
+c3f7914c
+User
+error: 'No signatures found matching the expected signature for payload. Are you passing the raw request body you received from Stripe? \n' +
+2024-12-18 17:06:36.05
+c3f7914c
+User
+' If a webhook request is being forwarded by a third-party tool, ensure that the exact request body, including JSON formatting and new line style, is preserved.\n' +
+2024-12-18 17:06:36.05
+c3f7914c
+User
+'\n' +
+2024-12-18 17:06:36.05
+c3f7914c
+User
+'Learn more about webhook signing and explore webhook integration examples for various frameworks at https://docs.stripe.com/webhooks/signature\n',
+2024-12-18 17:06:36.05
+c3f7914c
+User
+signature: 't=1734521795,v1=ba2063f4da75cac26f8ef7f7c89e3cf35369f148d63c0e05ef9d06d2b0438811',
+2024-12-18 17:06:36.05
+c3f7914c
+User
+rawBody: '{"id":"evt_1QXLYNSBc9gulaWv2ntEDr5Y","object":"event","api_version":"2024-11-20.acacia","created":17...',
+2024-12-18 17:06:36.05
+c3f7914c
+User
+timestamp: '2024-12-18T11:36:36.059Z'
+2024-12-18 17:06:36.05
+c3f7914c
+User
+}
