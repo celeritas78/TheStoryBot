@@ -5,8 +5,11 @@ declare global {
   namespace Express {
     interface Request {
       rawBody?: Buffer;
-      isAuthenticated?: () => boolean;
+      isAuthenticated: () => boolean;
       user?: any;
+      logout: (callback: (err?: Error) => void) => void;
+      login: (user: any, callback: (err?: Error) => void) => void;
+      session: any;
     }
   }
 }

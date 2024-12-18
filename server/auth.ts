@@ -484,7 +484,7 @@ export function setupAuth(app: Express) {
   // Delete account route
   app.delete("/api/account", async (req, res) => {
     try {
-      if (!req.isAuthenticated() || !req.user) {
+      if (!req.isAuthenticated?.() || !req.user) {
         return res.status(401).json({ message: "Not logged in" });
       }
 
