@@ -40,16 +40,19 @@ process.on('unhandledRejection', (reason, promise) => {
 const app = express();
 const server = createServer(app);
 
-// Basic middleware setup
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-
 // Disable express logging and headers
 app.set('debug', false);
 app.disable('verbose');
 app.disable('log');
 app.set('env', 'production');
 app.disable('x-powered-by');
+
+// Set up routes that need raw bodies (like Stripe webhook) before body parsers
+setupRoutes(app);
+
+// Basic middleware setup - after raw body routes
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 
 // Define paths at the top level
 const rootPath = process.cwd();

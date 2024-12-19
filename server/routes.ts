@@ -60,14 +60,29 @@ export function setupRoutes(app: express.Application) {
   // Stripe webhook handler
   const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
   
-  app.post('/api/stripe-webhook', express.raw({type: 'application/json'}), async (req: Request, res: Response) => {
+  // Configure raw body handling for Stripe webhook
+  const stripeWebhookMiddleware = express.raw({type: 'application/json'});
+  
+  app.post('/api/stripe-webhook', stripeWebhookMiddleware, async (req: WebhookRequest, res: Response) => {
     let event: Stripe.Event;
 
     try {
+      const rawBody = req.body;
+      if (!Buffer.isBuffer(rawBody)) {
+        console.error('Invalid request body format:', {
+          bodyType: typeof rawBody,
+          isBuffer: Buffer.isBuffer(rawBody),
+          contentType: req.headers['content-type'],
+          timestamp: new Date().toISOString()
+        });
+        return res.status(400).json({ error: 'Invalid request body format' });
+      }
+
       console.log('Webhook request received:', {
         signature: req.headers['stripe-signature'],
-        rawBody: req.body instanceof Buffer,
-        bodyLength: req.body?.length,
+        rawBody: true,
+        bodyLength: rawBody.length,
+        contentType: req.headers['content-type'],
         timestamp: new Date().toISOString()
       });
 
