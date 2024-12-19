@@ -18,48 +18,7 @@ export default function ProfilePage() {
   const [isUploading, setIsUploading] = useState(false);
   const { toast } = useToast();
 
-  const handleChildPhotoUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    setIsUploading(true);
-    const formData = new FormData();
-    formData.append('photo', file);
-
-    try {
-      const response = await fetch('/api/profile/child-photo', {
-        method: 'POST',
-        body: formData,
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to upload photo');
-      }
-
-      const { childPhotoUrl, user } = await response.json();
-      
-      // Invalidate and refetch user data to ensure we have the latest
-      await queryClient.invalidateQueries({ queryKey: ['user'] });
-      
-      // Update the React Query cache with the new user data
-      queryClient.setQueryData(['user'], () => user);
-
-      toast({
-        title: "Photo uploaded",
-        description: "Your child's photo has been uploaded successfully.",
-      });
-    } catch (error) {
-      console.error('Photo upload error:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to upload photo",
-      });
-    } finally {
-      setIsUploading(false);
-    }
-  }, [queryClient, toast]);
+  // Photo upload functionality removed as part of Stripe payment system removal
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -154,52 +113,7 @@ export default function ProfilePage() {
                 disabled={isSaving}
               />
             </div>
-            <div className="space-y-2">
-              <Label>Child's Photo</Label>
-              <div className="flex flex-col items-center gap-4 p-4 border-2 border-dashed rounded-lg">
-                <div className="relative w-32 h-32 rounded-full overflow-hidden">
-                  {user.childPhotoUrl ? (
-                    <OptimizedImage
-                      src={user.childPhotoUrl}
-                      alt="Child's photo"
-                      className="object-cover w-full h-full"
-                      priority={true}
-                      fallbackSrc="/assets/avatar-placeholder.png"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gray-100 rounded-full flex items-center justify-center">
-                      <Upload className="w-8 h-8 text-gray-400" />
-                    </div>
-                  )}
-                </div>
-                <div className="flex items-center gap-2">
-                  <Input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleChildPhotoUpload}
-                    disabled={isUploading}
-                    className="hidden"
-                    id="child-photo-upload"
-                  />
-                  <Label
-                    htmlFor="child-photo-upload"
-                    className="cursor-pointer inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
-                  >
-                    {isUploading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Uploading...
-                      </>
-                    ) : (
-                      <>
-                        <Upload className="mr-2 h-4 w-4" />
-                        {user.childPhotoUrl ? "Change Photo" : "Upload Photo"}
-                      </>
-                    )}
-                  </Label>
-                </div>
-              </div>
-            </div>
+            {/* Child photo upload section removed as part of Stripe payment system removal */}
             <Button type="submit" disabled={isSaving}>
               {isSaving ? (
                 <>

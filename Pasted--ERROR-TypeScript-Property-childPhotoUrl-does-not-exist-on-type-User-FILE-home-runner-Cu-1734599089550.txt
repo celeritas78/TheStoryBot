@@ -1,0 +1,181 @@
+
+
+ ERROR(TypeScript)  Property 'childPhotoUrl' does not exist on type 'User'.
+ FILE  /home/runner/CustomBedtimeStories-v2/client/src/pages/ProfilePage.tsx:161:25
+
+    159 |               <div className="flex flex-col items-center gap-4 p-4 border-2 border-dashed rounded-lg">
+    160 |                 <div className="relative w-32 h-32 rounded-full overflow-hidden">
+  > 161 |                   {user.childPhotoUrl ? (
+        |                         ^^^^^^^^^^^^^
+    162 |                     <OptimizedImage
+    163 |                       src={user.childPhotoUrl}
+    164 |                       alt="Child's photo"
+
+ ERROR(TypeScript)  Property 'childPhotoUrl' does not exist on type 'User'.
+ FILE  /home/runner/CustomBedtimeStories-v2/client/src/pages/ProfilePage.tsx:163:33
+
+    161 |                   {user.childPhotoUrl ? (
+    162 |                     <OptimizedImage
+  > 163 |                       src={user.childPhotoUrl}
+        |                                 ^^^^^^^^^^^^^
+    164 |                       alt="Child's photo"
+    165 |                       className="object-cover w-full h-full"
+    166 |                       priority={true}
+
+ ERROR(TypeScript)  Property 'childPhotoUrl' does not exist on type 'User'.
+ FILE  /home/runner/CustomBedtimeStories-v2/client/src/pages/ProfilePage.tsx:196:31
+
+    194 |                       <>
+    195 |                         <Upload className="mr-2 h-4 w-4" />
+  > 196 |                         {user.childPhotoUrl ? "Change Photo" : "Upload Photo"}
+        |                               ^^^^^^^^^^^^^
+    197 |                       </>
+    198 |                     )}
+    199 |                   </Label>
+
+[TypeScript] Found 3 errors. Watching for file changes.
+Login successful: { id: 1, email: 'sandeep@asterial.in' }
+2024-12-19T09:04:14.350Z [DEBUG] images serving file: {
+  url: '/40e1c54a-b75c-4858-90a2-4d11250e2f5e.jpeg',
+  filename: '40e1c54a-b75c-4858-90a2-4d11250e2f5e.jpeg',
+  filePath: '/home/runner/CustomBedtimeStories-v2/public/images/40e1c54a-b75c-4858-90a2-4d11250e2f5e.jpeg',
+  contentType: 'image/jpeg',
+  size: 147915,
+  headers: [Object: null prototype] {
+    'access-control-allow-origin': '*',
+    'access-control-allow-methods': 'GET, HEAD, OPTIONS',
+    'access-control-allow-headers': 'Origin, X-Requested-With, Content-Type, Accept, Range',
+    'x-content-type-options': 'nosniff',
+    'content-type': 'image/jpeg',
+    'content-length': 147915,
+    'accept-ranges': 'bytes',
+    'cache-control': 'public, max-age=31536000'
+  }
+}
+2024-12-19T09:04:20.215Z [DEBUG] images serving file: {
+  url: '/12b7e44b-c136-46bc-95e9-597e7a55277f.png',
+  filename: '12b7e44b-c136-46bc-95e9-597e7a55277f.png',
+  filePath: '/home/runner/CustomBedtimeStories-v2/public/images/12b7e44b-c136-46bc-95e9-597e7a55277f.png',
+  contentType: 'image/png',
+  size: 2768716,
+  headers: [Object: null prototype] {
+    'access-control-allow-origin': '*',
+    'access-control-allow-methods': 'GET, HEAD, OPTIONS',
+    'access-control-allow-headers': 'Origin, X-Requested-With, Content-Type, Accept, Range',
+    'x-content-type-options': 'nosniff',
+    'content-type': 'image/png',
+    'content-length': 2768716,
+    'accept-ranges': 'bytes',
+    'cache-control': 'public, max-age=31536000'
+  }
+}
+2024-12-19T09:04:20.241Z [ERROR] images file not found: {
+  url: '/6ec6c6da-b350-46af-b7c8-8255dbd5fee4.png',
+  filename: '6ec6c6da-b350-46af-b7c8-8255dbd5fee4.png',
+  filePath: '/home/runner/CustomBedtimeStories-v2/public/images/6ec6c6da-b350-46af-b7c8-8255dbd5fee4.png'
+}
+2024-12-19T09:04:20.525Z [DEBUG] images serving file: {
+  url: '/57d09f3f-fca4-4b33-bb3e-d3ca6600c540.png',
+  filename: '57d09f3f-fca4-4b33-bb3e-d3ca6600c540.png',
+  filePath: '/home/runner/CustomBedtimeStories-v2/public/images/57d09f3f-fca4-4b33-bb3e-d3ca6600c540.png',
+  contentType: 'image/png',
+  size: 3492809,
+  headers: [Object: null prototype] {
+    'access-control-allow-origin': '*',
+    'access-control-allow-methods': 'GET, HEAD, OPTIONS',
+    'access-control-allow-headers': 'Origin, X-Requested-With, Content-Type, Accept, Range',
+    'x-content-type-options': 'nosniff',
+    'content-type': 'image/png',
+    'content-length': 3492809,
+    'accept-ranges': 'bytes',
+    'cache-control': 'public, max-age=31536000'
+  }
+}
+2024-12-19T09:04:20.733Z [DEBUG] images serving file: {
+  url: '/132d6edb-e528-4412-a9a5-380bd1ec8189.png',
+  filename: '132d6edb-e528-4412-a9a5-380bd1ec8189.png',
+  filePath: '/home/runner/CustomBedtimeStories-v2/public/images/132d6edb-e528-4412-a9a5-380bd1ec8189.png',
+  contentType: 'image/png',
+  size: 3730281,
+  headers: [Object: null prototype] {
+    'access-control-allow-origin': '*',
+    'access-control-allow-methods': 'GET, HEAD, OPTIONS',
+    'access-control-allow-headers': 'Origin, X-Requested-With, Content-Type, Accept, Range',
+    'x-content-type-options': 'nosniff',
+    'content-type': 'image/png',
+    'content-length': 3730281,
+    'accept-ranges': 'bytes',
+    'cache-control': 'public, max-age=31536000'
+  }
+}
+2024-12-19T09:04:21.061Z [DEBUG] images serving file: {
+  url: '/656afa7f-de35-458c-8154-ceff8e53e9b9.png',
+  filename: '656afa7f-de35-458c-8154-ceff8e53e9b9.png',
+  filePath: '/home/runner/CustomBedtimeStories-v2/public/images/656afa7f-de35-458c-8154-ceff8e53e9b9.png',
+  contentType: 'image/png',
+  size: 3097334,
+  headers: [Object: null prototype] {
+    'access-control-allow-origin': '*',
+    'access-control-allow-methods': 'GET, HEAD, OPTIONS',
+    'access-control-allow-headers': 'Origin, X-Requested-With, Content-Type, Accept, Range',
+    'x-content-type-options': 'nosniff',
+    'content-type': 'image/png',
+    'content-length': 3097334,
+    'accept-ranges': 'bytes',
+    'cache-control': 'public, max-age=31536000'
+  }
+}
+2024-12-19T09:04:21.257Z [DEBUG] images serving file: {
+  url: '/a2938c37-998e-45cc-bad0-14b3672f2fb6.png',
+  filename: 'a2938c37-998e-45cc-bad0-14b3672f2fb6.png',
+  filePath: '/home/runner/CustomBedtimeStories-v2/public/images/a2938c37-998e-45cc-bad0-14b3672f2fb6.png',
+  contentType: 'image/png',
+  size: 3018216,
+  headers: [Object: null prototype] {
+    'access-control-allow-origin': '*',
+    'access-control-allow-methods': 'GET, HEAD, OPTIONS',
+    'access-control-allow-headers': 'Origin, X-Requested-With, Content-Type, Accept, Range',
+    'x-content-type-options': 'nosniff',
+    'content-type': 'image/png',
+    'content-length': 3018216,
+    'accept-ranges': 'bytes',
+    'cache-control': 'public, max-age=31536000'
+  }
+}
+2024-12-19T09:04:21.526Z [DEBUG] images serving file: {
+  url: '/06534ef3-3d67-4bdb-b741-4f2706ca0e25.png',
+  filename: '06534ef3-3d67-4bdb-b741-4f2706ca0e25.png',
+  filePath: '/home/runner/CustomBedtimeStories-v2/public/images/06534ef3-3d67-4bdb-b741-4f2706ca0e25.png',
+  contentType: 'image/png',
+  size: 3269172,
+  headers: [Object: null prototype] {
+    'access-control-allow-origin': '*',
+    'access-control-allow-methods': 'GET, HEAD, OPTIONS',
+    'access-control-allow-headers': 'Origin, X-Requested-With, Content-Type, Accept, Range',
+    'x-content-type-options': 'nosniff',
+    'content-type': 'image/png',
+    'content-length': 3269172,
+    'accept-ranges': 'bytes',
+    'cache-control': 'public, max-age=31536000'
+  }
+}
+2024-12-19T09:04:21.591Z [ERROR] images file not found: {
+  url: '/4fab0dc8-302a-47a0-ad12-cc5ef3788d3a.png',
+  filename: '4fab0dc8-302a-47a0-ad12-cc5ef3788d3a.png',
+  filePath: '/home/runner/CustomBedtimeStories-v2/public/images/4fab0dc8-302a-47a0-ad12-cc5ef3788d3a.png'
+}
+2024-12-19T09:04:21.613Z [ERROR] images file not found: {
+  url: '/2eaf18df-3746-477b-80c8-2987418aa717.png',
+  filename: '2eaf18df-3746-477b-80c8-2987418aa717.png',
+  filePath: '/home/runner/CustomBedtimeStories-v2/public/images/2eaf18df-3746-477b-80c8-2987418aa717.png'
+}
+2024-12-19T09:04:21.621Z [ERROR] images file not found: {
+  url: '/fdb434f8-cf89-44f2-bde6-f4e66ea1e81a.png',
+  filename: 'fdb434f8-cf89-44f2-bde6-f4e66ea1e81a.png',
+  filePath: '/home/runner/CustomBedtimeStories-v2/public/images/fdb434f8-cf89-44f2-bde6-f4e66ea1e81a.png'
+}
+2024-12-19T09:04:21.628Z [ERROR] images file not found: {
+  url: '/2f7eabc8-42be-4554-8210-cd7b29db2755.png',
+  filename: '2f7eabc8-42be-4554-8210-cd7b29db2755.png',
+  filePath: '/home/runner/CustomBedtimeStories-v2/public/images/2f7eabc8-42be-4554-8210-cd7b29db2755.png'
+}
