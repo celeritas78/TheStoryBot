@@ -60,6 +60,7 @@ const registrationSchema = z.object({
     .regex(/[A-Z]/, "Must contain an uppercase letter")
     .regex(/[a-z]/, "Must contain a lowercase letter")
     .regex(/[0-9]/, "Must contain a number"),
+  displayName: z.string().min(1).max(255)
 });
 
 export function setupAuth(app: Express) {
@@ -132,37 +133,41 @@ export function setupAuth(app: Express) {
     try {
       const result = registrationSchema.safeParse(req.body);
       if (!result.success) {
-        return res.status(400).json({ error: "Validation failed", details: result.error.errors });
+        return res.status(400).json({ 
+          error: "Validation failed", 
+          details: result.error.issues.map(i => i.message).join(", ") 
+        });
       }
 
-      const { email, password } = result.data;
+      const { email, password, displayName } = result.data;
 
+      // Check if user already exists
       const existingUser = await db.select().from(users).where(eq(users.email, email)).limit(1);
       if (existingUser.length > 0) {
         return res.status(409).json({ error: "Email already registered" });
       }
 
+      // Hash the password
       const hashedPassword = await crypto.hash(password);
       const now = new Date();
       const verificationToken = crypto.generateVerificationToken();
-      const verificationTokenExpiry = new Date(now.getTime() + 24 * 60 * 60 * 1000); // 24 hours from now
+      const verificationTokenExpiry = new Date(now.getTime() + 24 * 60 * 60 * 1000); // 24 hours
 
-      console.log('\n=== User Registration ===');
-      console.log('Creating new user with email:', email);
-      console.log('Verification token:', verificationToken);
-      console.log('Token expires:', verificationTokenExpiry);
-      console.log('========================\n');
-
-      // First create the user
-      const [newUser] = await db.insert(users).values({
-        email,
-        password: hashedPassword,
-        emailVerified: false,
-        verificationToken,
-        verificationTokenExpiry,
-        createdAt: now,
-        updatedAt: now,
-      }).returning();
+      // Create the new user
+      const [newUser] = await db
+        .insert(users)
+        .values({
+          email,
+          password: hashedPassword,
+          displayName,
+          emailVerified: false,
+          verificationToken,
+          verificationTokenExpiry,
+          storyCredits: 3, // Default credits for new users
+          createdAt: now,
+          updatedAt: now,
+        })
+        .returning();
 
       // Then try to send the verification email
       try {
@@ -173,13 +178,13 @@ export function setupAuth(app: Express) {
           message: emailSent 
             ? "Registration successful! Please check your email to verify your account." 
             : "Registration successful, but email verification is currently unavailable.",
-          user: { id: newUser.id, email: newUser.email, emailVerified: false }
+          user: { id: newUser.id, email: newUser.email, emailVerified: false, displayName: newUser.displayName }
         });
       } catch (error) {
         console.error('Registration error:', error);
         res.status(201).json({ 
           message: "Registration successful, but email verification is currently unavailable.",
-          user: { id: newUser.id, email: newUser.email, emailVerified: false }
+          user: { id: newUser.id, email: newUser.email, emailVerified: false, displayName: newUser.displayName }
         });
       }
     } catch (error) {
@@ -249,7 +254,8 @@ export function setupAuth(app: Express) {
             user: {
               id: recentlyVerifiedUser.id,
               email: recentlyVerifiedUser.email,
-              emailVerified: true
+              emailVerified: true,
+              displayName: recentlyVerifiedUser.displayName
             }
           });
         }
@@ -272,7 +278,8 @@ export function setupAuth(app: Express) {
           user: {
             id: user.id,
             email: user.email,
-            emailVerified: true
+            emailVerified: true,
+            displayName: user.displayName
           }
         });
       }
@@ -360,7 +367,8 @@ export function setupAuth(app: Express) {
             user: {
               id: updatedUser.id,
               email: updatedUser.email,
-              emailVerified: true
+              emailVerified: true,
+              displayName: updatedUser.displayName
             }
           });
         });

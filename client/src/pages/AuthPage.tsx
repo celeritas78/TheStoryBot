@@ -26,12 +26,16 @@ export default function AuthPage() {
       const email = formData.get("email") as string;
       const password = formData.get("password") as string;
 
-      const action = type === "login" ? login : register;
-      const result = await action(
-        type === "login"
-          ? { email, password } as const
-          : { email, password, displayName: (formData.get("displayName") as string) } as const
-      );
+      let result;
+      if (type === "login") {
+        result = await login({ email, password });
+      } else {
+        result = await register({ 
+          email, 
+          password, 
+          displayName: (formData.get("displayName") as string)
+        });
+      }
 
       if (!result.ok) {
         throw new Error(result.message);

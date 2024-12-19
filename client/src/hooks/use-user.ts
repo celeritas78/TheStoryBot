@@ -8,7 +8,6 @@ export interface User {
   displayName: string | null;
   storyCredits: number;
   avatarUrl: string | null;
-  childPhotoUrl: string | null;
   emailVerified: boolean;
   bio?: string;
 }
@@ -78,7 +77,7 @@ export function useUser() {
   }, [error, setLocation]);
 
   const login = async (data: LoginData): Promise<LoginResponse> => {
-    const response = await fetch("/api/auth/login", {
+    const response = await fetch("/api/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
@@ -115,7 +114,7 @@ export function useUser() {
   };
 
   const logout = async (): Promise<ApiResponse> => {
-    const response = await fetch("/api/auth/logout", {
+    const response = await fetch("/api/logout", {
       method: "POST",
     });
     if (!response.ok) {
