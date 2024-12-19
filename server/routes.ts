@@ -16,10 +16,7 @@ import {
 import { sendErrorResponse } from './utils/error';
 import type { Request, Response, NextFunction } from 'express';
 
-// Custom type for Stripe webhook request
-interface WebhookRequest extends Express.Request {
-  rawBody: Buffer;
-}
+import { saveImageFile } from './services/image-storage';
 import { 
   getAudioFilePath, 
   audioFileExists, 
@@ -35,6 +32,12 @@ import {
   SUPPORTED_IMAGE_FORMATS,
   getMimeType as getImageMimeType 
 } from './services/image-storage';
+
+// Custom type for Stripe webhook request
+interface WebhookRequest extends Request {
+  body: Buffer;
+  rawBody?: Buffer;
+}
 import { MAX_STORIES } from './config';
 
 const registrationSchema = z.object({
@@ -51,23 +54,72 @@ function isAuthenticated(req: Express.Request): req is Express.Request {
 export function setupRoutes(app: express.Application) {
   // Initialize Stripe
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
-    apiVersion: '2024-11-20.acacia',
+    apiVersion: '2024-11-20',
   });
 
   // Stripe webhook handler
-  app.post('/api/stripe-webhook', express.raw({type: 'application/json'}), async (req, res) => {
-    const sig = req.headers['stripe-signature'];
+  const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  
+  app.post('/api/stripe-webhook', express.raw({type: 'application/json'}), async (req: Request, res: Response) => {
+    let event: Stripe.Event;
 
     try {
-      if (!sig) {
-        throw new Error('No Stripe signature found');
+      const sig = req.headers['stripe-signature'];
+      
+      if (!sig || !endpointSecret) {
+        return res.status(400).json({ error: 'Missing signature or endpoint secret' });
       }
 
-      const event = stripe.webhooks.constructEvent(
+      event = stripe.webhooks.constructEvent(
         req.body,
         sig,
-        process.env.STRIPE_WEBHOOK_SECRET as string
+        endpointSecret
       );
+
+      // Handle the event
+      switch (event.type) {
+        case 'checkout.session.completed':
+          const session = event.data.object as Stripe.Checkout.Session;
+          const userId = session.client_reference_id;
+          const amountTotal = session.amount_total;
+          
+          if (!userId || !amountTotal) {
+            throw new Error('Missing user ID or amount in webhook payload');
+          }
+
+          // Calculate credits (1 USD = 1 credit)
+          const credits = Math.floor(amountTotal / 100); // Convert cents to dollars
+
+          // Update user credits and record transaction
+          await db.transaction(async (tx) => {
+            // Add credits to user
+            await tx
+              .update(users)
+              .set({ 
+                storyCredits: sql`story_credits + ${credits}`,
+                updatedAt: new Date()
+              })
+              .where(eq(users.id, parseInt(userId)));
+
+            // Record the transaction
+            await tx
+              .insert(creditTransactions)
+              .values({
+                userId: parseInt(userId),
+                amount: amountTotal,
+                credits,
+                status: 'completed',
+                stripePaymentId: session.payment_intent as string,
+                createdAt: new Date()
+              });
+          });
+          break;
+
+        default:
+          console.log(`Unhandled event type ${event.type}`);
+      }
+
+      res.json({ received: true });
 
       // Handle the event
       switch (event.type) {

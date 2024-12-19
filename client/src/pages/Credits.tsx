@@ -36,7 +36,15 @@ export default function Credits() {
               
               <div className="mt-8 text-center">
                 <Button
-                  onClick={() => window.open('https://buy.stripe.com/7sIcO0aiG8D09I46oC', '_blank')}
+                  onClick={() => {
+                    if (user?.id) {
+                      const stripeUrl = new URL('https://buy.stripe.com/7sIcO0aiG8D09I46oC');
+                      stripeUrl.searchParams.set('client_reference_id', user.id.toString());
+                      window.open(stripeUrl.toString(), '_blank');
+                    } else {
+                      console.error('User ID not found');
+                    }
+                  }}
                   className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all"
                 >
                   Buy Credits
