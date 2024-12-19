@@ -87,6 +87,10 @@ export function setupRoutes(app: express.Application) {
       }
 
       const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ error: 'User ID not found in session' });
+      }
+
       const fileBuffer = req.file.buffer;
       const fileType = req.file.mimetype.split('/')[1] || 'jpeg';
 
@@ -101,7 +105,7 @@ export function setupRoutes(app: express.Application) {
           childPhotoUrl,
           updatedAt: new Date()
         })
-        .where(eq(users.id, userId))
+        .where((users, { eq }) => eq(users.id, userId))
         .returning();
 
       if (!updatedUser) {
@@ -177,11 +181,12 @@ export function setupRoutes(app: express.Application) {
       }
 
       // Check if user has enough credits
-      const [user] = await db
-        .select()
-        .from(users)
-        .where(eq(users.id, userId))
-        .limit(1);
+      const user = await db.query.users.findFirst({
+        where: (users, { eq }) => eq(users.id, userId),
+        columns: {
+          storyCredits: true
+        }
+      });
 
       if (!user) {
         return res.status(404).json({ error: "User not found" });
@@ -577,8 +582,8 @@ export function setupRoutes(app: express.Application) {
     }
   });
 
-  // Credits update endpoint (placeholder for future implementation)
-  app.post('/api/credits/update', async (req, res) => {
+  // Credits info endpoint
+  app.get('/api/credits', async (req, res) => {
     if (!req.isAuthenticated || !req.isAuthenticated()) {
       return res.status(401).json({ error: "Not logged in" });
     }
@@ -589,21 +594,21 @@ export function setupRoutes(app: express.Application) {
     }
 
     try {
-      const [user] = await db
-        .select()
-        .from(users)
-        .where(eq(users.id, userId))
-        .limit(1);
+      const user = await db.query.users.findFirst({
+        where: (users, { eq }) => eq(users.id, userId),
+        columns: {
+          storyCredits: true
+        }
+      });
 
       if (!user) {
         return res.status(404).json({ error: 'User not found' });
       }
 
-      // TODO: Implement new credits system here
       res.json({ credits: user.storyCredits });
     } catch (error) {
-      console.error('Error updating credits:', error);
-      res.status(500).json({ error: 'Failed to update credits' });
+      console.error('Error fetching credits:', error);
+      res.status(500).json({ error: 'Failed to fetch credits' });
     }
   });
 }
