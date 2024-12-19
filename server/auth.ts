@@ -68,15 +68,15 @@ export function setupAuth(app: Express) {
   const MemoryStore = createMemoryStore(session);
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || "default-secret",
-    resave: false,
-    saveUninitialized: false,
+    resave: true, // Changed to true to ensure session is saved
+    saveUninitialized: true, // Changed to true to create session for all requests
     store: new MemoryStore({ 
       checkPeriod: 86400000 // Prune expired entries every 24h
     }),
     name: 'sid',
     rolling: true,
     cookie: {
-      secure: process.env.NODE_ENV === 'production',
+      secure: false, // Set to false for development
       httpOnly: true,
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       path: '/',
@@ -424,16 +424,12 @@ export function setupAuth(app: Express) {
         }
 
         const { password, ...safeUser } = user;
-        const response = { 
-          message: "Login successful", 
-          user: safeUser as SafeUser,
-          isAuthenticated: true
-        };
-
-        // Save user data in session
-        req.session.user = safeUser as SafeUser;
         
-        // Save session before sending response
+        // Explicitly save data in session
+        req.session.user = safeUser;
+        req.session.isAuthenticated = true;
+
+        // Force session save
         req.session.save((err) => {
           if (err) {
             console.error('Session save failed:', err);
@@ -442,8 +438,19 @@ export function setupAuth(app: Express) {
               error: "Failed to save session" 
             });
           }
-          console.log('Login successful:', { id: user.id, email: user.email });
-          res.json(response);
+
+          console.log('Login successful:', { 
+            id: user.id, 
+            email: user.email,
+            sessionId: req.sessionID,
+            sessionData: req.session
+          });
+
+          res.json({ 
+            message: "Login successful", 
+            user: safeUser,
+            isAuthenticated: true
+          });
         });
       });
     })(req, res, next);
@@ -489,6 +496,28 @@ export function setupAuth(app: Express) {
   });
 
   app.get("/api/user", (req, res) => {
+    console.log('User session check:', {
+      isAuthenticated: req.isAuthenticated?.(),
+      hasSession: !!req.session,
+      sessionId: req.sessionID,
+      sessionData: req.session,
+      user: req.user
+    });
+
+    // First check if user is authenticated
+    if (!req.isAuthenticated?.()) {
+      return res.status(401).json({ message: "Not logged in" });
+    }
+    
+    // Then verify we have user data
+    if (!req.user) {
+      return res.status(401).json({ message: "User session invalid" });
+    }
+
+    // Send all user data except password
+    const { password, ...userData } = req.user;
+    return res.json(userData);
+  });
   // Delete account route
   app.delete("/api/account", async (req, res) => {
     try {
@@ -530,16 +559,4 @@ export function setupAuth(app: Express) {
     }
   });
 
-    if (!req.isAuthenticated || !req.isAuthenticated()) {
-      return res.status(401).json({ message: "Not logged in" });
-    }
-    
-    if (!req.user) {
-      return res.status(401).json({ message: "User session invalid" });
-    }
-
-    // Send all user data except password
-    const { password, ...userData } = req.user;
-    return res.json(userData);
-  });
 }
