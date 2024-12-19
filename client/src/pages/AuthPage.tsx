@@ -23,10 +23,13 @@ export default function AuthPage() {
 
     try {
       const formData = new FormData(event.currentTarget);
-      const userData = {
-        email: formData.get("email") as string,
-        password: formData.get("password") as string,
-      };
+      const email = formData.get("email") as string;
+      const password = formData.get("password") as string;
+      const displayName = formData.get("displayName") as string;
+
+      const userData = type === "login" 
+        ? { email, password }
+        : { email, password, displayName };
 
       const action = type === "login" ? login : register;
       const result = await action(userData);
@@ -41,7 +44,7 @@ export default function AuthPage() {
 
       if (type === "login") {
         // Check if email is verified
-        if (result.data?.user && !result.data.user.emailVerified) {
+        if (result.user && !result.user.emailVerified) {
           toast({
             title: "Email not verified",
             description: "Please check your email for the verification link before accessing all features.",
@@ -136,6 +139,16 @@ export default function AuthPage() {
                       id="register-email"
                       name="email"
                       type="email"
+                      required
+                      disabled={isLoading}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="register-displayName">Display Name</Label>
+                    <Input
+                      id="register-displayName"
+                      name="displayName"
+                      type="text"
                       required
                       disabled={isLoading}
                     />
