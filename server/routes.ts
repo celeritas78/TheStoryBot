@@ -54,7 +54,7 @@ function isAuthenticated(req: Express.Request): req is Express.Request {
 export function setupRoutes(app: express.Application) {
   // Initialize Stripe
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
-    apiVersion: '2023-08-16',
+    apiVersion: '2024-12-18.acacia',
   });
 
   // Stripe webhook handler
