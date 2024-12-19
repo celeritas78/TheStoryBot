@@ -25,14 +25,13 @@ export default function AuthPage() {
       const formData = new FormData(event.currentTarget);
       const email = formData.get("email") as string;
       const password = formData.get("password") as string;
-      const displayName = formData.get("displayName") as string;
-
-      const userData = type === "login" 
-        ? { email, password }
-        : { email, password, displayName };
 
       const action = type === "login" ? login : register;
-      const result = await action(userData);
+      const result = await action(
+        type === "login"
+          ? { email, password } as const
+          : { email, password, displayName: (formData.get("displayName") as string) } as const
+      );
 
       if (!result.ok) {
         throw new Error(result.message);
