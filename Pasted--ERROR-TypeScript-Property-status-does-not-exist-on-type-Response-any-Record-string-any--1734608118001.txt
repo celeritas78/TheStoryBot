@@ -1,0 +1,109 @@
+
+ ERROR(TypeScript)  Property 'status' does not exist on type 'Response<any, Record<string, any>>'.
+ FILE  /home/runner/CustomBedtimeStories-v2/server/routes.ts:125:20
+
+    123 |           timestamp: new Date().toISOString()
+    124 |         });
+  > 125 |         return res.status(400).send('Missing signature or endpoint secret');
+        |                    ^^^^^^
+    126 |       }
+    127 |
+    128 |       try {
+
+ ERROR(TypeScript)  Property 'status' does not exist on type 'Response<any, Record<string, any>>'.
+ FILE  /home/runner/CustomBedtimeStories-v2/server/routes.ts:145:20
+
+    143 |           timestamp: new Date().toISOString()
+    144 |         });
+  > 145 |         return res.status(400).send(`Webhook signature verification failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
+        |                    ^^^^^^
+    146 |       }
+    147 |
+    148 |       // Handle the event
+
+ ERROR(TypeScript)  Property 'status' does not exist on type 'Response<any, Record<string, any>>'.
+ FILE  /home/runner/CustomBedtimeStories-v2/server/routes.ts:169:24
+
+    167 |               timestamp: new Date().toISOString()
+    168 |             });
+  > 169 |             return res.status(400).send('Invalid checkout session data');
+        |                        ^^^^^^
+    170 |           }
+    171 |
+    172 |           try {
+
+ ERROR(TypeScript)  Argument of type 'string | null' is not assignable to parameter of type 'string'.
+  Type 'null' is not assignable to type 'string'.
+ FILE  /home/runner/CustomBedtimeStories-v2/server/routes.ts:184:46
+
+    182 |                   updatedAt: new Date()
+    183 |                 })
+  > 184 |                 .where(eq(users.id, parseInt(session.client_reference_id)))
+        |                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    185 |                 .returning({ storyCredits: users.storyCredits });
+    186 |
+    187 |               // Record transaction
+
+ ERROR(TypeScript)  No overload matches this call.
+  Overload 1 of 2, '(value: { status: string | SQL<unknown> | Placeholder<string, any>; userId: number | SQL<unknown> | Placeholder<string, any>; amount: number | SQL<unknown> | Placeholder<...>; credits: number | ... 1 more ... | Placeholder<...>; id?: number | ... 2 more ... | undefined; createdAt?: Date | ... 2 more ... | undefined; stripePaymentId?: string | ... 3 more ... | undefined; }): PgInsertBase<...>', gave the following error.
+    Type 'number | null' is not assignable to type 'number | SQL<unknown> | Placeholder<string, any>'.
+      Type 'null' is not assignable to type 'number | SQL<unknown> | Placeholder<string, any>'.
+  Overload 2 of 2, '(values: { status: string | SQL<unknown> | Placeholder<string, any>; userId: number | SQL<unknown> | Placeholder<string, any>; amount: number | SQL<unknown> | Placeholder<...>; credits: number | ... 1 more ... | Placeholder<...>; id?: number | ... 2 more ... | undefined; createdAt?: Date | ... 2 more ... | undefined; stripePaymentId?: string | ... 3 more ... | undefined; }[]): PgInsertBase<...>', gave the following error.
+    Object literal may only specify known properties, and 'userId' does not exist in type '{ status: string | SQL<unknown> | Placeholder<string, any>; userId: number | SQL<unknown> | Placeholder<string, any>; amount: number | SQL<unknown> | Placeholder<...>; credits: number | ... 1 more ... | Placeholder<...>; id?: number | ... 2 more ... | undefined; createdAt?: Date | ... 2 more ... | undefined; stripeP...'.
+ FILE  /home/runner/CustomBedtimeStories-v2/server/routes.ts:190:18
+
+    188 |               await tx
+    189 |                 .insert(creditTransactions)
+  > 190 |                 .values({
+        |                  ^^^^^^
+    191 |                   userId: parseInt(session.client_reference_id),
+    192 |                   amount: session.amount_total,
+    193 |                   credits,
+
+ ERROR(TypeScript)  Argument of type 'string | null' is not assignable to parameter of type 'string'.
+  Type 'null' is not assignable to type 'string'.
+ FILE  /home/runner/CustomBedtimeStories-v2/server/routes.ts:191:36
+
+    189 |                 .insert(creditTransactions)
+    190 |                 .values({
+  > 191 |                   userId: parseInt(session.client_reference_id),
+        |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    192 |                   amount: session.amount_total,
+    193 |                   credits,
+    194 |                   status: 'completed',
+
+ ERROR(TypeScript)  Property 'status' does not exist on type 'Response<any, Record<string, any>>'.
+ FILE  /home/runner/CustomBedtimeStories-v2/server/routes.ts:213:24
+
+    211 |               timestamp: new Date().toISOString()
+    212 |             });
+  > 213 |             return res.status(500).send('Failed to process payment');
+        |                        ^^^^^^
+    214 |           }
+    215 |           break;
+    216 |
+
+ ERROR(TypeScript)  Property 'send' does not exist on type 'Response<any, Record<string, any>>'.
+ FILE  /home/runner/CustomBedtimeStories-v2/server/routes.ts:222:11
+
+    220 |
+    221 |       // Return a 200 response to acknowledge receipt of the event
+  > 222 |       res.send();
+        |           ^^^^
+    223 |     } catch (err) {
+    224 |       console.error('Webhook processing error:', {
+    225 |         error: err instanceof Error ? err.message : 'Unknown error',
+
+ ERROR(TypeScript)  Property 'status' does not exist on type 'Response<any, Record<string, any>>'.
+ FILE  /home/runner/CustomBedtimeStories-v2/server/routes.ts:228:11
+
+    226 |         timestamp: new Date().toISOString()
+    227 |       });
+  > 228 |       res.status(400).send(`Webhook Error: ${err instanceof Error ? err.message : 'Unknown error'}`);
+        |           ^^^^^^
+    229 |     }
+    230 |   });
+    231 |   // Configure multer for handling file uploads
+
+[TypeScript] Found 9 errors. Watching for file changes.
+Login successful: { id: 1, email: 'sandeep@asterial.in' }

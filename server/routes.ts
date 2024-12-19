@@ -14,7 +14,7 @@ import {
   generateSpeech 
 } from './services/ai';
 import { sendErrorResponse } from './utils/error';
-import type { Request, Response, NextFunction } from 'express';
+import type { Request, Response as ExpressResponse, NextFunction } from 'express';
 
 import { saveImageFile } from './services/image-storage';
 import { 
@@ -100,7 +100,7 @@ export function setupRoutes(app: express.Application) {
   });
   
   // Handle Stripe webhook events with proper request typing
-  app.post('/api/stripe-webhook', express.raw({type: 'application/json'}), async (req: WebhookRequest, res: Response) => {
+  app.post('/api/stripe-webhook', express.raw({type: 'application/json'}), async (req: WebhookRequest, res: ExpressResponse) => {
     let event: Stripe.Event;
 
     try {
@@ -122,7 +122,7 @@ export function setupRoutes(app: express.Application) {
           hasEndpointSecret: !!endpointSecret,
           timestamp: new Date().toISOString()
         });
-        return res.status(400).send('Missing signature or endpoint secret');
+        return res.status(400).json({ error: 'Missing signature or endpoint secret' });
       }
 
       try {
@@ -142,7 +142,7 @@ export function setupRoutes(app: express.Application) {
           error: err instanceof Error ? err.message : 'Unknown error',
           timestamp: new Date().toISOString()
         });
-        return res.status(400).send(`Webhook signature verification failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
+        return res.status(400).json({ error: `Webhook signature verification failed: ${err instanceof Error ? err.message : 'Unknown error'}` });
       }
 
       // Handle the event
@@ -166,7 +166,7 @@ export function setupRoutes(app: express.Application) {
               amount: session.amount_total,
               timestamp: new Date().toISOString()
             });
-            return res.status(400).send('Invalid checkout session data');
+            return res.status(400).json({ error: 'Invalid checkout session data' });
           }
 
           try {
@@ -210,7 +210,7 @@ export function setupRoutes(app: express.Application) {
               sessionId: session.id,
               timestamp: new Date().toISOString()
             });
-            return res.status(500).send('Failed to process payment');
+            return res.status(500).json({ error: 'Failed to process payment' });
           }
           break;
 
@@ -219,13 +219,13 @@ export function setupRoutes(app: express.Application) {
       }
 
       // Return a 200 response to acknowledge receipt of the event
-      res.send();
+      res.status(200).json({ received: true });
     } catch (err) {
       console.error('Webhook processing error:', {
         error: err instanceof Error ? err.message : 'Unknown error',
         timestamp: new Date().toISOString()
       });
-      res.status(400).send(`Webhook Error: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      res.status(400).json({ error: `Webhook Error: ${err instanceof Error ? err.message : 'Unknown error'}` });
     }
   });
   // Configure multer for handling file uploads
