@@ -13,6 +13,11 @@ interface User {
   bio?: string;
 }
 
+interface ApiResponse {
+  ok: boolean;
+  message?: string;
+}
+
 interface LoginData {
   email: string;
   password: string;
@@ -27,6 +32,22 @@ interface ProfileUpdateData {
   bio?: string;
   avatar?: File;
   childPhoto?: File;
+}
+
+interface LoginResponse extends ApiResponse {
+  user?: User;
+}
+
+interface RegisterResponse extends ApiResponse {
+  user?: {
+    id: number;
+    email: string;
+    displayName: string;
+  };
+}
+
+interface ProfileResponse extends ApiResponse {
+  user?: User;
 }
 
 export function useUser() {
@@ -54,43 +75,46 @@ export function useUser() {
     }
   }, [error, setLocation]);
 
-  const login = async (data: LoginData) => {
+  const login = async (data: LoginData): Promise<LoginResponse> => {
     const response = await fetch("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
+    const result = await response.json();
     if (!response.ok) {
-      throw new Error("Login failed");
+      return { ok: false, message: result.error || "Login failed" };
     }
     await queryClient.invalidateQueries({ queryKey: ["user"] });
-    return response.json();
+    return { ok: true, user: result.user };
   };
 
-  const register = async (data: RegisterData) => {
+  const register = async (data: RegisterData): Promise<RegisterResponse> => {
     const response = await fetch("/api/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
+    const result = await response.json();
     if (!response.ok) {
-      throw new Error("Registration failed");
+      return { ok: false, message: result.error || "Registration failed" };
     }
-    return response.json();
+    return { ok: true, user: result.user };
   };
 
-  const logout = async () => {
+  const logout = async (): Promise<ApiResponse> => {
     const response = await fetch("/api/auth/logout", {
       method: "POST",
     });
     if (!response.ok) {
-      throw new Error("Logout failed");
+      return { ok: false, message: "Logout failed" };
     }
     queryClient.clear();
     setLocation("/auth");
+    return { ok: true };
   };
 
-  const updateProfile = async (data: ProfileUpdateData) => {
+  const updateProfile = async (data: ProfileUpdateData): Promise<ProfileResponse> => {
     const formData = new FormData();
     Object.entries(data).forEach(([key, value]) => {
       if (value !== undefined) {
@@ -102,22 +126,25 @@ export function useUser() {
       method: "PUT",
       body: formData,
     });
+    const result = await response.json();
     if (!response.ok) {
-      throw new Error("Profile update failed");
+      return { ok: false, message: result.error || "Profile update failed" };
     }
     await queryClient.invalidateQueries({ queryKey: ["user"] });
-    return response.json();
+    return { ok: true, user: result.user };
   };
 
-  const deleteAccount = async () => {
+  const deleteAccount = async (): Promise<ApiResponse> => {
     const response = await fetch("/api/profile", {
       method: "DELETE",
     });
     if (!response.ok) {
-      throw new Error("Account deletion failed");
+      const result = await response.json();
+      return { ok: false, message: result.error || "Account deletion failed" };
     }
     queryClient.clear();
     setLocation("/auth");
+    return { ok: true };
   };
 
   return {
