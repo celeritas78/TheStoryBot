@@ -67,7 +67,26 @@ export function setupRoutes(app: express.Application) {
     let event: Stripe.Event;
 
     try {
+      // Log all incoming request details
+      console.log('Stripe webhook request details:', {
+        method: req.method,
+        path: req.path,
+        headers: req.headers,
+        timestamp: new Date().toISOString(),
+        query: req.query,
+        params: req.params
+      });
+
       const rawBody = req.body;
+      console.log('Request body details:', {
+        hasBody: !!rawBody,
+        bodyType: typeof rawBody,
+        isBuffer: Buffer.isBuffer(rawBody),
+        bodyLength: rawBody?.length,
+        contentType: req.headers['content-type'],
+        timestamp: new Date().toISOString()
+      });
+
       if (!Buffer.isBuffer(rawBody)) {
         console.error('Invalid request body format:', {
           bodyType: typeof rawBody,
@@ -97,17 +116,39 @@ export function setupRoutes(app: express.Application) {
         return res.status(400).json({ error: 'Missing signature or endpoint secret' });
       }
 
+      // Log environment check
+      console.log('Webhook environment check:', {
+        hasStripeSecret: !!process.env.STRIPE_SECRET_KEY,
+        hasWebhookSecret: !!process.env.STRIPE_WEBHOOK_SECRET,
+        environment: process.env.NODE_ENV,
+        timestamp: new Date().toISOString()
+      });
+
       try {
+        console.log('Attempting to construct webhook event:', {
+          hasSignature: !!sig,
+          signatureTimestamp: sig?.split(',')[0],
+          bodyLength: rawBody.length,
+          timestamp: new Date().toISOString()
+        });
+
         event = stripe.webhooks.constructEvent(
-          req.body,
+          rawBody,
           sig,
           endpointSecret
         );
+
+        console.log('Webhook event constructed successfully:', {
+          eventId: event.id,
+          eventType: event.type,
+          timestamp: new Date().toISOString()
+        });
       } catch (err) {
         console.error('Webhook signature verification failed:', {
           error: err instanceof Error ? err.message : 'Unknown error',
           signature: sig,
-          bodyLength: req.body?.length,
+          bodyLength: rawBody.length,
+          webhookSecret: endpointSecret ? 'Present' : 'Missing',
           timestamp: new Date().toISOString()
         });
         throw err;
