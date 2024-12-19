@@ -1,0 +1,108 @@
+
+
+
+ ERROR(TypeScript)  Property 'logout' does not exist on type '{ user: User | undefined; isLoading: boolean; error: Error | null; }'.
+ FILE  /home/runner/CustomBedtimeStories-v2/client/src/components/Header.tsx:14:17
+
+    12 |
+    13 | export default function Header() {
+  > 14 |   const { user, logout } = useUser();
+       |                 ^^^^^^
+    15 |   const [location] = useLocation();
+    16 |
+    17 |   const handleLogout = async () => {
+
+ ERROR(TypeScript)  Property 'login' does not exist on type '{ user: User | undefined; isLoading: boolean; error: Error | null; }'.
+ FILE  /home/runner/CustomBedtimeStories-v2/client/src/pages/AuthPage.tsx:16:11
+
+    14 |   const [registrationSuccess, setRegistrationSuccess] = useState<string | null>(null);
+    15 |   const { toast } = useToast();
+  > 16 |   const { login, register } = useUser();
+       |           ^^^^^
+    17 |   const [, setLocation] = useLocation();
+    18 |
+    19 |   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>, type: "login" | "register") => {
+
+ ERROR(TypeScript)  Property 'register' does not exist on type '{ user: User | undefined; isLoading: boolean; error: Error | null; }'.
+ FILE  /home/runner/CustomBedtimeStories-v2/client/src/pages/AuthPage.tsx:16:18
+
+    14 |   const [registrationSuccess, setRegistrationSuccess] = useState<string | null>(null);
+    15 |   const { toast } = useToast();
+  > 16 |   const { login, register } = useUser();
+       |                  ^^^^^^^^
+    17 |   const [, setLocation] = useLocation();
+    18 |
+    19 |   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>, type: "login" | "register") => {
+
+ ERROR(TypeScript)  Property 'updateProfile' does not exist on type '{ user: User | undefined; isLoading: boolean; error: Error | null; }'.
+ FILE  /home/runner/CustomBedtimeStories-v2/client/src/pages/ProfilePage.tsx:14:28
+
+    12 |
+    13 | export default function ProfilePage() {
+  > 14 |   const { user, isLoading, updateProfile, deleteAccount } = useUser();
+       |                            ^^^^^^^^^^^^^
+    15 |   const queryClient = useQueryClient();
+    16 |   const [isSaving, setIsSaving] = useState(false);
+    17 |   const [isDeleting, setIsDeleting] = useState(false);
+
+ ERROR(TypeScript)  Property 'deleteAccount' does not exist on type '{ user: User | undefined; isLoading: boolean; error: Error | null; }'.
+ FILE  /home/runner/CustomBedtimeStories-v2/client/src/pages/ProfilePage.tsx:14:43
+
+    12 |
+    13 | export default function ProfilePage() {
+  > 14 |   const { user, isLoading, updateProfile, deleteAccount } = useUser();
+       |                                           ^^^^^^^^^^^^^
+    15 |   const queryClient = useQueryClient();
+    16 |   const [isSaving, setIsSaving] = useState(false);
+    17 |   const [isDeleting, setIsDeleting] = useState(false);
+
+ ERROR(TypeScript)  Property 'bio' does not exist on type 'User'.
+ FILE  /home/runner/CustomBedtimeStories-v2/client/src/pages/ProfilePage.tsx:152:36
+
+    150 |                 id="bio"
+    151 |                 name="bio"
+  > 152 |                 defaultValue={user.bio || ""}
+        |                                    ^^^
+    153 |                 placeholder="Tell us about yourself"
+    154 |                 disabled={isSaving}
+    155 |               />
+
+ ERROR(TypeScript)  No overload matches this call.
+  Overload 1 of 3, '(left: PgColumn<{ name: "id"; tableName: "users"; dataType: "number"; columnType: "PgSerial"; data: number; driverParam: number; notNull: true; hasDefault: true; isPrimaryKey: true; isAutoincrement: false; ... 4 more ...; generated: undefined; }, {}, {}>, right: number | SQLWrapper): SQL<...>', gave the following error.
+    Argument of type 'number | undefined' is not assignable to parameter of type 'number | SQLWrapper'.
+      Type 'undefined' is not assignable to type 'number | SQLWrapper'.
+  Overload 2 of 3, '(left: Aliased<number | undefined>, right: number | SQLWrapper | undefined): SQL<unknown>', gave the following error.
+    Argument of type 'PgColumn<{ name: "id"; tableName: "users"; dataType: "number"; columnType: "PgSerial"; data: number; driverParam: number; notNull: true; hasDefault: true; isPrimaryKey: true; isAutoincrement: false; hasRuntimeDefault: false; enumValues: undefined; baseColumn: never; identity: undefined; generated: undefined; }, {}, ...' is not assignable to parameter of type 'Aliased<number | undefined>'.
+      Type 'PgColumn<{ name: "id"; tableName: "users"; dataType: "number"; columnType: "PgSerial"; data: number; driverParam: number; notNull: true; hasDefault: true; isPrimaryKey: true; isAutoincrement: false; hasRuntimeDefault: false; enumValues: undefined; baseColumn: never; identity: undefined; generated: undefined; }, {}, ...' is missing the following properties from type 'Aliased<number | undefined>': sql, fieldAlias
+  Overload 3 of 3, '(left: never, right: unknown): SQL<unknown>', gave the following error.
+    Argument of type 'PgColumn<{ name: "id"; tableName: "users"; dataType: "number"; columnType: "PgSerial"; data: number; driverParam: number; notNull: true; hasDefault: true; isPrimaryKey: true; isAutoincrement: false; hasRuntimeDefault: false; enumValues: undefined; baseColumn: never; identity: undefined; generated: undefined; }, {}, ...' is not assignable to parameter of type 'never'.
+ FILE  /home/runner/CustomBedtimeStories-v2/server/routes.ts:104:16
+
+    102 |           updatedAt: new Date()
+    103 |         })
+  > 104 |         .where(eq(users.id, userId))
+        |                ^^
+    105 |         .returning();
+    106 |
+    107 |       if (!updatedUser) {
+
+ ERROR(TypeScript)  No overload matches this call.
+  Overload 1 of 3, '(left: PgColumn<{ name: "user_id"; tableName: "stories"; dataType: "number"; columnType: "PgInteger"; data: number; driverParam: string | number; notNull: false; hasDefault: false; isPrimaryKey: false; ... 5 more ...; generated: undefined; }, {}, {}>, right: number | SQLWrapper): SQL<...>', gave the following error.
+    Argument of type 'number | undefined' is not assignable to parameter of type 'number | SQLWrapper'.
+      Type 'undefined' is not assignable to type 'number | SQLWrapper'.
+  Overload 2 of 3, '(left: Aliased<number | undefined>, right: number | SQLWrapper | undefined): SQL<unknown>', gave the following error.
+    Argument of type 'PgColumn<{ name: "user_id"; tableName: "stories"; dataType: "number"; columnType: "PgInteger"; data: number; driverParam: string | number; notNull: false; hasDefault: false; isPrimaryKey: false; isAutoincrement: false; ... 4 more ...; generated: undefined; }, {}, {}>' is not assignable to parameter of type 'Aliased<number | undefined>'.
+      Type 'PgColumn<{ name: "user_id"; tableName: "stories"; dataType: "number"; columnType: "PgInteger"; data: number; driverParam: string | number; notNull: false; hasDefault: false; isPrimaryKey: false; isAutoincrement: false; ... 4 more ...; generated: undefined; }, {}, {}>' is missing the following properties from type 'Aliased<number | undefined>': sql, fieldAlias
+  Overload 3 of 3, '(left: never, right: unknown): SQL<unknown>', gave the following error.
+    Argument of type 'PgColumn<{ name: "user_id"; tableName: "stories"; dataType: "number"; columnType: "PgInteger"; data: number; driverParam: string | number; notNull: false; hasDefault: false; isPrimaryKey: false; isAutoincrement: false; ... 4 more ...; generated: undefined; }, {}, {}>' is not assignable to parameter of type 'never'.
+ FILE  /home/runner/CustomBedtimeStories-v2/server/routes.ts:360:16
+
+    358 |       const userId = req.user?.id;
+    359 |       const userStories = await db.query.stories.findMany({
+  > 360 |         where: eq(stories.userId, userId),
+        |                ^^
+    361 |         with: {
+    362 |           segments: {
+    363 |             where: eq(storySegments.sequence, 1),
+
+[TypeScript] Found 8 errors. Watching for file changes.
