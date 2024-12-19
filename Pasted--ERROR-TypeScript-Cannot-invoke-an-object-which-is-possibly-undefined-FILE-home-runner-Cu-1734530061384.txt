@@ -1,0 +1,59 @@
+
+
+
+ ERROR(TypeScript)  Cannot invoke an object which is possibly 'undefined'.
+ FILE  /home/runner/CustomBedtimeStories-v2/server/auth.ts:455:10
+
+    453 |   // Update profile route
+    454 |   app.put("/api/profile", (req, res) => {
+  > 455 |     if (!req.isAuthenticated() || !req.user) {
+        |          ^^^^^^^^^^^^^^^^^^^
+    456 |       return res.status(401).json({ message: "Not logged in" });
+    457 |     }
+    458 |
+
+ ERROR(TypeScript)  'req.isAuthenticated' is possibly 'undefined'.
+ FILE  /home/runner/CustomBedtimeStories-v2/server/auth.ts:455:10
+
+    453 |   // Update profile route
+    454 |   app.put("/api/profile", (req, res) => {
+  > 455 |     if (!req.isAuthenticated() || !req.user) {
+        |          ^^^^^^^^^^^^^^^^^^^
+    456 |       return res.status(401).json({ message: "Not logged in" });
+    457 |     }
+    458 |
+
+ ERROR(TypeScript)  Cannot invoke an object which is possibly 'undefined'.
+ FILE  /home/runner/CustomBedtimeStories-v2/server/auth.ts:487:12
+
+    485 |   app.delete("/api/account", async (req, res) => {
+    486 |     try {
+  > 487 |       if (!req.isAuthenticated() || !req.user) {
+        |            ^^^^^^^^^^^^^^^^^^^
+    488 |         return res.status(401).json({ message: "Not logged in" });
+    489 |       }
+    490 |
+
+ ERROR(TypeScript)  'req.isAuthenticated' is possibly 'undefined'.
+ FILE  /home/runner/CustomBedtimeStories-v2/server/auth.ts:487:12
+
+    485 |   app.delete("/api/account", async (req, res) => {
+    486 |     try {
+  > 487 |       if (!req.isAuthenticated() || !req.user) {
+        |            ^^^^^^^^^^^^^^^^^^^
+    488 |         return res.status(401).json({ message: "Not logged in" });
+    489 |       }
+    490 |
+
+ ERROR(TypeScript)  Property 'rawBody' does not exist on type 'IncomingMessage'.
+ FILE  /home/runner/CustomBedtimeStories-v2/server/routes.ts:754:11
+
+    752 |   app.post('/api/stripe-webhook', 
+    753 |     express.raw({type: 'application/json', verify: (req, res, buf) => {
+  > 754 |       req.rawBody = buf;
+        |           ^^^^^^^
+    755 |     }}),
+    756 |     async (req, res, next) => {
+    757 |       const sig = req.headers['stripe-signature'];
+
+[TypeScript] Found 5 errors. Watching for file changes.
