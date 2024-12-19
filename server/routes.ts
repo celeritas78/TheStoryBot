@@ -64,55 +64,133 @@ export function setupRoutes(app: express.Application) {
     let event: Stripe.Event;
 
     try {
+      console.log('Webhook request received:', {
+        signature: req.headers['stripe-signature'],
+        rawBody: req.body instanceof Buffer,
+        bodyLength: req.body?.length,
+        timestamp: new Date().toISOString()
+      });
+
       const sig = req.headers['stripe-signature'];
       
       if (!sig || !endpointSecret) {
+        console.error('Webhook validation failed:', {
+          hasSignature: !!sig,
+          hasEndpointSecret: !!endpointSecret,
+          timestamp: new Date().toISOString()
+        });
         return res.status(400).json({ error: 'Missing signature or endpoint secret' });
       }
 
-      event = stripe.webhooks.constructEvent(
-        req.body,
-        sig,
-        endpointSecret
-      );
+      try {
+        event = stripe.webhooks.constructEvent(
+          req.body,
+          sig,
+          endpointSecret
+        );
+      } catch (err) {
+        console.error('Webhook signature verification failed:', {
+          error: err instanceof Error ? err.message : 'Unknown error',
+          signature: sig,
+          bodyLength: req.body?.length,
+          timestamp: new Date().toISOString()
+        });
+        throw err;
+      }
 
       // Handle the event
       switch (event.type) {
         case 'checkout.session.completed':
+          console.log('Processing checkout.session.completed event:', {
+            eventId: event.id,
+            timestamp: new Date().toISOString()
+          });
+          
           const session = event.data.object as Stripe.Checkout.Session;
           const userId = session.client_reference_id;
           const amountTotal = session.amount_total;
           
+          console.log('Session details:', {
+            sessionId: session.id,
+            userId,
+            amountTotal,
+            paymentStatus: session.payment_status,
+            timestamp: new Date().toISOString()
+          });
+          
           if (!userId || !amountTotal) {
-            throw new Error('Missing user ID or amount in webhook payload');
+            const error = new Error('Missing user ID or amount in webhook payload');
+            console.error('Invalid webhook payload:', {
+              error: error.message,
+              userId,
+              amountTotal,
+              sessionId: session.id,
+              timestamp: new Date().toISOString()
+            });
+            throw error;
           }
 
           // Calculate credits (1 USD = 1 credit)
           const credits = Math.floor(amountTotal / 100); // Convert cents to dollars
-
-          // Update user credits and record transaction
-          await db.transaction(async (tx) => {
-            // Add credits to user
-            await tx
-              .update(users)
-              .set({ 
-                storyCredits: sql`story_credits + ${credits}`,
-                updatedAt: new Date()
-              })
-              .where(eq(users.id, parseInt(userId)));
-
-            // Record the transaction
-            await tx
-              .insert(creditTransactions)
-              .values({
-                userId: parseInt(userId),
-                amount: amountTotal,
-                credits,
-                status: 'completed',
-                stripePaymentId: session.payment_intent as string,
-                createdAt: new Date()
-              });
+          
+          console.log('Updating credits:', {
+            userId,
+            credits,
+            originalAmount: amountTotal,
+            timestamp: new Date().toISOString()
           });
+
+          try {
+            // Update user credits and record transaction
+            await db.transaction(async (tx) => {
+              // Add credits to user
+              const [updatedUser] = await tx
+                .update(users)
+                .set({ 
+                  storyCredits: sql`story_credits + ${credits}`,
+                  updatedAt: new Date()
+                })
+                .where(eq(users.id, parseInt(userId)))
+                .returning({ storyCredits: users.storyCredits });
+
+              console.log('Credits updated successfully:', {
+                userId,
+                newCreditBalance: updatedUser.storyCredits,
+                addedCredits: credits,
+                timestamp: new Date().toISOString()
+              });
+
+              // Record the transaction
+              const [transaction] = await tx
+                .insert(creditTransactions)
+                .values({
+                  userId: parseInt(userId),
+                  amount: amountTotal,
+                  credits,
+                  status: 'completed',
+                  stripePaymentId: session.payment_intent as string,
+                  createdAt: new Date()
+                })
+                .returning();
+
+              console.log('Transaction recorded:', {
+                transactionId: transaction.id,
+                userId,
+                credits,
+                stripePaymentId: session.payment_intent,
+                timestamp: new Date().toISOString()
+              });
+            });
+          } catch (error) {
+            console.error('Failed to update credits:', {
+              error: error instanceof Error ? error.message : 'Unknown error',
+              userId,
+              credits,
+              sessionId: session.id,
+              timestamp: new Date().toISOString()
+            });
+            throw error;
+          }
           break;
 
         default:
