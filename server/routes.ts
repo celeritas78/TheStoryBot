@@ -86,8 +86,8 @@ export function setupRoutes(app: express.Application) {
   // Configure raw body handling for Stripe webhook with proper typing
   const stripeWebhookMiddleware = express.raw({
     type: 'application/json',
-    verify: ((req: WebhookRequest, _res: express.Response, buf: Buffer) => {
-      req.rawBody = buf;
+    verify: ((req: express.Request, _res: express.Response, buf: Buffer) => {
+      (req as WebhookRequest).rawBody = buf;
       console.log('Raw body captured in middleware:', {
         hasBody: !!buf,
         bodyLength: buf?.length,
@@ -96,7 +96,7 @@ export function setupRoutes(app: express.Application) {
         path: req.path,
         method: req.method
       });
-    }) as VerifyCallback
+    })
   });
   
   // Handle Stripe webhook events with proper request typing
