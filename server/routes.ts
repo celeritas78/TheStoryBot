@@ -33,33 +33,14 @@ import {
   getMimeType as getImageMimeType 
 } from './services/image-storage';
 
-// Custom type for Stripe webhook request with proper type extensions
-interface WebhookRequest extends Express.Request {
+// Custom type for Stripe webhook request
+interface WebhookRequest extends express.Request {
   rawBody?: Buffer;
   headers: {
     'stripe-signature'?: string;
     'content-type'?: string;
     [key: string]: string | string[] | undefined;
   };
-  body: Buffer;
-  query: Record<string, string>;
-  params: Record<string, string>;
-  path: string;
-  method: string;
-}
-
-// Type for the verify callback in express.raw middleware
-interface VerifyCallback {
-  (req: WebhookRequest, res: ExpressResponse, buf: Buffer): void;
-}
-
-// Extend Express Request type globally
-declare global {
-  namespace Express {
-    interface Request {
-      rawBody?: Buffer;
-    }
-  }
 }
 
 // Type guard for client reference ID
@@ -86,33 +67,14 @@ function isAuthenticated(req: Express.Request): req is Express.Request {
 
 export function setupRoutes(app: express.Application) {
   // Initialize Stripe
-  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
-    apiVersion: '2024-12-18.acacia',
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+    apiVersion: '2023-08-16',
   });
 
-  // Stripe webhook handler
   const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
-  
-  // Configure raw body handling for Stripe webhook with proper typing
-  const stripeWebhookMiddleware = express.raw({
-    type: 'application/json',
-    verify: ((req: express.Request, _res: express.Response, buf: Buffer) => {
-      (req as WebhookRequest).rawBody = buf;
-      console.log('Raw body captured in middleware:', {
-        hasBody: !!buf,
-        bodyLength: buf?.length,
-        contentType: req.headers['content-type'],
-        timestamp: new Date().toISOString(),
-        path: req.path,
-        method: req.method
-      });
-    })
-  });
-  
-  // Handle Stripe webhook events with proper request typing
-  app.post('/api/stripe-webhook', express.raw({type: 'application/json'}), async (req: WebhookRequest, res: ExpressResponse) => {
-    let event: Stripe.Event;
 
+  // Configure raw body handling for Stripe webhook
+  app.post('/api/stripe-webhook', express.raw({type: 'application/json'}), async (req: WebhookRequest, res: ExpressResponse) => {
     try {
       // Log incoming webhook request
       console.log('Stripe webhook request received:', {
@@ -135,6 +97,8 @@ export function setupRoutes(app: express.Application) {
         return res.status(400).json({ error: 'Missing signature or endpoint secret' });
       }
 
+      let event: Stripe.Event;
+      
       try {
         event = stripe.webhooks.constructEvent(
           req.body,
@@ -152,12 +116,14 @@ export function setupRoutes(app: express.Application) {
           error: err instanceof Error ? err.message : 'Unknown error',
           timestamp: new Date().toISOString()
         });
-        return res.status(400).json({ error: `Webhook signature verification failed: ${err instanceof Error ? err.message : 'Unknown error'}` });
+        return res.status(400).json({ 
+          error: `Webhook signature verification failed: ${err instanceof Error ? err.message : 'Unknown error'}` 
+        });
       }
 
       // Handle the event
       switch (event.type) {
-        case 'checkout.session.completed':
+        case 'checkout.session.completed': {
           const session = event.data.object as Stripe.Checkout.Session;
           
           console.log('Processing checkout.session.completed:', {
@@ -228,6 +194,7 @@ export function setupRoutes(app: express.Application) {
             return res.status(500).json({ error: 'Failed to process payment' });
           }
           break;
+        }
 
         default:
           console.log(`Unhandled event type ${event.type}`);
@@ -240,7 +207,9 @@ export function setupRoutes(app: express.Application) {
         error: err instanceof Error ? err.message : 'Unknown error',
         timestamp: new Date().toISOString()
       });
-      return res.status(400).json({ error: `Webhook Error: ${err instanceof Error ? err.message : 'Unknown error'}` });
+      return res.status(400).json({ 
+        error: `Webhook Error: ${err instanceof Error ? err.message : 'Unknown error'}` 
+      });
     }
   });
   // Configure multer for handling file uploads
