@@ -54,7 +54,7 @@ function isAuthenticated(req: Express.Request): req is Express.Request {
 export function setupRoutes(app: express.Application) {
   // Initialize Stripe
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
-    apiVersion: '2024-11-20',
+    apiVersion: '2023-08-16',
   });
 
   // Stripe webhook handler
@@ -75,51 +75,6 @@ export function setupRoutes(app: express.Application) {
         sig,
         endpointSecret
       );
-
-      // Handle the event
-      switch (event.type) {
-        case 'checkout.session.completed':
-          const session = event.data.object as Stripe.Checkout.Session;
-          const userId = session.client_reference_id;
-          const amountTotal = session.amount_total;
-          
-          if (!userId || !amountTotal) {
-            throw new Error('Missing user ID or amount in webhook payload');
-          }
-
-          // Calculate credits (1 USD = 1 credit)
-          const credits = Math.floor(amountTotal / 100); // Convert cents to dollars
-
-          // Update user credits and record transaction
-          await db.transaction(async (tx) => {
-            // Add credits to user
-            await tx
-              .update(users)
-              .set({ 
-                storyCredits: sql`story_credits + ${credits}`,
-                updatedAt: new Date()
-              })
-              .where(eq(users.id, parseInt(userId)));
-
-            // Record the transaction
-            await tx
-              .insert(creditTransactions)
-              .values({
-                userId: parseInt(userId),
-                amount: amountTotal,
-                credits,
-                status: 'completed',
-                stripePaymentId: session.payment_intent as string,
-                createdAt: new Date()
-              });
-          });
-          break;
-
-        default:
-          console.log(`Unhandled event type ${event.type}`);
-      }
-
-      res.json({ received: true });
 
       // Handle the event
       switch (event.type) {
