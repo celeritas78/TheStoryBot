@@ -1,5 +1,5 @@
 import { Request as ExpressRequest, Response as ExpressResponse, NextFunction } from 'express';
-import { User } from '../db/schema';
+import { User } from '@prisma/client';
 
 declare global {
   namespace Express {
@@ -25,6 +25,10 @@ declare global {
 
 export interface StripeWebhookRequest extends Express.Request {
   rawBody: Buffer;
+}
+
+export interface AuthenticatedRequest extends Express.Request {
+  user: User;
 }
 
 export { NextFunction };
