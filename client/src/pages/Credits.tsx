@@ -21,13 +21,25 @@ export default function Credits() {
       setShowSuccess(true);
       // Clean up URL
       window.history.replaceState({}, '', '/credits');
+      
       // Refresh user data to get updated credits
-      refetch?.().catch(error => {
-        console.error('Failed to refresh user data after payment:', {
-          error: error instanceof Error ? error.message : 'Unknown error',
-          timestamp: new Date().toISOString()
-        });
-      });
+      const refreshData = async () => {
+        try {
+          if (refetch) {
+            await refetch();
+            console.log('Successfully refreshed user data after payment', {
+              timestamp: new Date().toISOString()
+            });
+          }
+        } catch (error) {
+          console.error('Failed to refresh user data after payment:', {
+            error: error instanceof Error ? error.message : 'Unknown error',
+            timestamp: new Date().toISOString()
+          });
+        }
+      };
+      
+      refreshData();
     }
   }, [refetch]);
 

@@ -1,0 +1,132 @@
+
+
+
+ ERROR(TypeScript)  Cannot invoke an object which is possibly 'undefined'.
+ FILE  /home/runner/CustomBedtimeStories-v2/server/auth.ts:455:10
+
+    453 |   // Update profile route
+    454 |   app.put("/api/profile", (req, res) => {
+  > 455 |     if (!req.isAuthenticated() || !req.user) {
+        |          ^^^^^^^^^^^^^^^^^^^
+    456 |       return res.status(401).json({ message: "Not logged in" });
+    457 |     }
+    458 |
+
+ ERROR(TypeScript)  'req.isAuthenticated' is possibly 'undefined'.
+ FILE  /home/runner/CustomBedtimeStories-v2/server/auth.ts:455:10
+
+    453 |   // Update profile route
+    454 |   app.put("/api/profile", (req, res) => {
+  > 455 |     if (!req.isAuthenticated() || !req.user) {
+        |          ^^^^^^^^^^^^^^^^^^^
+    456 |       return res.status(401).json({ message: "Not logged in" });
+    457 |     }
+    458 |
+
+ ERROR(TypeScript)  Property 'password' does not exist on type '{ id: number; email: string; displayName?: string | undefined; storyCredits?: number | undefined; }'.
+ FILE  /home/runner/CustomBedtimeStories-v2/server/auth.ts:534:13
+
+    532 |
+    533 |     // Send all user data except password
+  > 534 |     const { password, ...userData } = req.user;
+        |             ^^^^^^^^
+    535 |     return res.json(userData);
+    536 |   });
+    537 | }
+
+ ERROR(TypeScript)  Interface 'AuthenticatedRequest' incorrectly extends interface 'Request'.
+  Types of property 'user' are incompatible.
+    Type '{ id: number; email: string; displayName?: string | undefined; storyCredits?: number | undefined; } | undefined' is not assignable to type 'User | undefined'.
+      Type '{ id: number; email: string; displayName?: string | undefined; storyCredits?: number | undefined; }' is missing the following properties from type '{ email: string; password: string; displayName: string | null; id: number; provider: string; providerId: string | null; avatarUrl: string | null; childPhotoUrl: string | null; bio: string | null; ... 9 more ...; updatedAt: Date; }': password, provider, providerId, avatarUrl, and 11 more.
+ FILE  /home/runner/CustomBedtimeStories-v2/server/routes.ts:64:11
+
+    62 |
+    63 | // Define custom types for authentication
+  > 64 | interface AuthenticatedRequest extends Express.Request {
+       |           ^^^^^^^^^^^^^^^^^^^^
+    65 |   isAuthenticated: () => boolean;
+    66 |   user?: {
+    67 |     id: number;
+
+ ERROR(TypeScript)  A type predicate's type must be assignable to its parameter's type.
+  Type 'AuthenticatedRequest' is not assignable to type 'Request'.
+    Types of property 'user' are incompatible.
+      Type '{ id: number; email: string; displayName?: string | undefined; storyCredits?: number | undefined; } | undefined' is not assignable to type 'User | undefined'.
+        Type '{ id: number; email: string; displayName?: string | undefined; storyCredits?: number | undefined; }' is missing the following properties from type '{ email: string; password: string; displayName: string | null; id: number; provider: string; providerId: string | null; avatarUrl: string | null; childPhotoUrl: string | null; bio: string | null; ... 9 more ...; updatedAt: Date; }': password, provider, providerId, avatarUrl, and 11 more.
+ FILE  /home/runner/CustomBedtimeStories-v2/server/routes.ts:75:56
+
+    73 |
+    74 | // Type guard for authenticated requests
+  > 75 | function isAuthenticated(req: Express.Request): req is AuthenticatedRequest {
+       |                                                        ^^^^^^^^^^^^^^^^^^^^
+    76 |   return 'isAuthenticated' in req && typeof (req as any).isAuthenticated === 'function';
+    77 | }
+    78 |
+
+ ERROR(TypeScript)  Namespace 'global.Express' has no exported member 'NextFunction'.
+ FILE  /home/runner/CustomBedtimeStories-v2/server/routes.ts:768:64
+
+    766 |   app.post('/api/stripe-webhook', 
+    767 |     express.raw({type: 'application/json'}),
+  > 768 |     (req: WebhookRequest, res: Express.Response, next: Express.NextFunction) => {
+        |                                                                ^^^^^^^^^^^^
+    769 |       // The raw body is available directly from the request
+    770 |       req.rawBody = req.body;
+    771 |       const sig = req.headers['stripe-signature'];
+
+ ERROR(TypeScript)  Property 'body' does not exist on type 'WebhookRequest'.
+ FILE  /home/runner/CustomBedtimeStories-v2/server/routes.ts:770:25
+
+    768 |     (req: WebhookRequest, res: Express.Response, next: Express.NextFunction) => {
+    769 |       // The raw body is available directly from the request
+  > 770 |       req.rawBody = req.body;
+        |                         ^^^^
+    771 |       const sig = req.headers['stripe-signature'];
+    772 |       const rawBody = req.body;
+    773 |
+
+ ERROR(TypeScript)  Property 'headers' does not exist on type 'WebhookRequest'.
+ FILE  /home/runner/CustomBedtimeStories-v2/server/routes.ts:771:23
+
+    769 |       // The raw body is available directly from the request
+    770 |       req.rawBody = req.body;
+  > 771 |       const sig = req.headers['stripe-signature'];
+        |                       ^^^^^^^
+    772 |       const rawBody = req.body;
+    773 |
+    774 |       console.log('Webhook request received:', {
+
+ ERROR(TypeScript)  Property 'body' does not exist on type 'WebhookRequest'.
+ FILE  /home/runner/CustomBedtimeStories-v2/server/routes.ts:772:27
+
+    770 |       req.rawBody = req.body;
+    771 |       const sig = req.headers['stripe-signature'];
+  > 772 |       const rawBody = req.body;
+        |                           ^^^^
+    773 |
+    774 |       console.log('Webhook request received:', {
+    775 |         signature: sig,
+
+ ERROR(TypeScript)  Property 'headers' does not exist on type 'WebhookRequest'.
+ FILE  /home/runner/CustomBedtimeStories-v2/server/routes.ts:776:26
+
+    774 |       console.log('Webhook request received:', {
+    775 |         signature: sig,
+  > 776 |         contentType: req.headers['content-type'],
+        |                          ^^^^^^^
+    777 |         bodyLength: rawBody?.length,
+    778 |         isBuffer: Buffer.isBuffer(rawBody),
+    779 |         timestamp: new Date().toISOString()
+
+ ERROR(TypeScript)  Property 'status' does not exist on type 'Response'.
+ FILE  /home/runner/CustomBedtimeStories-v2/server/routes.ts:784:20
+
+    782 |       if (!Buffer.isBuffer(rawBody)) {
+    783 |         console.error('Invalid request body format');
+  > 784 |         return res.status(400).json({ error: 'Invalid request body format' });
+        |                    ^^^^^^
+    785 |       }
+    786 |
+    787 |       req.rawBody = rawBody;
+
+[TypeScript] Found 11 errors. Watching for file changes.

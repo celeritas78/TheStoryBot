@@ -60,21 +60,25 @@ const registrationSchema = z.object({
   displayName: z.string().min(2, "Display name too short").max(255, "Display name too long"),
 });
 
-// Define custom types for authentication
-interface AuthenticatedRequest extends Express.Request {
-  isAuthenticated: () => boolean;
-  user?: {
-    id: number;
-    email: string;
-    displayName?: string;
-    storyCredits?: number;
-  };
-}
+// Import NextFunction
+import { NextFunction } from 'express';
 
 // Type guard for authenticated requests
-function isAuthenticated(req: Express.Request): req is AuthenticatedRequest {
-  return 'isAuthenticated' in req && typeof (req as any).isAuthenticated === 'function';
+function isAuthenticated(req: Express.Request): req is Express.Request {
+  return req.isAuthenticated();
 }
+
+// Custom interface for webhook requests that properly extends Express.Request
+interface WebhookRequest extends Express.Request {
+  rawBody: Buffer;
+}
+
+// Stripe webhook handler type
+type StripeWebhookHandler = (
+  req: WebhookRequest,
+  res: Express.Response,
+  next: NextFunction
+) => Promise<void> | void;
 
 
 export function setupRoutes(app: express.Application) {
@@ -763,31 +767,38 @@ export function setupRoutes(app: express.Application) {
   }
 
   // Stripe webhook endpoint must come before any body parsers
-  app.post('/api/stripe-webhook', 
-    express.raw({type: 'application/json'}),
-    (req: WebhookRequest, res: Express.Response, next: Express.NextFunction) => {
-      // The raw body is available directly from the request
-      req.rawBody = req.body;
-      const sig = req.headers['stripe-signature'];
-      const rawBody = req.body;
+  app.post('/api/stripe-webhook',
+    express.raw({ type: 'application/json' }),
+    async (req: Express.Request, res: Express.Response, next: NextFunction) => {
+      try {
+        const sig = req.headers['stripe-signature'];
+        const rawBody = req.body;
 
-      console.log('Webhook request received:', {
-        signature: sig,
-        contentType: req.headers['content-type'],
-        bodyLength: rawBody?.length,
-        isBuffer: Buffer.isBuffer(rawBody),
-        timestamp: new Date().toISOString()
-      });
+        console.log('Webhook request received:', {
+          hasSignature: !!sig,
+          bodyLength: rawBody?.length,
+          contentType: req.headers['content-type'],
+          timestamp: new Date().toISOString()
+        });
 
-      if (!Buffer.isBuffer(rawBody)) {
-        console.error('Invalid request body format');
-        return res.status(400).json({ error: 'Invalid request body format' });
+        if (!Buffer.isBuffer(rawBody)) {
+          console.error('Invalid request body format:', {
+            bodyType: typeof rawBody,
+            isBuffer: Buffer.isBuffer(rawBody),
+            timestamp: new Date().toISOString()
+          });
+          return res.status(400).json({ error: 'Invalid request body format' });
+        }
+
+        // Set the raw body for webhook verification
+        (req as any).rawBody = rawBody;
+        next();
+      } catch (error) {
+        console.error('Error in webhook middleware:', error);
+        return res.status(500).json({ error: 'Internal server error' });
       }
-
-      req.rawBody = rawBody;
-      next();
     },
-    async (req: express.Request, res: express.Response) => {
+    async (req: Express.Request, res: Express.Response) => {
       const sig = req.headers['stripe-signature'] as string | undefined;
       const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
       
