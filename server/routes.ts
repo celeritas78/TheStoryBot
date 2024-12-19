@@ -61,8 +61,8 @@ const registrationSchema = z.object({
 });
 
 // Type guard for authenticated requests
-function isAuthenticated(req: Express.Request): req is Express.Request {
-  return req.isAuthenticated();
+function isAuthenticated(req: express.Request): req is express.Request & { user: { id: number } } {
+  return req.isAuthenticated?.() || false;
 }
 
 export function setupRoutes(app: express.Application) {
@@ -525,10 +525,8 @@ export function setupRoutes(app: express.Application) {
         timestamp: new Date().toISOString()
       });
 
-      if (!isAuthenticated(req)) {
+      if (!req.isAuthenticated?.()) {
         console.log('Authentication failed:', {
-          headers: req.headers,
-          cookies: req.cookies,
           timestamp: new Date().toISOString()
         });
         return res.status(401).json({ error: "Not logged in" });
