@@ -41,16 +41,16 @@ interface WebhookRequest extends Express.Request {
     'content-type'?: string;
     [key: string]: string | string[] | undefined;
   };
-  body: any;
-  query: any;
-  params: any;
+  body: Buffer;
+  query: Record<string, string>;
+  params: Record<string, string>;
   path: string;
   method: string;
 }
 
 // Type for the verify callback in express.raw middleware
 interface VerifyCallback {
-  (req: WebhookRequest, res: express.Response, buf: Buffer): void;
+  (req: WebhookRequest, res: ExpressResponse, buf: Buffer): void;
 }
 
 // Extend Express Request type globally
@@ -60,6 +60,16 @@ declare global {
       rawBody?: Buffer;
     }
   }
+}
+
+// Type guard for client reference ID
+function isValidClientReferenceId(id: string | null | undefined): id is string {
+  return typeof id === 'string' && id.length > 0;
+}
+
+// Type guard for amount total
+function isValidAmount(amount: number | null | undefined): amount is number {
+  return typeof amount === 'number' && !isNaN(amount);
 }
 import { MAX_STORIES } from './config';
 
@@ -158,8 +168,8 @@ export function setupRoutes(app: express.Application) {
             timestamp: new Date().toISOString()
           });
 
-          // Validate required fields
-          if (!session.client_reference_id || !session.amount_total) {
+          // Validate required fields using type guards
+          if (!isValidClientReferenceId(session.client_reference_id) || !isValidAmount(session.amount_total)) {
             console.error('Invalid checkout session:', {
               sessionId: session.id,
               clientReferenceId: session.client_reference_id,
@@ -172,6 +182,7 @@ export function setupRoutes(app: express.Application) {
           try {
             // Convert amount to credits (1 USD = 1 credit)
             const credits = Math.floor(session.amount_total / 100);
+            const userId = parseInt(session.client_reference_id);
             
             await db.transaction(async (tx) => {
               // Update user credits
@@ -181,14 +192,18 @@ export function setupRoutes(app: express.Application) {
                   storyCredits: sql`story_credits + ${credits}`,
                   updatedAt: new Date()
                 })
-                .where(eq(users.id, parseInt(session.client_reference_id)))
+                .where(eq(users.id, userId))
                 .returning({ storyCredits: users.storyCredits });
+
+              if (!updatedUser) {
+                throw new Error('Failed to update user credits');
+              }
 
               // Record transaction
               await tx
                 .insert(creditTransactions)
                 .values({
-                  userId: parseInt(session.client_reference_id),
+                  userId,
                   amount: session.amount_total,
                   credits,
                   status: 'completed',
@@ -198,7 +213,7 @@ export function setupRoutes(app: express.Application) {
 
               console.log('Payment processed successfully:', {
                 sessionId: session.id,
-                userId: session.client_reference_id,
+                userId,
                 credits,
                 newBalance: updatedUser.storyCredits,
                 timestamp: new Date().toISOString()
@@ -219,13 +234,13 @@ export function setupRoutes(app: express.Application) {
       }
 
       // Return a 200 response to acknowledge receipt of the event
-      res.status(200).json({ received: true });
+      return res.status(200).json({ received: true });
     } catch (err) {
       console.error('Webhook processing error:', {
         error: err instanceof Error ? err.message : 'Unknown error',
         timestamp: new Date().toISOString()
       });
-      res.status(400).json({ error: `Webhook Error: ${err instanceof Error ? err.message : 'Unknown error'}` });
+      return res.status(400).json({ error: `Webhook Error: ${err instanceof Error ? err.message : 'Unknown error'}` });
     }
   });
   // Configure multer for handling file uploads
