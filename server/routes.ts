@@ -513,15 +513,35 @@ export function setupRoutes(app: express.Application) {
   });
 
   // Get all stories endpoint
-  app.get("/api/stories", async (req, res) => {
+  app.get("/api/stories", async (req: express.Request, res: ExpressResponse) => {
     try {
-      if (!req.isAuthenticated || !req.isAuthenticated()) {
+      // Add detailed logging for authentication state
+      console.log('Stories request authentication check:', {
+        isAuthenticatedExists: !!req.isAuthenticated,
+        isAuthenticated: req.isAuthenticated?.(),
+        hasUser: !!req.user,
+        userId: req.user?.id,
+        session: req.session,
+        timestamp: new Date().toISOString()
+      });
+
+      if (!isAuthenticated(req)) {
+        console.log('Authentication failed:', {
+          headers: req.headers,
+          cookies: req.cookies,
+          timestamp: new Date().toISOString()
+        });
         return res.status(401).json({ error: "Not logged in" });
       }
 
       const userId = req.user?.id;
+      if (!userId) {
+        console.error('User ID missing from authenticated request');
+        return res.status(401).json({ error: "User not found in session" });
+      }
+
       const userStories = await db.query.stories.findMany({
-        where: eq(stories.userId, userId as number),
+        where: eq(stories.userId, userId),
         with: {
           segments: {
             where: eq(storySegments.sequence, 1),
@@ -530,9 +550,19 @@ export function setupRoutes(app: express.Application) {
         orderBy: [desc(stories.createdAt)],
       });
 
+      console.log('Stories fetched successfully:', {
+        userId,
+        storyCount: userStories.length,
+        timestamp: new Date().toISOString()
+      });
+
       res.json(userStories);
     } catch (error) {
-      console.error("Error fetching stories:", error);
+      console.error('Error fetching stories:', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        timestamp: new Date().toISOString()
+      });
       res.status(500).json({ error: "Failed to fetch stories" });
     }
   });
