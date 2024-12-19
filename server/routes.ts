@@ -36,6 +36,16 @@ import {
 // Custom type for Stripe webhook request with proper type extensions
 interface WebhookRequest extends Express.Request {
   rawBody?: Buffer;
+  headers: {
+    'stripe-signature'?: string;
+    'content-type'?: string;
+    [key: string]: string | string[] | undefined;
+  };
+  body: any;
+  query: any;
+  params: any;
+  path: string;
+  method: string;
 }
 
 // Type for the verify callback in express.raw middleware
