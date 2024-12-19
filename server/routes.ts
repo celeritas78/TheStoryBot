@@ -100,109 +100,39 @@ export function setupRoutes(app: express.Application) {
   });
   
   // Handle Stripe webhook events with proper request typing
-  app.post('/api/stripe-webhook', stripeWebhookMiddleware as express.RequestHandler, async (req: WebhookRequest, res: Response) => {
+  app.post('/api/stripe-webhook', express.raw({type: 'application/json'}), async (req: WebhookRequest, res: Response) => {
     let event: Stripe.Event;
 
     try {
-      // Log all incoming request details
-      console.log('Stripe webhook request details:', {
+      // Log incoming webhook request
+      console.log('Stripe webhook request received:', {
         method: req.method,
         path: req.path,
-        headers: req.headers,
-        timestamp: new Date().toISOString(),
-        query: req.query,
-        params: req.params
-      });
-
-      const rawBody = req.rawBody || req.body;
-      console.log('Request body details:', {
-        hasBody: !!rawBody,
-        bodyType: typeof rawBody,
-        isBuffer: Buffer.isBuffer(rawBody),
-        bodyLength: rawBody?.length,
         contentType: req.headers['content-type'],
+        hasSignature: !!req.headers['stripe-signature'],
+        bodyLength: req.body?.length,
         timestamp: new Date().toISOString()
       });
 
-      if (!Buffer.isBuffer(rawBody)) {
-        console.error('Invalid request body format:', {
-          bodyType: typeof rawBody,
-          isBuffer: Buffer.isBuffer(rawBody),
-          contentType: req.headers['content-type'],
-          timestamp: new Date().toISOString()
-        });
-        return res.status(400).json({ error: 'Invalid request body format' });
-      }
-
-      console.log('Webhook request received:', {
-        signature: req.headers['stripe-signature'],
-        rawBody: true,
-        bodyLength: rawBody.length,
-        contentType: req.headers['content-type'],
-        timestamp: new Date().toISOString()
-      });
-
-      const sig = req.headers['stripe-signature'];
+      const signature = req.headers['stripe-signature'];
       
-      if (!sig || !endpointSecret) {
-        console.error('Webhook validation failed:', {
-          hasSignature: !!sig,
+      if (!signature || !endpointSecret) {
+        console.error('Missing webhook requirements:', {
+          hasSignature: !!signature,
           hasEndpointSecret: !!endpointSecret,
           timestamp: new Date().toISOString()
         });
-        return res.status(400).json({ error: 'Missing signature or endpoint secret' });
+        return res.status(400).send('Missing signature or endpoint secret');
       }
 
-      // Log environment check
-      console.log('Webhook environment check:', {
-        hasStripeSecret: !!process.env.STRIPE_SECRET_KEY,
-        hasWebhookSecret: !!process.env.STRIPE_WEBHOOK_SECRET,
-        environment: process.env.NODE_ENV,
-        timestamp: new Date().toISOString()
-      });
-
       try {
-        // Log environment check
-        console.log('Webhook environment check:', {
-          hasStripeSecret: !!process.env.STRIPE_SECRET_KEY,
-          hasWebhookSecret: !!process.env.STRIPE_WEBHOOK_SECRET,
-          environment: process.env.NODE_ENV,
-          timestamp: new Date().toISOString()
-        });
-
-        if (!sig) {
-          throw new Error('No Stripe signature found in headers');
-        }
-
-        const sigHeader = Array.isArray(sig) ? sig[0] : sig;
-        if (!sigHeader) {
-          throw new Error('No valid Stripe signature found in headers');
-        }
-
-        if (!Buffer.isBuffer(rawBody)) {
-          console.error('Invalid request body format:', {
-            bodyType: typeof rawBody,
-            isBuffer: Buffer.isBuffer(rawBody),
-            contentType: req.headers['content-type'],
-            timestamp: new Date().toISOString()
-          });
-          return res.status(400).json({ error: 'Invalid request body format' });
-        }
-
-        console.log('Attempting to construct webhook event:', {
-          hasSignature: true,
-          signatureHeader: sigHeader,
-          bodyLength: rawBody.length,
-          timestamp: new Date().toISOString()
-        });
-        
         event = stripe.webhooks.constructEvent(
-          rawBody,
-          sigHeader,
-          endpointSecret as string
+          req.body,
+          signature,
+          endpointSecret
         );
 
-        console.log('Webhook event constructed successfully:', {
+        console.log('Webhook event constructed:', {
           eventId: event.id,
           eventType: event.type,
           timestamp: new Date().toISOString()
@@ -210,145 +140,77 @@ export function setupRoutes(app: express.Application) {
       } catch (err) {
         console.error('Webhook signature verification failed:', {
           error: err instanceof Error ? err.message : 'Unknown error',
-          signature: sig,
-          bodyLength: rawBody.length,
-          webhookSecret: endpointSecret ? 'Present' : 'Missing',
           timestamp: new Date().toISOString()
         });
-        throw err;
+        return res.status(400).send(`Webhook signature verification failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
       }
 
       // Handle the event
       switch (event.type) {
         case 'checkout.session.completed':
-          console.log('Processing checkout.session.completed event:', {
-            eventId: event.id,
-            timestamp: new Date().toISOString()
-          });
-          
           const session = event.data.object as Stripe.Checkout.Session;
-          const userId = session.client_reference_id;
-          const amountTotal = session.amount_total;
           
-          console.log('Session details:', {
+          console.log('Processing checkout.session.completed:', {
             sessionId: session.id,
-            userId,
-            amountTotal,
-            paymentStatus: session.payment_status,
-            timestamp: new Date().toISOString()
-          });
-          
-          if (!userId || !amountTotal) {
-            const error = new Error('Missing user ID or amount in webhook payload');
-            console.error('Invalid webhook payload:', {
-              error: error.message,
-              userId,
-              amountTotal,
-              sessionId: session.id,
-              timestamp: new Date().toISOString()
-            });
-            throw error;
-          }
-          
-          console.log('Session details:', {
-            sessionId: session.id,
-            userId,
-            amountTotal,
-            paymentStatus: session.payment_status,
-            timestamp: new Date().toISOString()
-          });
-          
-          if (!userId || !amountTotal) {
-            const error = new Error('Missing user ID or amount in webhook payload');
-            console.error('Invalid webhook payload:', {
-              error: error.message,
-              userId,
-              amountTotal,
-              sessionId: session.id,
-              timestamp: new Date().toISOString()
-            });
-            throw error;
-          }
-
-          // Calculate credits (1 USD = 1 credit)
-          const credits = Math.floor(amountTotal / 100); // Convert cents to dollars
-          
-          console.log('Processing payment completion:', {
-            userId,
-            credits,
-            originalAmount: amountTotal,
-            paymentIntent: session.payment_intent,
-            customerEmail: session.customer_email,
-            paymentStatus: session.payment_status,
+            customerId: session.customer,
+            clientReferenceId: session.client_reference_id,
+            amount: session.amount_total,
             timestamp: new Date().toISOString()
           });
 
-          // Update user credits and record transaction
+          // Validate required fields
+          if (!session.client_reference_id || !session.amount_total) {
+            console.error('Invalid checkout session:', {
+              sessionId: session.id,
+              clientReferenceId: session.client_reference_id,
+              amount: session.amount_total,
+              timestamp: new Date().toISOString()
+            });
+            return res.status(400).send('Invalid checkout session data');
+          }
+
           try {
+            // Convert amount to credits (1 USD = 1 credit)
+            const credits = Math.floor(session.amount_total / 100);
+            
             await db.transaction(async (tx) => {
-              console.log('Starting credit update transaction:', {
-                userId,
-                credits,
-                amountTotal,
-                sessionId: session.id,
-                timestamp: new Date().toISOString()
-              });
-
-              // Add credits to user
+              // Update user credits
               const [updatedUser] = await tx
                 .update(users)
                 .set({ 
                   storyCredits: sql`story_credits + ${credits}`,
                   updatedAt: new Date()
                 })
-                .where(eq(users.id, parseInt(userId)))
+                .where(eq(users.id, parseInt(session.client_reference_id)))
                 .returning({ storyCredits: users.storyCredits });
 
-              console.log('Credits updated successfully:', {
-                userId,
-                newCreditBalance: updatedUser.storyCredits,
-                addedCredits: credits,
-                timestamp: new Date().toISOString()
-              });
-
-              // Record the transaction
-              const [transaction] = await tx
+              // Record transaction
+              await tx
                 .insert(creditTransactions)
                 .values({
-                  userId: parseInt(userId),
-                  amount: amountTotal,
+                  userId: parseInt(session.client_reference_id),
+                  amount: session.amount_total,
                   credits,
                   status: 'completed',
                   stripePaymentId: session.payment_intent as string,
                   createdAt: new Date()
-                })
-                .returning();
+                });
 
-              console.log('Transaction recorded successfully:', {
-                transactionId: transaction.id,
-                userId,
+              console.log('Payment processed successfully:', {
+                sessionId: session.id,
+                userId: session.client_reference_id,
                 credits,
-                stripePaymentId: session.payment_intent,
-                timestamp: new Date().toISOString()
-              });
-
-              console.log('Transaction recorded:', {
-                transactionId: transaction.id,
-                userId,
-                credits,
-                stripePaymentId: session.payment_intent,
+                newBalance: updatedUser.storyCredits,
                 timestamp: new Date().toISOString()
               });
             });
           } catch (error) {
-            console.error('Failed to update credits:', {
+            console.error('Failed to process payment:', {
               error: error instanceof Error ? error.message : 'Unknown error',
-              userId,
-              credits,
               sessionId: session.id,
               timestamp: new Date().toISOString()
             });
-            throw error;
+            return res.status(500).send('Failed to process payment');
           }
           break;
 
@@ -356,9 +218,13 @@ export function setupRoutes(app: express.Application) {
           console.log(`Unhandled event type ${event.type}`);
       }
 
-      res.json({ received: true });
+      // Return a 200 response to acknowledge receipt of the event
+      res.send();
     } catch (err) {
-      console.error('Error processing webhook:', err);
+      console.error('Webhook processing error:', {
+        error: err instanceof Error ? err.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      });
       res.status(400).send(`Webhook Error: ${err instanceof Error ? err.message : 'Unknown error'}`);
     }
   });
