@@ -33,13 +33,17 @@ import {
   getMimeType as getImageMimeType 
 } from './services/image-storage';
 
-// Custom type for Stripe webhook request
-interface WebhookRequest extends Request {
-  body: any;
-  rawBody: Buffer;
+// Custom type for Stripe webhook request with proper type extensions
+interface WebhookRequest extends Express.Request {
+  rawBody?: Buffer;
 }
 
-// Extend the Express Request type
+// Type for the verify callback in express.raw middleware
+interface VerifyCallback {
+  (req: WebhookRequest, res: express.Response, buf: Buffer): void;
+}
+
+// Extend Express Request type globally
 declare global {
   namespace Express {
     interface Request {
@@ -69,10 +73,10 @@ export function setupRoutes(app: express.Application) {
   // Stripe webhook handler
   const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
   
-  // Configure raw body handling for Stripe webhook
+  // Configure raw body handling for Stripe webhook with proper typing
   const stripeWebhookMiddleware = express.raw({
     type: 'application/json',
-    verify: (req: WebhookRequest, _res, buf) => {
+    verify: ((req: WebhookRequest, _res: express.Response, buf: Buffer) => {
       req.rawBody = buf;
       console.log('Raw body captured in middleware:', {
         hasBody: !!buf,
@@ -82,11 +86,11 @@ export function setupRoutes(app: express.Application) {
         path: req.path,
         method: req.method
       });
-    }
+    }) as VerifyCallback
   });
   
-  // Handle Stripe webhook events
-  app.post('/api/stripe-webhook', stripeWebhookMiddleware, async (req: WebhookRequest, res: Response) => {
+  // Handle Stripe webhook events with proper request typing
+  app.post('/api/stripe-webhook', stripeWebhookMiddleware as express.RequestHandler, async (req: WebhookRequest, res: Response) => {
     let event: Stripe.Event;
 
     try {
