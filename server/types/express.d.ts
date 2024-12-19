@@ -5,7 +5,6 @@ import { User } from '@prisma/client';
 declare global {
   namespace Express {
     interface Request {
-      rawBody?: Buffer;
       isAuthenticated(): boolean;
       user?: User;
       logout(callback: (err?: Error) => void): void;
@@ -22,10 +21,6 @@ declare global {
       };
     }
   }
-}
-
-export interface StripeWebhookRequest extends ExpressRequest {
-  rawBody: Buffer;
 }
 
 export interface AuthenticatedRequest extends ExpressRequest {
