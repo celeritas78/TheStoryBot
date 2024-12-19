@@ -1,3 +1,4 @@
+
 import { Request as ExpressRequest, Response as ExpressResponse, NextFunction } from 'express';
 import { User } from '@prisma/client';
 
@@ -23,11 +24,11 @@ declare global {
   }
 }
 
-export interface StripeWebhookRequest extends Express.Request {
+export interface StripeWebhookRequest extends ExpressRequest {
   rawBody: Buffer;
 }
 
-export interface AuthenticatedRequest extends Express.Request {
+export interface AuthenticatedRequest extends ExpressRequest {
   user: User;
 }
 
