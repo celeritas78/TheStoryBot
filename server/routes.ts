@@ -35,8 +35,17 @@ import {
 
 // Custom type for Stripe webhook request
 interface WebhookRequest extends Request {
-  body: Buffer;
-  rawBody?: Buffer;
+  body: any;
+  rawBody: Buffer;
+}
+
+// Extend the Express Request type
+declare global {
+  namespace Express {
+    interface Request {
+      rawBody?: Buffer;
+    }
+  }
 }
 import { MAX_STORIES } from './config';
 
@@ -61,8 +70,22 @@ export function setupRoutes(app: express.Application) {
   const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
   
   // Configure raw body handling for Stripe webhook
-  const stripeWebhookMiddleware = express.raw({type: 'application/json'});
+  const stripeWebhookMiddleware = express.raw({
+    type: 'application/json',
+    verify: (req: WebhookRequest, _res, buf) => {
+      req.rawBody = buf;
+      console.log('Raw body captured in middleware:', {
+        hasBody: !!buf,
+        bodyLength: buf?.length,
+        contentType: req.headers['content-type'],
+        timestamp: new Date().toISOString(),
+        path: req.path,
+        method: req.method
+      });
+    }
+  });
   
+  // Handle Stripe webhook events
   app.post('/api/stripe-webhook', stripeWebhookMiddleware, async (req: WebhookRequest, res: Response) => {
     let event: Stripe.Event;
 
@@ -77,7 +100,7 @@ export function setupRoutes(app: express.Application) {
         params: req.params
       });
 
-      const rawBody = req.body;
+      const rawBody = req.rawBody || req.body;
       console.log('Request body details:', {
         hasBody: !!rawBody,
         bodyType: typeof rawBody,
@@ -125,17 +148,44 @@ export function setupRoutes(app: express.Application) {
       });
 
       try {
-        console.log('Attempting to construct webhook event:', {
-          hasSignature: !!sig,
-          signatureTimestamp: sig?.split(',')[0],
-          bodyLength: rawBody.length,
+        // Log environment check
+        console.log('Webhook environment check:', {
+          hasStripeSecret: !!process.env.STRIPE_SECRET_KEY,
+          hasWebhookSecret: !!process.env.STRIPE_WEBHOOK_SECRET,
+          environment: process.env.NODE_ENV,
           timestamp: new Date().toISOString()
         });
 
+        if (!sig) {
+          throw new Error('No Stripe signature found in headers');
+        }
+
+        const sigHeader = Array.isArray(sig) ? sig[0] : sig;
+        if (!sigHeader) {
+          throw new Error('No valid Stripe signature found in headers');
+        }
+
+        if (!Buffer.isBuffer(rawBody)) {
+          console.error('Invalid request body format:', {
+            bodyType: typeof rawBody,
+            isBuffer: Buffer.isBuffer(rawBody),
+            contentType: req.headers['content-type'],
+            timestamp: new Date().toISOString()
+          });
+          return res.status(400).json({ error: 'Invalid request body format' });
+        }
+
+        console.log('Attempting to construct webhook event:', {
+          hasSignature: true,
+          signatureHeader: sigHeader,
+          bodyLength: rawBody.length,
+          timestamp: new Date().toISOString()
+        });
+        
         event = stripe.webhooks.constructEvent(
           rawBody,
-          sig,
-          endpointSecret
+          sigHeader,
+          endpointSecret as string
         );
 
         console.log('Webhook event constructed successfully:', {
@@ -185,20 +235,51 @@ export function setupRoutes(app: express.Application) {
             });
             throw error;
           }
+          
+          console.log('Session details:', {
+            sessionId: session.id,
+            userId,
+            amountTotal,
+            paymentStatus: session.payment_status,
+            timestamp: new Date().toISOString()
+          });
+          
+          if (!userId || !amountTotal) {
+            const error = new Error('Missing user ID or amount in webhook payload');
+            console.error('Invalid webhook payload:', {
+              error: error.message,
+              userId,
+              amountTotal,
+              sessionId: session.id,
+              timestamp: new Date().toISOString()
+            });
+            throw error;
+          }
 
           // Calculate credits (1 USD = 1 credit)
           const credits = Math.floor(amountTotal / 100); // Convert cents to dollars
           
-          console.log('Updating credits:', {
+          console.log('Processing payment completion:', {
             userId,
             credits,
             originalAmount: amountTotal,
+            paymentIntent: session.payment_intent,
+            customerEmail: session.customer_email,
+            paymentStatus: session.payment_status,
             timestamp: new Date().toISOString()
           });
 
+          // Update user credits and record transaction
           try {
-            // Update user credits and record transaction
             await db.transaction(async (tx) => {
+              console.log('Starting credit update transaction:', {
+                userId,
+                credits,
+                amountTotal,
+                sessionId: session.id,
+                timestamp: new Date().toISOString()
+              });
+
               // Add credits to user
               const [updatedUser] = await tx
                 .update(users)
@@ -228,6 +309,14 @@ export function setupRoutes(app: express.Application) {
                   createdAt: new Date()
                 })
                 .returning();
+
+              console.log('Transaction recorded successfully:', {
+                transactionId: transaction.id,
+                userId,
+                credits,
+                stripePaymentId: session.payment_intent,
+                timestamp: new Date().toISOString()
+              });
 
               console.log('Transaction recorded:', {
                 transactionId: transaction.id,
