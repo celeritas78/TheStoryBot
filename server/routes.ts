@@ -1,7 +1,8 @@
 import express from 'express';
 import fs from 'fs';
 import path from 'path';
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, and, SQL } from 'drizzle-orm';
+import { PgColumn } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
 import { db } from '../db';
 import { stories, storySegments, users } from '../db/schema';
@@ -105,7 +106,7 @@ export function setupRoutes(app: express.Application) {
           childPhotoUrl,
           updatedAt: new Date()
         })
-        .where((users, { eq }) => eq(users.id, userId))
+        .where(eq(users.id, userId as number))
         .returning();
 
       if (!updatedUser) {
@@ -362,7 +363,7 @@ export function setupRoutes(app: express.Application) {
 
       const userId = req.user?.id;
       const userStories = await db.query.stories.findMany({
-        where: eq(stories.userId, userId),
+        where: eq(stories.userId, userId as number),
         with: {
           segments: {
             where: eq(storySegments.sequence, 1),

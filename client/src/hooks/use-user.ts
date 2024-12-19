@@ -2,7 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { useLocation } from "wouter";
 
-interface User {
+export interface User {
   id: number;
   email: string;
   displayName: string | null;
@@ -13,41 +13,43 @@ interface User {
   bio?: string;
 }
 
-interface ApiResponse {
+export interface ApiResponse {
   ok: boolean;
   message?: string;
 }
 
-interface LoginData {
+export interface LoginData {
   email: string;
   password: string;
 }
 
-interface RegisterData extends LoginData {
+export interface RegisterData extends LoginData {
   displayName: string;
 }
 
-interface ProfileUpdateData {
+export interface ProfileUpdateData {
   displayName?: string;
   bio?: string;
   avatar?: File;
   childPhoto?: File;
 }
 
-interface LoginResponse extends ApiResponse {
-  user?: User;
+export interface LoginResponse extends ApiResponse {
+  user: User | null;
+  emailVerified?: boolean;
 }
 
-interface RegisterResponse extends ApiResponse {
-  user?: {
+export interface RegisterResponse extends ApiResponse {
+  user: {
     id: number;
     email: string;
     displayName: string;
-  };
+    emailVerified: boolean;
+  } | null;
 }
 
-interface ProfileResponse extends ApiResponse {
-  user?: User;
+export interface ProfileResponse extends ApiResponse {
+  user: User | null;
 }
 
 export function useUser() {
@@ -83,10 +85,14 @@ export function useUser() {
     });
     const result = await response.json();
     if (!response.ok) {
-      return { ok: false, message: result.error || "Login failed" };
+      return { ok: false, message: result.error || "Login failed", user: null };
     }
     await queryClient.invalidateQueries({ queryKey: ["user"] });
-    return { ok: true, user: result.user };
+    return { 
+      ok: true, 
+      user: result.user,
+      emailVerified: result.user?.emailVerified
+    };
   };
 
   const register = async (data: RegisterData): Promise<RegisterResponse> => {
@@ -97,9 +103,15 @@ export function useUser() {
     });
     const result = await response.json();
     if (!response.ok) {
-      return { ok: false, message: result.error || "Registration failed" };
+      return { ok: false, message: result.error || "Registration failed", user: null };
     }
-    return { ok: true, user: result.user };
+    return { 
+      ok: true, 
+      user: result.user ? {
+        ...result.user,
+        emailVerified: false
+      } : null
+    };
   };
 
   const logout = async (): Promise<ApiResponse> => {
@@ -128,7 +140,7 @@ export function useUser() {
     });
     const result = await response.json();
     if (!response.ok) {
-      return { ok: false, message: result.error || "Profile update failed" };
+      return { ok: false, message: result.error || "Profile update failed", user: null };
     }
     await queryClient.invalidateQueries({ queryKey: ["user"] });
     return { ok: true, user: result.user };
