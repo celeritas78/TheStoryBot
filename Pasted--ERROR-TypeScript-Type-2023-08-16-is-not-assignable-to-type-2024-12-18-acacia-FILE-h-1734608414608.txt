@@ -1,0 +1,30 @@
+
+
+ ERROR(TypeScript)  Type '"2023-08-16"' is not assignable to type '"2024-12-18.acacia"'.
+ FILE  /home/runner/CustomBedtimeStories-v2/server/routes.ts:71:5
+
+    69 |   // Initialize Stripe
+    70 |   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  > 71 |     apiVersion: '2023-08-16',
+       |     ^^^^^^^^^^
+    72 |   });
+    73 |
+    74 |   const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+ ERROR(TypeScript)  No overload matches this call.
+  Overload 1 of 2, '(value: { status: string | SQL<unknown> | Placeholder<string, any>; userId: number | SQL<unknown> | Placeholder<string, any>; amount: number | SQL<unknown> | Placeholder<...>; credits: number | ... 1 more ... | Placeholder<...>; id?: number | ... 2 more ... | undefined; createdAt?: Date | ... 2 more ... | undefined; stripePaymentId?: string | ... 3 more ... | undefined; }): PgInsertBase<...>', gave the following error.
+    Type 'number | null' is not assignable to type 'number | SQL<unknown> | Placeholder<string, any>'.
+      Type 'null' is not assignable to type 'number | SQL<unknown> | Placeholder<string, any>'.
+  Overload 2 of 2, '(values: { status: string | SQL<unknown> | Placeholder<string, any>; userId: number | SQL<unknown> | Placeholder<string, any>; amount: number | SQL<unknown> | Placeholder<...>; credits: number | ... 1 more ... | Placeholder<...>; id?: number | ... 2 more ... | undefined; createdAt?: Date | ... 2 more ... | undefined; stripePaymentId?: string | ... 3 more ... | undefined; }[]): PgInsertBase<...>', gave the following error.
+    Object literal may only specify known properties, and 'userId' does not exist in type '{ status: string | SQL<unknown> | Placeholder<string, any>; userId: number | SQL<unknown> | Placeholder<string, any>; amount: number | SQL<unknown> | Placeholder<...>; credits: number | ... 1 more ... | Placeholder<...>; id?: number | ... 2 more ... | undefined; createdAt?: Date | ... 2 more ... | undefined; stripeP...'.
+ FILE  /home/runner/CustomBedtimeStories-v2/server/routes.ts:171:18
+
+    169 |               await tx
+    170 |                 .insert(creditTransactions)
+  > 171 |                 .values({
+        |                  ^^^^^^
+    172 |                   userId,
+    173 |                   amount: session.amount_total,
+    174 |                   credits,
+
+[TypeScript] Found 2 errors. Watching for file changes.

@@ -68,7 +68,7 @@ function isAuthenticated(req: Express.Request): req is Express.Request {
 export function setupRoutes(app: express.Application) {
   // Initialize Stripe
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-    apiVersion: '2023-08-16',
+    apiVersion: '2024-12-18.acacia',
   });
 
   const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -166,15 +166,19 @@ export function setupRoutes(app: express.Application) {
               }
 
               // Record transaction
+              if (!session.payment_intent || typeof session.payment_intent !== 'string') {
+                throw new Error('Invalid payment intent');
+              }
+
               await tx
                 .insert(creditTransactions)
                 .values({
-                  userId,
-                  amount: session.amount_total,
+                  user_id: userId,
+                  amount: session.amount_total || 0,
                   credits,
                   status: 'completed',
-                  stripePaymentId: session.payment_intent as string,
-                  createdAt: new Date()
+                  stripe_payment_id: session.payment_intent,
+                  created_at: new Date()
                 });
 
               console.log('Payment processed successfully:', {
