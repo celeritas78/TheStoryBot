@@ -170,15 +170,19 @@ export function setupRoutes(app: express.Application) {
                 throw new Error('Invalid payment intent');
               }
 
+              if (!session.payment_intent || typeof session.payment_intent !== 'string') {
+                throw new Error('Invalid payment intent');
+              }
+
               await tx
                 .insert(creditTransactions)
                 .values({
-                  user_id: userId,
+                  userId: userId,
                   amount: session.amount_total || 0,
                   credits,
                   status: 'completed',
-                  stripe_payment_id: session.payment_intent,
-                  created_at: new Date()
+                  stripePaymentId: session.payment_intent,
+                  createdAt: new Date()
                 });
 
               console.log('Payment processed successfully:', {

@@ -1,0 +1,18 @@
+
+
+ ERROR(TypeScript)  No overload matches this call.
+  Overload 1 of 2, '(value: { status: string | SQL<unknown> | Placeholder<string, any>; userId: number | SQL<unknown> | Placeholder<string, any>; amount: number | SQL<unknown> | Placeholder<...>; credits: number | ... 1 more ... | Placeholder<...>; id?: number | ... 2 more ... | undefined; createdAt?: Date | ... 2 more ... | undefined; stripePaymentId?: string | ... 3 more ... | undefined; }): PgInsertBase<...>', gave the following error.
+    Object literal may only specify known properties, but 'user_id' does not exist in type '{ status: string | SQL<unknown> | Placeholder<string, any>; userId: number | SQL<unknown> | Placeholder<string, any>; amount: number | SQL<unknown> | Placeholder<...>; credits: number | ... 1 more ... | Placeholder<...>; id?: number | ... 2 more ... | undefined; createdAt?: Date | ... 2 more ... | undefined; stripeP...'. Did you mean to write 'userId'?
+  Overload 2 of 2, '(values: { status: string | SQL<unknown> | Placeholder<string, any>; userId: number | SQL<unknown> | Placeholder<string, any>; amount: number | SQL<unknown> | Placeholder<...>; credits: number | ... 1 more ... | Placeholder<...>; id?: number | ... 2 more ... | undefined; createdAt?: Date | ... 2 more ... | undefined; stripePaymentId?: string | ... 3 more ... | undefined; }[]): PgInsertBase<...>', gave the following error.
+    Object literal may only specify known properties, and 'user_id' does not exist in type '{ status: string | SQL<unknown> | Placeholder<string, any>; userId: number | SQL<unknown> | Placeholder<string, any>; amount: number | SQL<unknown> | Placeholder<...>; credits: number | ... 1 more ... | Placeholder<...>; id?: number | ... 2 more ... | undefined; createdAt?: Date | ... 2 more ... | undefined; stripeP...'.
+ FILE  /home/runner/CustomBedtimeStories-v2/server/routes.ts:176:19
+
+    174 |                 .insert(creditTransactions)
+    175 |                 .values({
+  > 176 |                   user_id: userId,
+        |                   ^^^^^^^
+    177 |                   amount: session.amount_total || 0,
+    178 |                   credits,
+    179 |                   status: 'completed',
+
+[TypeScript] Found 1 error. Watching for file changes.
