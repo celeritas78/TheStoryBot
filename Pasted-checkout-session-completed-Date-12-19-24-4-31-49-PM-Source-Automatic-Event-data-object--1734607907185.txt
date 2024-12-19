@@ -1,0 +1,312 @@
+checkout.session.completed
+Date
+12/19/24, 4:31:49 PM
+Source
+Automatic
+Event data
+{
+  "object": {
+    "id": "cs_live_b1sfdeNuG7GGA7uW8xkQKc9a10fULFEEYY0lh48GI4R7LhBpSRV12OmmwN",
+    "object": "checkout.session",
+    "adaptive_pricing": {
+      "enabled": false
+    },
+    "after_expiration": null,
+    "allow_promotion_codes": true,
+    "amount_subtotal": 8494,
+    "amount_total": 85,
+    "automatic_tax": {
+      "enabled": false,
+      "liability": null,
+      "status": null
+    },
+    "billing_address_collection": "required",
+    "cancel_url": "https://stripe.com",
+    "client_reference_id": "1",
+    "client_secret": null,
+    "consent": null,
+    "consent_collection": {
+      "payment_method_reuse_agreement": null,
+      "promotions": "none",
+      "terms_of_service": "none"
+    },
+    "created": 1734606029,
+    "currency": "inr",
+    "currency_conversion": null,
+    "custom_fields": [
+      {
+        "key": "fullname",
+        "label": {
+          "custom": "Full Name",
+          "type": "custom"
+        },
+        "optional": false,
+        "text": {
+          "default_value": null,
+          "maximum_length": null,
+          "minimum_length": null,
+          "value": "Sandeep Khomne"
+        },
+        "type": "text"
+      }
+    ],
+    "custom_text": {
+      "after_submit": null,
+      "shipping_address": null,
+      "submit": null,
+      "terms_of_service_acceptance": null
+    },
+    "customer": "cus_RQYayxU0Z3l3iX",
+    "customer_creation": "always",
+    "customer_details": {
+      "address": {
+        "city": "Pune",
+        "country": "IN",
+        "line1": "C1401 Vallonia Bavdhan",
+        "line2": null,
+        "postal_code": "411021",
+        "state": "MH"
+      },
+      "email": "sandeep@asterial.in",
+      "name": "Sandeep Khomne",
+      "phone": "+919730016326",
+      "tax_exempt": "none",
+      "tax_ids": [
+      ]
+    },
+    "customer_email": null,
+    "expires_at": 1734692429,
+    "invoice": null,
+    "invoice_creation": {
+      "enabled": false,
+      "invoice_data": {
+        "account_tax_ids": null,
+        "custom_fields": null,
+        "description": null,
+        "footer": null,
+        "issuer": null,
+        "metadata": {
+        },
+        "rendering_options": null
+      }
+    },
+    "livemode": true,
+    "locale": "auto",
+    "metadata": {
+    },
+    "mode": "payment",
+    "payment_intent": "pi_3QXhTiSBc9gulaWv05Xz7nMy",
+    "payment_link": "plink_1QXKFESBc9gulaWvlt5Utjtr",
+    "payment_method_collection": "if_required",
+    "payment_method_configuration_details": null,
+    "payment_method_options": {
+      "card": {
+        "request_three_d_secure": "automatic"
+      }
+    },
+    "payment_method_types": [
+      "card"
+    ],
+    "payment_status": "paid",
+    "phone_number_collection": {
+      "enabled": true
+    },
+    "recovered_from": null,
+    "saved_payment_method_options": {
+      "allow_redisplay_filters": [
+        "always"
+      ],
+      "payment_method_remove": null,
+      "payment_method_save": null
+    },
+    "setup_intent": null,
+    "shipping_address_collection": null,
+    "shipping_cost": null,
+    "shipping_details": null,
+    "shipping_options": [
+    ],
+    "status": "complete",
+    "submit_type": "auto",
+    "subscription": null,
+    "success_url": "https://stripe.com",
+    "total_details": {
+      "amount_discount": 8409,
+      "amount_shipping": 0,
+      "amount_tax": 0
+    },
+    "ui_mode": "hosted",
+    "url": null
+  }
+}
+
+Hide lines
+Webhook attempts
+Attempts to send this event to your webhook endpoints in the past 15 days
+Webhook URL
+Date
+Next retry
+​
+Failed
+https://thestorybot.com/api/stripe-webhook
+Dec 19, 4:31 PM
+in 31 minutes
+
+Resend
+
+More options
+HTTP status code
+400 (Bad Request)
+Request to your endpoint
+{
+  "id": "evt_1QXhUISBc9gulaWv6ucbTSGj",
+  "object": "event",
+  "api_version": "2023-08-16",
+  "created": 1734606109,
+  "data": {
+    "object": {
+      "id": "cs_live_b1sfdeNuG7GGA7uW8xkQKc9a10fULFEEYY0lh48GI4R7LhBpSRV12OmmwN",
+      "object": "checkout.session",
+      "adaptive_pricing": {
+        "enabled": false
+      },
+      "after_expiration": null,
+      "allow_promotion_codes": true,
+      "amount_subtotal": 8494,
+      "amount_total": 85,
+      "automatic_tax": {
+        "enabled": false,
+        "liability": null,
+        "status": null
+      },
+      "billing_address_collection": "required",
+      "cancel_url": "https://stripe.com",
+      "client_reference_id": "1",
+      "client_secret": null,
+      "consent": null,
+      "consent_collection": {
+        "payment_method_reuse_agreement": null,
+        "promotions": "none",
+        "terms_of_service": "none"
+      },
+      "created": 1734606029,
+      "currency": "inr",
+      "currency_conversion": null,
+      "custom_fields": [
+        {
+          "key": "fullname",
+          "label": {
+            "custom": "Full Name",
+            "type": "custom"
+          },
+          "optional": false,
+          "text": {
+            "default_value": null,
+            "maximum_length": null,
+            "minimum_length": null,
+            "value": "Sandeep Khomne"
+          },
+          "type": "text"
+        }
+      ],
+      "custom_text": {
+        "after_submit": null,
+        "shipping_address": null,
+        "submit": null,
+        "terms_of_service_acceptance": null
+      },
+      "customer": "cus_RQYayxU0Z3l3iX",
+      "customer_creation": "always",
+      "customer_details": {
+        "address": {
+          "city": "Pune",
+          "country": "IN",
+          "line1": "C1401 Vallonia Bavdhan",
+          "line2": null,
+          "postal_code": "411021",
+          "state": "MH"
+        },
+        "email": "sandeep@asterial.in",
+        "name": "Sandeep Khomne",
+        "phone": "+919730016326",
+        "tax_exempt": "none",
+        "tax_ids": [
+        ]
+      },
+      "customer_email": null,
+      "expires_at": 1734692429,
+      "invoice": null,
+      "invoice_creation": {
+        "enabled": false,
+        "invoice_data": {
+          "account_tax_ids": null,
+          "custom_fields": null,
+          "description": null,
+          "footer": null,
+          "issuer": null,
+          "metadata": {
+          },
+          "rendering_options": null
+        }
+      },
+      "livemode": true,
+      "locale": "auto",
+      "metadata": {
+      },
+      "mode": "payment",
+      "payment_intent": "pi_3QXhTiSBc9gulaWv05Xz7nMy",
+      "payment_link": "plink_1QXKFESBc9gulaWvlt5Utjtr",
+      "payment_method_collection": "if_required",
+      "payment_method_configuration_details": null,
+      "payment_method_options": {
+        "card": {
+          "request_three_d_secure": "automatic"
+        }
+      },
+      "payment_method_types": [
+        "card"
+      ],
+      "payment_status": "paid",
+      "phone_number_collection": {
+        "enabled": true
+      },
+      "recovered_from": null,
+      "saved_payment_method_options": {
+        "allow_redisplay_filters": [
+          "always"
+        ],
+        "payment_method_remove": null,
+        "payment_method_save": null
+      },
+      "setup_intent": null,
+      "shipping_address_collection": null,
+      "shipping_cost": null,
+      "shipping_details": null,
+      "shipping_options": [
+      ],
+      "status": "complete",
+      "submit_type": "auto",
+      "subscription": null,
+      "success_url": "https://stripe.com",
+      "total_details": {
+        "amount_discount": 8409,
+        "amount_shipping": 0,
+        "amount_tax": 0
+      },
+      "ui_mode": "hosted",
+      "url": null
+    }
+  },
+  "livemode": true,
+  "pending_webhooks": 2,
+  "request": {
+    "id": null,
+    "idempotency_key": null
+  },
+  "type": "checkout.session.completed"
+}
+
+Hide lines
+Response
+{
+  "error": "Invalid request body format"
+}
