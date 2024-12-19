@@ -5,7 +5,8 @@ import { eq, desc } from 'drizzle-orm';
 import { z } from 'zod';
 import { db } from '../db';
 import { stories, storySegments, users } from '../db/schema';
-import type { Request, Response } from 'express';
+import type { Request as ExpressRequest, Response } from 'express';
+import type { AuthenticatedRequest, StripeWebhookRequest } from './types/express';
 import multer from 'multer';
 import { saveImageFile } from './services/image-storage';
 import bcrypt from 'bcryptjs';
@@ -769,7 +770,7 @@ export function setupRoutes(app: express.Application) {
   // Stripe webhook endpoint must come before any body parsers
   app.post('/api/stripe-webhook',
     express.raw({ type: 'application/json' }),
-    async (req: Express.Request, res: Express.Response, next: NextFunction) => {
+    async (req: StripeWebhookRequest, res: Response, next: NextFunction) => {
       try {
         const sig = req.headers['stripe-signature'];
         const rawBody = req.body;
@@ -798,7 +799,7 @@ export function setupRoutes(app: express.Application) {
         return res.status(500).json({ error: 'Internal server error' });
       }
     },
-    async (req: Express.Request, res: Express.Response) => {
+    async (req: StripeWebhookRequest, res: Response) => {
       const sig = req.headers['stripe-signature'] as string | undefined;
       const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
       
