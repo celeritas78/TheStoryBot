@@ -48,13 +48,25 @@ export default function PurchaseCreditsModal({ isOpen, onClose }: PurchaseCredit
     setIsProcessing(true);
 
     try {
-      // Create payment intent
-      console.log('Creating payment intent:', {
+      // Create payment intent with detailed logging
+      console.log('Starting payment process:', {
         credits,
         amount: credits * 100,
-        customer: customerDetails,
-        timestamp: new Date().toISOString()
+        customerName: customerDetails.name,
+        customerLocation: `${customerDetails.city}, ${customerDetails.state}`,
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV
       });
+
+      // Validate Stripe is loaded
+      if (!stripe || !elements) {
+        console.error('Stripe not initialized:', {
+          hasStripe: !!stripe,
+          hasElements: !!elements,
+          timestamp: new Date().toISOString()
+        });
+        throw new Error('Payment system is not ready. Please try again.');
+      }
 
       // Validate customer details
       const result = customerSchema.safeParse(customerDetails);
@@ -184,20 +196,37 @@ export default function PurchaseCreditsModal({ isOpen, onClose }: PurchaseCredit
           onClose();
         }
     } catch (error) {
-      console.error('Payment error:', {
-        error,
-        message: error instanceof Error ? error.message : 'Unknown error',
-        timestamp: new Date().toISOString()
+      console.error('Payment processing failed:', {
+        error: error instanceof Error ? {
+          name: error.name,
+          message: error.message,
+          stack: error.stack
+        } : 'Unknown error',
+        timestamp: new Date().toISOString(),
+        customerLocation: `${customerDetails.city}, ${customerDetails.state}`,
+        amount: credits * 100
       });
       
       let errorMessage = 'An unexpected error occurred during payment';
       if (error instanceof Error) {
-        errorMessage = error.message;
-        // Handle specific Stripe error messages
-        if (errorMessage.includes('Indian regulations')) {
+        // Handle specific Stripe error cases
+        if (error.message.includes('Indian regulations')) {
           errorMessage = 'Payment failed due to regulatory requirements. Please try again.';
+        } else if (error.message.includes('card_declined')) {
+          errorMessage = 'Your card was declined. Please try another card.';
+        } else if (error.message.includes('insufficient_funds')) {
+          errorMessage = 'Insufficient funds. Please try another card.';
+        } else if (error.message.includes('expired_card')) {
+          errorMessage = 'Your card has expired. Please try another card.';
+        } else {
+          errorMessage = error.message;
         }
       }
+      
+      console.log('Showing error to user:', {
+        errorMessage,
+        timestamp: new Date().toISOString()
+      });
       
       toast({
         title: "Payment failed",
@@ -206,6 +235,10 @@ export default function PurchaseCreditsModal({ isOpen, onClose }: PurchaseCredit
       });
     } finally {
       setIsProcessing(false);
+      console.log('Payment processing completed', {
+        success: false,
+        timestamp: new Date().toISOString()
+      });
     }
   };
 

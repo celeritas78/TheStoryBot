@@ -25,13 +25,38 @@ export default function Credits() {
 
   // Poll for credit updates
   React.useEffect(() => {
-    if (!refetch) return;
+    if (typeof refetch !== 'function') {
+      console.log('Skipping credits polling - refetch not available', {
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+    
+    console.log('Starting credits polling interval', {
+      timestamp: new Date().toISOString()
+    });
     
     const interval = setInterval(() => {
-      refetch().catch(console.error);
+      refetch()
+        .then(() => {
+          console.log('Credits refreshed successfully', {
+            timestamp: new Date().toISOString()
+          });
+        })
+        .catch((error) => {
+          console.error('Failed to refresh credits:', {
+            error: error instanceof Error ? error.message : 'Unknown error',
+            timestamp: new Date().toISOString()
+          });
+        });
     }, 5000); // Check every 5 seconds
     
-    return () => clearInterval(interval);
+    return () => {
+      console.log('Cleaning up credits polling interval', {
+        timestamp: new Date().toISOString()
+      });
+      clearInterval(interval);
+    };
   }, [refetch]);
 
   const handlePurchaseClick = () => {

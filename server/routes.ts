@@ -60,10 +60,26 @@ const registrationSchema = z.object({
   displayName: z.string().min(2, "Display name too short").max(255, "Display name too long"),
 });
 
-// Extend the Express Request type to include rawBody
+// Extend the Express Request type to include rawBody and custom auth properties
 declare module 'express-serve-static-core' {
   interface Request {
     rawBody?: Buffer;
+    isAuthenticated?: () => boolean;
+    user?: {
+      id: number;
+      email: string;
+      displayName?: string;
+      storyCredits?: number;
+    };
+  }
+}
+
+// Extend the Express Response type
+declare module 'express-serve-static-core' {
+  interface Response {
+    locals: {
+      [key: string]: any;
+    };
   }
 }
 
