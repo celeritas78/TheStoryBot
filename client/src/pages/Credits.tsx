@@ -3,64 +3,39 @@ import { Title } from "@/components/ui/title";
 import { useUser } from '@/hooks/use-user';
 import { Button } from '@/components/ui/button';
 
-// Stripe Payment Link URL
+// Stripe Payment Link URL - this should be configured per environment
 const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/7sIcO0aiG8D09I46oC';
 
 export default function Credits() {
   const { user } = useUser();
   const [showSuccess, setShowSuccess] = React.useState(false);
-
   const { refetch } = useUser();
 
+  // Check for successful payment return
   React.useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('payment_success') === 'true') {
+      console.log('Payment success detected', {
+        timestamp: new Date().toISOString()
+      });
       setShowSuccess(true);
       // Clean up URL
       window.history.replaceState({}, '', '/credits');
       // Refresh user data to get updated credits
-      refetch?.().catch(console.error);
-    }
-  }, [refetch]);
-
-  // Poll for credit updates
-  React.useEffect(() => {
-    if (typeof refetch !== 'function') {
-      console.log('Skipping credits polling - refetch not available', {
-        timestamp: new Date().toISOString()
-      });
-      return;
-    }
-    
-    console.log('Starting credits polling interval', {
-      timestamp: new Date().toISOString()
-    });
-    
-    const interval = setInterval(() => {
-      refetch()
-        .then(() => {
-          console.log('Credits refreshed successfully', {
-            timestamp: new Date().toISOString()
-          });
-        })
-        .catch((error) => {
-          console.error('Failed to refresh credits:', {
-            error: error instanceof Error ? error.message : 'Unknown error',
-            timestamp: new Date().toISOString()
-          });
+      refetch?.().catch(error => {
+        console.error('Failed to refresh user data after payment:', {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          timestamp: new Date().toISOString()
         });
-    }, 5000); // Check every 5 seconds
-    
-    return () => {
-      console.log('Cleaning up credits polling interval', {
-        timestamp: new Date().toISOString()
       });
-      clearInterval(interval);
-    };
+    }
   }, [refetch]);
 
   const handlePurchaseClick = () => {
-    // Open Stripe Payment Link in a new window
+    console.log('Opening Stripe payment link', {
+      url: STRIPE_PAYMENT_LINK,
+      timestamp: new Date().toISOString()
+    });
     window.open(STRIPE_PAYMENT_LINK, '_blank');
   };
 
@@ -81,6 +56,7 @@ export default function Credits() {
               <span className="block sm:inline">Your credits have been updated.</span>
             </div>
           )}
+
           <div className="bg-white rounded-lg shadow-lg p-8 mb-8">
             <div className="flex justify-between items-center mb-6">
               <div>

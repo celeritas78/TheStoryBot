@@ -60,27 +60,20 @@ const registrationSchema = z.object({
   displayName: z.string().min(2, "Display name too short").max(255, "Display name too long"),
 });
 
-// Extend the Express Request type to include rawBody and custom auth properties
-declare module 'express-serve-static-core' {
-  interface Request {
-    rawBody?: Buffer;
-    isAuthenticated?: () => boolean;
-    user?: {
-      id: number;
-      email: string;
-      displayName?: string;
-      storyCredits?: number;
-    };
-  }
+// Define custom types for authentication
+interface AuthenticatedRequest extends Express.Request {
+  isAuthenticated: () => boolean;
+  user?: {
+    id: number;
+    email: string;
+    displayName?: string;
+    storyCredits?: number;
+  };
 }
 
-// Extend the Express Response type
-declare module 'express-serve-static-core' {
-  interface Response {
-    locals: {
-      [key: string]: any;
-    };
-  }
+// Type guard for authenticated requests
+function isAuthenticated(req: Express.Request): req is AuthenticatedRequest {
+  return 'isAuthenticated' in req && typeof (req as any).isAuthenticated === 'function';
 }
 
 
@@ -764,12 +757,17 @@ export function setupRoutes(app: express.Application) {
     }
   });
 
+  // Custom interface for webhook request
+  interface WebhookRequest extends Express.Request {
+    rawBody: Buffer;
+  }
+
   // Stripe webhook endpoint must come before any body parsers
   app.post('/api/stripe-webhook', 
-    express.raw({type: 'application/json', verify: (req, res, buf) => {
-      req.rawBody = buf;
-    }}),
-    async (req, res, next) => {
+    express.raw({type: 'application/json'}),
+    (req: WebhookRequest, res: Express.Response, next: Express.NextFunction) => {
+      // The raw body is available directly from the request
+      req.rawBody = req.body;
       const sig = req.headers['stripe-signature'];
       const rawBody = req.body;
 
