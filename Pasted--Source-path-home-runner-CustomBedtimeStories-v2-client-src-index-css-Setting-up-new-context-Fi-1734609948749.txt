@@ -1,0 +1,337 @@
+
+Source path: /home/runner/CustomBedtimeStories-v2/client/src/index.css
+Setting up new context...
+Finding changed files: 12.476ms
+Reading changed files: 795.512ms
+Sorting candidates: 9.206ms
+Generate rules: 678.535ms
+Build stylesheet: 13.164ms
+Potential classes:  4448
+Active contexts:  1
+JIT TOTAL: 2.461s
+
+
+User session check: {
+  isAuthenticated: false,
+  hasSession: true,
+  sessionId: 'pogsgbucbDkEH2F5c1UB1OcQf3pIVgs-',
+  sessionData: Session {
+    cookie: {
+      path: '/',
+      _expires: 2024-12-26T12:04:22.871Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    }
+  },
+  user: undefined
+}
+User session check: {
+  isAuthenticated: false,
+  hasSession: true,
+  sessionId: 'pogsgbucbDkEH2F5c1UB1OcQf3pIVgs-',
+  sessionData: Session {
+    cookie: {
+      path: '/',
+      _expires: 2024-12-26T12:04:23.125Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    }
+  },
+  user: undefined
+}
+User session check: {
+  isAuthenticated: false,
+  hasSession: true,
+  sessionId: 'Fz1pTtCs0TZJXrw-uftJy25q9vpAgLkw',
+  sessionData: Session {
+    cookie: {
+      path: '/',
+      _expires: 2024-12-26T12:04:24.441Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    }
+  },
+  user: undefined
+}
+User session check: {
+  isAuthenticated: false,
+  hasSession: true,
+  sessionId: 'Fz1pTtCs0TZJXrw-uftJy25q9vpAgLkw',
+  sessionData: Session {
+    cookie: {
+      path: '/',
+      _expires: 2024-12-26T12:04:24.635Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    }
+  },
+  user: undefined
+}
+
+ ERROR(TypeScript)  Property 'isAuthenticated' does not exist on type 'Session & Partial<SessionData>'.
+ FILE  /home/runner/CustomBedtimeStories-v2/server/auth.ts:430:21
+
+    428 |         // Explicitly save data in session
+    429 |         req.session.user = safeUser;
+  > 430 |         req.session.isAuthenticated = true;
+        |                     ^^^^^^^^^^^^^^^
+    431 |
+    432 |         // Force session save
+    433 |         req.session.save((err) => {
+
+[TypeScript] Found 1 error. Watching for file changes.
+Login successful: {
+  id: 1,
+  email: 'sandeep@asterial.in',
+  sessionId: '9vWB5QeM5xJxZToEaRfBtX9-BgnuFalf',
+  sessionData: Session {
+    cookie: {
+      path: '/',
+      _expires: 2024-12-26T12:05:04.085Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    passport: { user: 1 },
+    user: {
+      id: 1,
+      email: 'sandeep@asterial.in',
+      provider: 'local',
+      providerId: null,
+      displayName: null,
+      avatarUrl: null,
+      childPhotoUrl: '/images/40e1c54a-b75c-4858-90a2-4d11250e2f5e.jpeg',
+      bio: null,
+      emailVerified: true,
+      verificationToken: null,
+      verificationTokenExpiry: null,
+      resetToken: null,
+      resetTokenExpiry: null,
+      lastLoginAt: null,
+      active: true,
+      storyCredits: 0,
+      createdAt: 2024-12-16T11:48:22.725Z,
+      updatedAt: 2024-12-17T14:01:52.275Z
+    },
+    isAuthenticated: true
+  }
+}
+User session check: {
+  isAuthenticated: true,
+  hasSession: true,
+  sessionId: '9vWB5QeM5xJxZToEaRfBtX9-BgnuFalf',
+  sessionData: Session {
+    cookie: {
+      path: '/',
+      _expires: 2024-12-26T12:05:04.086Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    passport: { user: 1 },
+    user: {
+      id: 1,
+      email: 'sandeep@asterial.in',
+      provider: 'local',
+      providerId: null,
+      displayName: null,
+      avatarUrl: null,
+      childPhotoUrl: '/images/40e1c54a-b75c-4858-90a2-4d11250e2f5e.jpeg',
+      bio: null,
+      emailVerified: true,
+      verificationToken: null,
+      verificationTokenExpiry: null,
+      resetToken: null,
+      resetTokenExpiry: null,
+      lastLoginAt: null,
+      active: true,
+      storyCredits: 0,
+      createdAt: '2024-12-16T11:48:22.725Z',
+      updatedAt: '2024-12-17T14:01:52.275Z'
+    },
+    isAuthenticated: true
+  },
+  user: {
+    id: 1,
+    email: 'sandeep@asterial.in',
+    password: '0b954174f7b36cefe28c3eabd8d4a66323fe33e20465d76270119e2653a9683b55e0d89822c1d5b5f7ab0415a75a3ce97611e9553e5f7e3ac6f57fed990d33c0.716c5f2fd1c7d2b31777140c17ce152b',
+    provider: 'local',
+    providerId: null,
+    displayName: null,
+    avatarUrl: null,
+    childPhotoUrl: '/images/40e1c54a-b75c-4858-90a2-4d11250e2f5e.jpeg',
+    bio: null,
+    emailVerified: true,
+    verificationToken: null,
+    verificationTokenExpiry: null,
+    resetToken: null,
+    resetTokenExpiry: null,
+    lastLoginAt: null,
+    active: true,
+    storyCredits: 0,
+    createdAt: 2024-12-16T11:48:22.725Z,
+    updatedAt: 2024-12-17T14:01:52.275Z
+  }
+}
+User session check: {
+  isAuthenticated: true,
+  hasSession: true,
+  sessionId: '9vWB5QeM5xJxZToEaRfBtX9-BgnuFalf',
+  sessionData: Session {
+    cookie: {
+      path: '/',
+      _expires: 2024-12-26T12:05:04.431Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    passport: { user: 1 },
+    user: {
+      id: 1,
+      email: 'sandeep@asterial.in',
+      provider: 'local',
+      providerId: null,
+      displayName: null,
+      avatarUrl: null,
+      childPhotoUrl: '/images/40e1c54a-b75c-4858-90a2-4d11250e2f5e.jpeg',
+      bio: null,
+      emailVerified: true,
+      verificationToken: null,
+      verificationTokenExpiry: null,
+      resetToken: null,
+      resetTokenExpiry: null,
+      lastLoginAt: null,
+      active: true,
+      storyCredits: 0,
+      createdAt: '2024-12-16T11:48:22.725Z',
+      updatedAt: '2024-12-17T14:01:52.275Z'
+    },
+    isAuthenticated: true
+  },
+  user: {
+    id: 1,
+    email: 'sandeep@asterial.in',
+    password: '0b954174f7b36cefe28c3eabd8d4a66323fe33e20465d76270119e2653a9683b55e0d89822c1d5b5f7ab0415a75a3ce97611e9553e5f7e3ac6f57fed990d33c0.716c5f2fd1c7d2b31777140c17ce152b',
+    provider: 'local',
+    providerId: null,
+    displayName: null,
+    avatarUrl: null,
+    childPhotoUrl: '/images/40e1c54a-b75c-4858-90a2-4d11250e2f5e.jpeg',
+    bio: null,
+    emailVerified: true,
+    verificationToken: null,
+    verificationTokenExpiry: null,
+    resetToken: null,
+    resetTokenExpiry: null,
+    lastLoginAt: null,
+    active: true,
+    storyCredits: 0,
+    createdAt: 2024-12-16T11:48:22.725Z,
+    updatedAt: 2024-12-17T14:01:52.275Z
+  }
+}
+User session check: {
+  isAuthenticated: true,
+  hasSession: true,
+  sessionId: '9vWB5QeM5xJxZToEaRfBtX9-BgnuFalf',
+  sessionData: Session {
+    cookie: {
+      path: '/',
+      _expires: 2024-12-26T12:05:04.726Z,
+      originalMaxAge: 604800000,
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax'
+    },
+    passport: { user: 1 },
+    user: {
+      id: 1,
+      email: 'sandeep@asterial.in',
+      provider: 'local',
+      providerId: null,
+      displayName: null,
+      avatarUrl: null,
+      childPhotoUrl: '/images/40e1c54a-b75c-4858-90a2-4d11250e2f5e.jpeg',
+      bio: null,
+      emailVerified: true,
+      verificationToken: null,
+      verificationTokenExpiry: null,
+      resetToken: null,
+      resetTokenExpiry: null,
+      lastLoginAt: null,
+      active: true,
+      storyCredits: 0,
+      createdAt: '2024-12-16T11:48:22.725Z',
+      updatedAt: '2024-12-17T14:01:52.275Z'
+    },
+    isAuthenticated: true
+  },
+  user: {
+    id: 1,
+    email: 'sandeep@asterial.in',
+    password: '0b954174f7b36cefe28c3eabd8d4a66323fe33e20465d76270119e2653a9683b55e0d89822c1d5b5f7ab0415a75a3ce97611e9553e5f7e3ac6f57fed990d33c0.716c5f2fd1c7d2b31777140c17ce152b',
+    provider: 'local',
+    providerId: null,
+    displayName: null,
+    avatarUrl: null,
+    childPhotoUrl: '/images/40e1c54a-b75c-4858-90a2-4d11250e2f5e.jpeg',
+    bio: null,
+    emailVerified: true,
+    verificationToken: null,
+    verificationTokenExpiry: null,
+    resetToken: null,
+    resetTokenExpiry: null,
+    lastLoginAt: null,
+    active: true,
+    storyCredits: 0,
+    createdAt: 2024-12-16T11:48:22.725Z,
+    updatedAt: 2024-12-17T14:01:52.275Z
+  }
+}
+Stories request authentication check: {
+  isAuthenticatedExists: false,
+  isAuthenticated: undefined,
+  hasUser: false,
+  userId: undefined,
+  session: undefined,
+  timestamp: '2024-12-19T12:05:11.372Z'
+}
+Authentication failed: { timestamp: '2024-12-19T12:05:11.372Z' }
+Stories request authentication check: {
+  isAuthenticatedExists: false,
+  isAuthenticated: undefined,
+  hasUser: false,
+  userId: undefined,
+  session: undefined,
+  timestamp: '2024-12-19T12:05:12.408Z'
+}
+Authentication failed: { timestamp: '2024-12-19T12:05:12.408Z' }
+Stories request authentication check: {
+  isAuthenticatedExists: false,
+  isAuthenticated: undefined,
+  hasUser: false,
+  userId: undefined,
+  session: undefined,
+  timestamp: '2024-12-19T12:05:14.443Z'
+}
+Authentication failed: { timestamp: '2024-12-19T12:05:14.443Z' }
+Stories request authentication check: {
+  isAuthenticatedExists: false,
+  isAuthenticated: undefined,
+  hasUser: false,
+  userId: undefined,
+  session: undefined,
+  timestamp: '2024-12-19T12:05:18.485Z'
+}
+Authentication failed: { timestamp: '2024-12-19T12:05:18.485Z' }

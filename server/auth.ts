@@ -15,6 +15,10 @@ import { z } from "zod";
 declare module 'express-session' {
   interface SessionData {
     user?: Omit<SelectUser, 'password'>;
+    isAuthenticated?: boolean;
+    passport?: {
+      user: number;
+    };
   }
 }
 
@@ -68,21 +72,28 @@ export function setupAuth(app: Express) {
   const MemoryStore = createMemoryStore(session);
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || "default-secret",
-    resave: true, // Changed to true to ensure session is saved
-    saveUninitialized: true, // Changed to true to create session for all requests
+    resave: true,
+    saveUninitialized: true,
     store: new MemoryStore({ 
       checkPeriod: 86400000 // Prune expired entries every 24h
     }),
     name: 'sid',
     rolling: true,
     cookie: {
-      secure: false, // Set to false for development
+      secure: false, // We'll set this to true in production
       httpOnly: true,
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       path: '/',
       sameSite: 'lax'
     }
   };
+
+  if (process.env.NODE_ENV === 'production') {
+    app.set('trust proxy', 1);
+    if (sessionSettings.cookie) {
+      sessionSettings.cookie.secure = true;
+    }
+  }
 
   // Configure trust proxy settings
   const isProduction = process.env.NODE_ENV === 'production';

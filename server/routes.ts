@@ -61,6 +61,27 @@ const registrationSchema = z.object({
 });
 
 // Type guard for authenticated requests
+// Middleware to check authentication
+function requireAuth(req: express.Request, res: ExpressResponse, next: NextFunction) {
+  console.log('Authentication check:', {
+    isAuthenticatedExists: !!req.isAuthenticated,
+    isAuthenticated: req.isAuthenticated?.(),
+    hasUser: !!req.user,
+    userId: req.user?.id,
+    session: req.session,
+    timestamp: new Date().toISOString()
+  });
+
+  if (!req.isAuthenticated?.()) {
+    return res.status(401).json({ error: "Not logged in" });
+  }
+
+  if (!req.user) {
+    return res.status(401).json({ error: "User session invalid" });
+  }
+
+  next();
+}
 function isAuthenticated(req: express.Request): req is express.Request & { user: { id: number } } {
   return req.isAuthenticated?.() || false;
 }
@@ -325,11 +346,8 @@ export function setupRoutes(app: express.Application) {
   });
 
   // Story creation endpoint
-  app.post("/api/stories", async (req, res) => {
+  app.post("/api/stories", requireAuth, async (req, res) => {
     try {
-      if (!req.isAuthenticated || !req.isAuthenticated()) {
-        return res.status(401).json({ error: "Not logged in" });
-      }
 
       const { childName, childAge, mainCharacter, theme } = req.body;
       const userId = req.user?.id;
@@ -459,7 +477,7 @@ export function setupRoutes(app: express.Application) {
   });
 
   // Story continuation endpoint
-  app.post("/api/stories/:id/continue", async (req, res) => {
+  app.post("/api/stories/:id/continue", requireAuth, async (req, res) => {
     try {
       const { id } = req.params;
 
@@ -513,24 +531,8 @@ export function setupRoutes(app: express.Application) {
   });
 
   // Get all stories endpoint
-  app.get("/api/stories", async (req: express.Request, res: ExpressResponse) => {
+  app.get("/api/stories", requireAuth, async (req: express.Request, res: ExpressResponse) => {
     try {
-      // Add detailed logging for authentication state
-      console.log('Stories request authentication check:', {
-        isAuthenticatedExists: !!req.isAuthenticated,
-        isAuthenticated: req.isAuthenticated?.(),
-        hasUser: !!req.user,
-        userId: req.user?.id,
-        session: req.session,
-        timestamp: new Date().toISOString()
-      });
-
-      if (!req.isAuthenticated?.()) {
-        console.log('Authentication failed:', {
-          timestamp: new Date().toISOString()
-        });
-        return res.status(401).json({ error: "Not logged in" });
-      }
 
       const userId = req.user?.id;
       if (!userId) {
@@ -566,11 +568,8 @@ export function setupRoutes(app: express.Application) {
   });
 
   // Get single story endpoint
-  app.get("/api/stories/:id", async (req, res) => {
+  app.get("/api/stories/:id", requireAuth, async (req, res) => {
     try {
-      if (!req.isAuthenticated || !req.isAuthenticated()) {
-        return res.status(401).json({ error: "Not logged in" });
-      }
 
       const userId = req.user?.id;
       const story = await db.query.stories.findFirst({
@@ -770,10 +769,7 @@ export function setupRoutes(app: express.Application) {
   });
 
   // Credits info endpoint
-  app.get('/api/credits', async (req, res) => {
-    if (!req.isAuthenticated || !req.isAuthenticated()) {
-      return res.status(401).json({ error: "Not logged in" });
-    }
+  app.get('/api/credits', requireAuth, async (req, res) => {
 
     const userId = req.user?.id;
     if (!userId) {
