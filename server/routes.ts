@@ -1,15 +1,11 @@
 import express from 'express';
-import fs from 'fs';
-import path from 'path';
-import { eq, desc, and, SQL, sql } from 'drizzle-orm';
-import { PgColumn } from 'drizzle-orm/pg-core';
-import { z } from 'zod';
+import { eq, desc, sql } from 'drizzle-orm';
+import { users, stories, storySegments, creditTransactions } from '../db/schema';
 import { db } from '../db';
-import { stories, storySegments, users, creditTransactions } from '../db/schema';
-import type { Request as ExpressRequest, Response } from 'express';
-import type { AuthenticatedRequest } from './types/express';
+import path from 'path';
+import fs from 'fs';
+import { z } from 'zod';
 import multer from 'multer';
-import { saveImageFile } from './services/image-storage';
 import bcrypt from 'bcryptjs';
 import Stripe from 'stripe';
 import { 
@@ -18,6 +14,7 @@ import {
   generateSpeech 
 } from './services/ai';
 import { sendErrorResponse } from './utils/error';
+import type { Request, Response, NextFunction } from 'express';
 
 // Custom type for Stripe webhook request
 interface WebhookRequest extends Express.Request {
@@ -46,9 +43,6 @@ const registrationSchema = z.object({
   displayName: z.string().min(2, "Display name too short").max(255, "Display name too long"),
 });
 
-// Import NextFunction
-import { NextFunction } from 'express';
-
 // Type guard for authenticated requests
 function isAuthenticated(req: Express.Request): req is Express.Request {
   return req.isAuthenticated();
@@ -57,7 +51,7 @@ function isAuthenticated(req: Express.Request): req is Express.Request {
 export function setupRoutes(app: express.Application) {
   // Initialize Stripe
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
-    apiVersion: '2024-11-20',
+    apiVersion: '2024-11-20.acacia',
   });
 
   // Stripe webhook handler
