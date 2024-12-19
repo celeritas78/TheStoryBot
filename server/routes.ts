@@ -1,22 +1,28 @@
 import express from 'express';
 import fs from 'fs';
 import path from 'path';
-import { eq, desc, and, SQL } from 'drizzle-orm';
+import { eq, desc, and, SQL, sql } from 'drizzle-orm';
 import { PgColumn } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
 import { db } from '../db';
-import { stories, storySegments, users } from '../db/schema';
+import { stories, storySegments, users, creditTransactions } from '../db/schema';
 import type { Request as ExpressRequest, Response } from 'express';
 import type { AuthenticatedRequest } from './types/express';
 import multer from 'multer';
 import { saveImageFile } from './services/image-storage';
 import bcrypt from 'bcryptjs';
+import Stripe from 'stripe';
 import { 
   generateStoryContent, 
   generateImage, 
   generateSpeech 
-} from './services/openai';
+} from './services/ai';
 import { sendErrorResponse } from './utils/error';
+
+// Custom type for Stripe webhook request
+interface WebhookRequest extends Express.Request {
+  rawBody: Buffer;
+}
 import { 
   getAudioFilePath, 
   audioFileExists, 
@@ -48,20 +54,76 @@ function isAuthenticated(req: Express.Request): req is Express.Request {
   return req.isAuthenticated();
 }
 
-// Custom interface for webhook requests that properly extends Express.Request
-interface WebhookRequest extends Express.Request {
-  rawBody: Buffer;
-}
-
-// Stripe webhook handler type
-type StripeWebhookHandler = (
-  req: WebhookRequest,
-  res: Express.Response,
-  next: NextFunction
-) => Promise<void> | void;
-
-
 export function setupRoutes(app: express.Application) {
+  // Initialize Stripe
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
+    apiVersion: '2024-11-20',
+  });
+
+  // Stripe webhook handler
+  app.post('/api/stripe-webhook', express.raw({type: 'application/json'}), async (req, res) => {
+    const sig = req.headers['stripe-signature'];
+
+    try {
+      if (!sig) {
+        throw new Error('No Stripe signature found');
+      }
+
+      const event = stripe.webhooks.constructEvent(
+        req.body,
+        sig,
+        process.env.STRIPE_WEBHOOK_SECRET as string
+      );
+
+      // Handle the event
+      switch (event.type) {
+        case 'checkout.session.completed':
+          const session = event.data.object as Stripe.Checkout.Session;
+          const userId = session.client_reference_id;
+          const amountTotal = session.amount_total;
+          
+          if (!userId || !amountTotal) {
+            throw new Error('Missing user ID or amount in webhook payload');
+          }
+
+          // Calculate credits (1 USD = 1 credit)
+          const credits = Math.floor(amountTotal / 100); // Convert cents to dollars
+
+          // Update user credits and record transaction
+          await db.transaction(async (tx) => {
+            // Add credits to user
+            await tx
+              .update(users)
+              .set({ 
+                storyCredits: sql`story_credits + ${credits}`,
+                updatedAt: new Date()
+              })
+              .where(eq(users.id, parseInt(userId)));
+
+            // Record the transaction
+            await tx
+              .insert(creditTransactions)
+              .values({
+                userId: parseInt(userId),
+                amount: amountTotal,
+                credits,
+                status: 'completed',
+                stripePaymentId: session.payment_intent as string,
+                createdAt: new Date()
+              });
+          });
+          break;
+
+        default:
+          console.log(`Unhandled event type ${event.type}`);
+      }
+
+      res.json({ received: true });
+    } catch (err) {
+      console.error('Error processing webhook:', err);
+      res.status(400).send(`Webhook Error: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    }
+  });
   // Configure multer for handling file uploads
   const upload = multer({
     limits: {

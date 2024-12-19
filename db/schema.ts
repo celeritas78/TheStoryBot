@@ -71,6 +71,26 @@ export const storySegmentsRelations = relations(storySegments, ({ one }) => ({
   }),
 }));
 
+// Credit transactions table
+export const creditTransactions = pgTable("credit_transactions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  amount: integer("amount").notNull(),
+  credits: integer("credits").notNull(),
+  status: varchar("status", { length: 50 }).notNull(),
+  stripePaymentId: varchar("stripe_payment_id", { length: 255 }),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const creditTransactionsRelations = relations(creditTransactions, ({ one }) => ({
+  user: one(users, {
+    fields: [creditTransactions.userId],
+    references: [users.id],
+  }),
+}));
+
 // Schemas for validation
 export const insertUserSchema = createInsertSchema(users);
 export const selectUserSchema = createSelectSchema(users);

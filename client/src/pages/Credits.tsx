@@ -33,6 +33,16 @@ export default function Credits() {
                 <li>Get AI-powered audio narration</li>
                 <li>Save stories to your personal library</li>
               </ul>
+              
+              <div className="mt-8 text-center">
+                <Button
+                  onClick={() => window.open('https://buy.stripe.com/7sIcO0aiG8D09I46oC', '_blank')}
+                  className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all"
+                >
+                  Buy Credits
+                </Button>
+                <p className="mt-2 text-sm text-gray-500">1 USD = 1 Credit</p>
+              </div>
             </div>
           </div>
         </div>
